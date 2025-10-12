@@ -1,17 +1,20 @@
 package routes
 
 import (
-	"github.com/gin-contrib/cors"
+	"course_online_backend/internal/handler"
+	"course_online_backend/internal/services"
 	"log"
 
+	"firebase.google.com/go/v4"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func Routes() *gin.Engine {
+func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.New()
-
 	r.Use(gin.Recovery())
 
 	r.Use(cors.New(cors.Config{
@@ -22,16 +25,21 @@ func Routes() *gin.Engine {
 		AllowCredentials: true,
 	}))
 
-	err := r.SetTrustedProxies([]string{"127.0.0.1"})
-	if err != nil {
+	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
 		log.Panicf("Failed to set trusted proxies: %v", err)
 	}
 
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "success api test",
-		})
+		c.JSON(200, gin.H{"message": "success api test"})
 	})
+
+	authService := services.NewAuthService(db, app)
+	authHandler := handlers.NewAuthHandler(authService)
+
+	api := r.Group("/api")
+	{
+		api.POST("/auth/firebase-login", authHandler.FirebaseLoginHandler)
+	}
 
 	return r
 }
