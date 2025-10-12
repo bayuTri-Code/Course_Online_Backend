@@ -2,6 +2,7 @@ package database
 
 import (
 	"course_online_backend/internal/config"
+	"course_online_backend/internal/models"
 	"fmt"
 	"log"
 
@@ -9,12 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var Db *gorm.DB
-
-func PostgresConn(){
+func PostgresConn() *gorm.DB {
 	configDb := config.DbConfig
 
-	SetDb := fmt.Sprintf(
+	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		configDb.DBHost,
 		configDb.DBPort,
@@ -23,23 +22,35 @@ func PostgresConn(){
 		configDb.DBName,
 		configDb.DBSslmode,
 	)
-	db, err := gorm.Open(postgres.Open(SetDb), &gorm.Config{})
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to connect database: %v", err)
 	}
 
-	Db = db
-	log.Println("Database Connected")
-	autoMigrate()
-}
+	err = db.SetupJoinTable(&models.User{}, "Roles", &models.UserRole{})
+	if err != nil {
+		log.Fatalf("failed to setup join table User-Roles: %v", err)
+	}
 
-func autoMigrate() {
-	err := Db.AutoMigrate(
-		
+	err = db.SetupJoinTable(&models.Role{}, "Users", &models.UserRole{})
+	if err != nil {
+		log.Fatalf("failed to setup join table Role-Users: %v", err)
+	}
+
+	err = db.AutoMigrate(
+		&models.User{},
+		&models.Role{},
+		&models.UserRole{},
 	)
-
 	if err != nil {
-		log.Fatalf("Auto Migration Failed: %v", err)
+		log.Fatalf("auto migration failed: %v", err)
 	}
-	log.Println("Auto Migration Complete!")
+
+	if err := SeedRoles(db); err != nil {
+		log.Fatalf("failed to seed roles: %v", err)
+	}
+
+	log.Println("Database connected and migrated successfully.")
+	return db
 }
