@@ -13,6 +13,11 @@ type StandardResponse struct {
 	Errors  interface{} `json:"errors,omitempty"` 
 }
 
+type ErrorResponse struct {
+	Status  string      `json:"status"`           
+	Message string      `json:"message,omitempty"`
+	Errors  interface{} `json:"errors,omitempty"` 
+}
 
 func JSONSuccess(c *gin.Context, data interface{}, message string) {
 	c.JSON(http.StatusOK, StandardResponse{
@@ -30,10 +35,11 @@ func JSONCreated(c *gin.Context, data interface{}, message string) {
 	})
 }
 
-func JSONError(c *gin.Context, message string, code int) {
-	c.JSON(code, StandardResponse{
+func JSONError(c *gin.Context, message string, code int, errors interface{}) {
+	c.JSON(code, ErrorResponse{
 		Status:  "error",
 		Message: message,
+		Errors: errors,
 	})
 }
 
