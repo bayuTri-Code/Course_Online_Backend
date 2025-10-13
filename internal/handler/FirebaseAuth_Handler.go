@@ -26,14 +26,14 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body dto.TokenClaims true "Firebase Token"
-// @Success 200 {object} utils.StandardResponse "Login success"
+// @Param request body dto.FirebaseLoginRequest true "Firebase Token"
+// @Success 200 {object} dto.UserLoginResponse "Login success"
 // @Failure 400 {object} utils.ErrorResponse "Invalid request"
 // @Failure 401 {object} utils.ErrorResponse "Invalid token"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /api/auth/firebase-login [post]
 func (h *AuthHandler) FirebaseLoginHandler(c *gin.Context) {
-	var req dto.TokenClaims
+	var req dto.FirebaseLoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
