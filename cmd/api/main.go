@@ -8,14 +8,23 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	_"course_online_backend/cmd/api/docs"
 )
 
+// @title Course Online API
+// @version 1.0
+// @description API documentation for recipe API
+// @host http://192.168.100.247:7070
+// @BasePath /
 func main() {
 	config.ConfigDb()
 	db := database.PostgresConn()
 	app := config.InitFirebase()
 
 	r := routes.Routes(db, app)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if config.DbConfig.ServerEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)

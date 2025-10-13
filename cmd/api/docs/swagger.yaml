@@ -1,0 +1,66 @@
+basePath: /
+definitions:
+  dto.TokenClaims:
+    properties:
+      token:
+        type: string
+    type: object
+  utils.ErrorResponse:
+    properties:
+      errors: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  utils.StandardResponse:
+    properties:
+      data: {}
+      errors: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+host: http://192.168.100.247:7070
+info:
+  contact: {}
+  description: API documentation for recipe API
+  title: Course Online API
+  version: "1.0"
+paths:
+  /api/auth/firebase-login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with token from Firebase Authentication
+      parameters:
+      - description: Firebase Token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TokenClaims'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login success
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Login with Firebase Token
+      tags:
+      - Auth
+swagger: "2.0"
