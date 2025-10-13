@@ -42,6 +42,10 @@ func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, 
 
 	var user models.User
 	if err := s.Db.Where("firebase_uid = ?", uid).Preload("Roles").First(&user).Error; err == nil {
+		user.LastLogin = time.Now()
+		if err := s.Db.Save(&user).Error; err != nil {
+			return nil, fmt.Errorf("failed to update last login: %v", err)
+		}
 		return &user, nil
 	}
 

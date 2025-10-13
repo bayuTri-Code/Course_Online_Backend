@@ -17,6 +17,7 @@ type User struct {
     Roles []Role `gorm:"many2many:user_roles;joinForeignKey:UserID;joinReferences:RoleID" json:"roles"`
 }
 
+
 type Role struct {
     ID   uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
     Name string    `gorm:"size:50;unique;not null" json:"name"`
