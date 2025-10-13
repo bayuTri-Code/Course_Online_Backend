@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.TokenClaims"
+                            "$ref": "#/definitions/dto.FirebaseLoginRequest"
                         }
                     }
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Login success",
                         "schema": {
-                            "$ref": "#/definitions/utils.StandardResponse"
+                            "$ref": "#/definitions/dto.UserLoginResponse"
                         }
                     },
                     "400": {
@@ -69,7 +69,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.TokenClaims": {
+        "dto.FirebaseLoginRequest": {
             "type": "object",
             "properties": {
                 "token": {
@@ -77,10 +77,12 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.ErrorResponse": {
+        "dto.UserLoginResponse": {
             "type": "object",
             "properties": {
-                "errors": {},
+                "data": {
+                    "$ref": "#/definitions/dto.UserResponseDTO"
+                },
                 "message": {
                     "type": "string"
                 },
@@ -89,10 +91,49 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.StandardResponse": {
+        "dto.UserResponseDTO": {
             "type": "object",
             "properties": {
-                "data": {},
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firebaseId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "lastLogin": {
+                    "type": "string"
+                },
+                "roles": {
+                    "$ref": "#/definitions/models.Role"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Role": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.ErrorResponse": {
+            "type": "object",
+            "properties": {
                 "errors": {},
                 "message": {
                     "type": "string"

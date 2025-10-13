@@ -1,21 +1,47 @@
 basePath: /
 definitions:
-  dto.TokenClaims:
+  dto.FirebaseLoginRequest:
     properties:
       token:
         type: string
     type: object
-  utils.ErrorResponse:
+  dto.UserLoginResponse:
     properties:
-      errors: {}
+      data:
+        $ref: '#/definitions/dto.UserResponseDTO'
       message:
         type: string
       status:
         type: string
     type: object
-  utils.StandardResponse:
+  dto.UserResponseDTO:
     properties:
-      data: {}
+      createdAt:
+        type: string
+      email:
+        type: string
+      firebaseId:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      lastLogin:
+        type: string
+      roles:
+        $ref: '#/definitions/models.Role'
+      username:
+        type: string
+    type: object
+  models.Role:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  utils.ErrorResponse:
+    properties:
       errors: {}
       message:
         type: string
@@ -40,14 +66,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.TokenClaims'
+          $ref: '#/definitions/dto.FirebaseLoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Login success
           schema:
-            $ref: '#/definitions/utils.StandardResponse'
+            $ref: '#/definitions/dto.UserLoginResponse'
         "400":
           description: Invalid request
           schema:
