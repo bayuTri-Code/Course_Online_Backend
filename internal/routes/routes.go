@@ -8,7 +8,10 @@ import (
 	"firebase.google.com/go/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	
 	"gorm.io/gorm"
+
+	
 )
 
 func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
@@ -40,6 +43,9 @@ func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
 	{
 		api.POST("/auth/firebase-login", authHandler.FirebaseLoginHandler)
 	}
+	
+
+
 
 	return r
 }
