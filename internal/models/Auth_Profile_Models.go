@@ -14,8 +14,8 @@ type User struct {
 	LastLogin    time.Time `json:"last_login"`
 	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`
 
-	Roles []Role `gorm:"many2many:user_roles;joinForeignKey:UserID;joinReferences:RoleID" json:"roles"`
-    Biodata Biodata `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"biodata"`
+	Roles   []Role  `gorm:"many2many:user_roles;joinForeignKey:UserID;joinReferences:RoleID" json:"roles"`
+	Biodata Biodata `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"biodata"`
 }
 
 type Role struct {
@@ -35,7 +35,7 @@ type UserRole struct {
 
 type Biodata struct {
 	Id             uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-    UserID         uuid.UUID `gorm:"type:uuid;not null;uniqueIndex" json:"user_id"`
+	UserID         uuid.UUID `gorm:"type:uuid;not null;uniqueIndex" json:"user_id"`
 	Name           string    `gorm:"size:100;not null" json:"name"`
 	ProfilePicture string    `gorm:"size:255" json:"profile_picture"`
 	Age            int       `json:"age"`
