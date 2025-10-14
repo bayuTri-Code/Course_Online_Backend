@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/auth/firebase-login": {
+        "/auth/firebase-login": {
             "post": {
-                "description": "Login user with token from Firebase Authentication",
+                "description": "This endpoint allows users to log in using a Firebase authentication token (e.g., Google Sign-In).",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,15 +25,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Authentication"
                 ],
-                "summary": "Login with Firebase Token",
+                "summary": "Login user using Firebase ID Token",
                 "parameters": [
                     {
-                        "description": "Firebase Token",
-                        "name": "request",
+                        "type": "string",
+                        "description": "Bearer Firebase ID Token",
+                        "name": "Authorization",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Firebase token in JSON body (optional)",
+                        "name": "body",
                         "in": "body",
-                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/dto.FirebaseLoginRequest"
                         }
@@ -41,27 +46,28 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Login success",
+                        "description": "Login successful",
                         "schema": {
-                            "$ref": "#/definitions/dto.UserLoginResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "Invalid request body",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "401": {
-                        "description": "Invalid token",
+                        "description": "Unauthorized or invalid Firebase token",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -73,72 +79,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserLoginResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/dto.UserResponseDTO"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserResponseDTO": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "firebaseId": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "isActive": {
-                    "type": "boolean"
-                },
-                "lastLogin": {
-                    "type": "string"
-                },
-                "roles": {
-                    "$ref": "#/definitions/models.Role"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Role": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "errors": {},
-                "message": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 }
             }

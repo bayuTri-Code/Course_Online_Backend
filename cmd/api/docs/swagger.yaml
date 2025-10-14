@@ -5,49 +5,6 @@ definitions:
       token:
         type: string
     type: object
-  dto.UserLoginResponse:
-    properties:
-      data:
-        $ref: '#/definitions/dto.UserResponseDTO'
-      message:
-        type: string
-      status:
-        type: string
-    type: object
-  dto.UserResponseDTO:
-    properties:
-      createdAt:
-        type: string
-      email:
-        type: string
-      firebaseId:
-        type: string
-      id:
-        type: string
-      isActive:
-        type: boolean
-      lastLogin:
-        type: string
-      roles:
-        $ref: '#/definitions/models.Role'
-      username:
-        type: string
-    type: object
-  models.Role:
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  utils.ErrorResponse:
-    properties:
-      errors: {}
-      message:
-        type: string
-      status:
-        type: string
-    type: object
 host: http://192.168.100.247:7070
 info:
   contact: {}
@@ -55,38 +12,43 @@ info:
   title: Course Online API
   version: "1.0"
 paths:
-  /api/auth/firebase-login:
+  /auth/firebase-login:
     post:
       consumes:
       - application/json
-      description: Login user with token from Firebase Authentication
+      description: This endpoint allows users to log in using a Firebase authentication
+        token (e.g., Google Sign-In).
       parameters:
-      - description: Firebase Token
+      - description: Bearer Firebase ID Token
+        in: header
+        name: Authorization
+        type: string
+      - description: Firebase token in JSON body (optional)
         in: body
-        name: request
-        required: true
+        name: body
         schema:
           $ref: '#/definitions/dto.FirebaseLoginRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Login success
+          description: Login successful
           schema:
-            $ref: '#/definitions/dto.UserLoginResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Invalid request
+          description: Invalid request body
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "401":
-          description: Invalid token
+          description: Unauthorized or invalid Firebase token
           schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Login with Firebase Token
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user using Firebase ID Token
       tags:
-      - Auth
+      - Authentication
 swagger: "2.0"
