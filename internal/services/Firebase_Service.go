@@ -21,7 +21,6 @@ func NewAuthService(db *gorm.DB, app *firebase.App) *AuthService {
 		FirebaseApp: app,
 	}
 }
-
 func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, error) {
 	authClient, err := s.FirebaseApp.Auth(context.Background())
 	if err != nil {
@@ -34,33 +33,38 @@ func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, 
 	}
 
 	uid := token.UID
-	email := token.Claims["email"]
+	email := token.Claims["email"].(string)
 	name := ""
 	if n, ok := token.Claims["name"].(string); ok {
 		name = n
 	}
 
 	var user models.User
-	if err := s.Db.Where("firebase_uid = ?", uid).Preload("Roles").First(&user).Error; err == nil {
+	err = s.Db.Where("firebase_uid = ?", uid).Preload("Roles").First(&user).Error
+	if err == nil {
 		user.LastLogin = time.Now()
-		if err := s.Db.Save(&user).Error; err != nil {
-			return nil, fmt.Errorf("failed to update last login: %v", err)
+		if saveErr := s.Db.Save(&user).Error; saveErr != nil {
+			return nil, fmt.Errorf("failed to update last login: %v", saveErr)
 		}
 		return &user, nil
 	}
+
+	if err != gorm.ErrRecordNotFound {
+		return nil, fmt.Errorf("failed to fetch user: %v", err)
+	}
+	
 
 	var defaultRole models.Role
 	if err := s.Db.Where("name = ?", "user").First(&defaultRole).Error; err != nil {
 		return nil, fmt.Errorf("default role not found: %v", err)
 	}
-	
 
 	user = models.User{
 		FirebaseUID:  uid,
-		EmailAddress: email.(string),
+		EmailAddress: email,
 		Username:     name,
 		IsActive:     true,
-		CreatedAt:    user.CreatedAt,
+		CreatedAt:    time.Now(),
 		LastLogin:    time.Now(),
 	}
 
@@ -68,9 +72,11 @@ func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, 
 		if err := tx.Create(&user).Error; err != nil {
 			return err
 		}
+
 		if err := tx.Model(&user).Association("Roles").Append(&defaultRole); err != nil {
 			return err
 		}
+
 		return nil
 	}); err != nil {
 		return nil, fmt.Errorf("failed to register user: %v", err)
@@ -78,5 +84,3 @@ func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, 
 
 	return &user, nil
 }
-
-
