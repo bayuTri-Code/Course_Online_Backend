@@ -26,9 +26,9 @@ type Role struct {
 }
 
 type UserRole struct {
-    ID     uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-    UserID uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
-    RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
-    User   User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
-    Role   Role      `gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE" json:"-"`
+	ID     uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	UserID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_user_role" json:"user_id"`
+	RoleID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_user_role" json:"role_id"`
+	User   User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+	Role   Role      `gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE" json:"-"`
 }
