@@ -5,6 +5,7 @@ import (
 	"course_online_backend/internal/services"
 	"course_online_backend/internal/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	_ "course_online_backend/cmd/api/docs"
@@ -20,23 +21,33 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 	return &AuthHandler{Service: service}
 }
 
-// FirebaseLogin godoc
-// @Summary Login with Firebase Token
-// @Description Login user with token from Firebase Authentication
-// @Tags Auth
+// FirebaseLoginHandler godoc
+// @Summary Login user using Firebase ID Token
+// @Description This endpoint allows users to log in using a Firebase authentication token (e.g., Google Sign-In).
+// The token can be sent either through the Authorization header (Bearer <token>) or in the JSON body.
+// @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param request body dto.FirebaseLoginRequest true "Firebase Token"
-// @Success 200 {object} dto.UserLoginResponse "Login success"
-// @Failure 400 {object} utils.ErrorResponse "Invalid request"
-// @Failure 401 {object} utils.ErrorResponse "Invalid token"
-// @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/auth/firebase-login [post]
+// @Param Authorization header string false "Bearer Firebase ID Token"
+// @Param body body dto.FirebaseLoginRequest false "Firebase token in JSON body (optional)"
+// @Success 200 {object} map[string]interface{} "Login successful"
+// @Failure 400 {object} map[string]string "Invalid request body"
+// @Failure 401 {object} map[string]string "Unauthorized or invalid Firebase token"
+// @Router /auth/firebase-login [post]
 func (h *AuthHandler) FirebaseLoginHandler(c *gin.Context) {
 	var req dto.FirebaseLoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		req.Token = ""
+	}
+
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		req.Token = strings.Replace(authHeader, "Bearer ", "", 1)
+	}
+
+	if req.Token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing firebase token"})
 		return
 	}
 
