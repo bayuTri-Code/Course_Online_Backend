@@ -36,18 +36,13 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 // @Router /auth/firebase-login [post]
 func (h *AuthHandler) FirebaseLoginHandler(c *gin.Context) {
 	var req dto.FirebaseLoginRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		req.Token = ""
-	}
-
 	authHeader := c.GetHeader("Authorization")
+
 	if authHeader != "" {
 		req.Token = strings.Replace(authHeader, "Bearer ", "", 1)
-	}
-
-	if req.Token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing firebase token"})
+	} else if req.Token != "" {
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing Firebase token"})
 		return
 	}
 
