@@ -15,8 +15,14 @@ type User struct {
 	LastLogin    time.Time `json:"last_login"`
 	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`
 
-	Roles   []Role  `gorm:"many2many:user_roles;joinForeignKey:UserID;joinReferences:RoleID" json:"roles"`
-	Biodata Biodata `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"biodata"`
+	Roles            []Role            `gorm:"many2many:user_roles;joinForeignKey:UserID;joinReferences:RoleID" json:"roles"`
+	Biodata          Biodata           `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"biodata"`
+	Activities       []Activity        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"activities"`
+	CreatedCourses   []Course          `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"created_courses"`
+	CreatedQuizzes   []Quiz            `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"created_quizzes"`
+	Enrollments      []Enrollment      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"enrollments"`
+	QuizAttempts     []UserQuizAttempt `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"quiz_attempts"`
+	CompletedLessons []UserLesson      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"completed_lessons"`
 }
 
 type Role struct {
