@@ -66,4 +66,3 @@ func (h *AuthHandler) FirebaseLoginHandler(c *gin.Context) {
 	utils.JSONSuccess(c, userResponse, "Login success")
 }
 
-

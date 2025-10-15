@@ -55,7 +55,7 @@ func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, 
 	
 
 	var defaultRole models.Role
-	if err := s.Db.Where("name = ?", "user").First(&defaultRole).Error; err != nil {
+	if err := s.Db.Where("name = ?", "student").First(&defaultRole).Error; err != nil {
 		return nil, fmt.Errorf("default role not found: %v", err)
 	}
 

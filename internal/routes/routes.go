@@ -8,10 +8,7 @@ import (
 	"firebase.google.com/go/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	
 	"gorm.io/gorm"
-
-	
 )
 
 func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
@@ -21,7 +18,7 @@ func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
 	r.Use(gin.Recovery())
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://127.0.0.1:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://192.168.100.247:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -39,13 +36,16 @@ func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
 	authService := services.NewAuthService(db, app)
 	authHandler := handlers.NewAuthHandler(authService)
 
-	api := r.Group("/api")
+	authRoutes := r.Group("/api/auth")
 	{
-		api.POST("/auth/firebase-login", authHandler.FirebaseLoginHandler)
+		authRoutes.POST("/firebase-login", authHandler.FirebaseLoginHandler)
 	}
-	
 
+	// protectedRoutes := r.Group("/api")
+	// protectedRoutes.Use(middleware.FirebaseAuth(app))
+	// {
 
+	// }
 
 	return r
 }
