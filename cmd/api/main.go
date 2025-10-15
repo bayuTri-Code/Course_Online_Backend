@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"log"
 
+	_ "course_online_backend/cmd/api/docs"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	_"course_online_backend/cmd/api/docs"
 )
 
 // @title Course Online API
@@ -20,10 +21,12 @@ import (
 // @BasePath /
 func main() {
 	config.ConfigDb()
+	
 	db := database.PostgresConn()
-	app := config.InitFirebase()
+	
+	firebaseApp := config.InitFirebase()
 
-	r := routes.Routes(db, app)
+	r := routes.Routes(db, firebaseApp)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if config.DbConfig.ServerEnv == "production" {

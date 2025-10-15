@@ -9,6 +9,21 @@ type FirebaseLoginRequest struct {
 	Token string `json:"token"`
 }
 
+type UserBiodataRequest struct {
+	Name   string `json:"name" binding:"required"`
+	Age    int    `json:"age"`
+	School string `json:"school"`
+}
+
+type UserBiodataResponse struct {
+	Id             string          `json:"id"`
+	Name           string          `json:"name"`
+	ProfilePicture string          `json:"profile_picture"`
+	Age            int             `json:"age"`
+	School         string          `json:"school"`
+	User           UserResponseDTO `json:"user"`
+}
+
 type UserResponseDTO struct {
 	ID         string      `json:"id"`
 	FirebaseID string      `json:"firebaseId"`
