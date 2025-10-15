@@ -21,6 +21,7 @@ type Config struct {
 
 }
 
+
 var DbConfig *Config
 
 func ConfigDb() {
