@@ -5,9 +5,9 @@ import (
 	"course_online_backend/internal/models"
 	"fmt"
 	"time"
+	"gorm.io/gorm"
 
 	firebase "firebase.google.com/go/v4"
-	"gorm.io/gorm"
 )
 
 type AuthService struct {
@@ -52,7 +52,6 @@ func (s *AuthService) LoginWithFirebaseToken(tokenString string) (*models.User, 
 	if err != gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("failed to fetch user: %v", err)
 	}
-	
 
 	var defaultRole models.Role
 	if err := s.Db.Where("name = ?", "student").First(&defaultRole).Error; err != nil {

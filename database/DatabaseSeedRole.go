@@ -25,11 +25,11 @@ func SeedRoles(db *gorm.DB) error {
 				log.Printf("Failed to seed role %s: %v", role.Name, err)
 				return err
 			}
-			log.Printf("✓ Role '%s' seeded successfully", role.Name)
+			log.Printf("Role '%s' seeded successfully", role.Name)
 		} else if result.Error != nil {
 			return result.Error
 		} else {
-			log.Printf("○ Role '%s' already exists, skipping", role.Name)
+			log.Printf("Role '%s' already exists, skipping", role.Name)
 		}
 	}
 

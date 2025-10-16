@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"course_online_backend/internal/dto"
