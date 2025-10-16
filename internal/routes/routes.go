@@ -42,7 +42,7 @@ func Routes(db *gorm.DB, app *firebase.App) *gin.Engine {
 	}
 
 	// protectedRoutes := r.Group("/api")
-	// protectedRoutes.Use(middleware.FirebaseAuth(app))
+	// protectedRoutes.Use(middleware.FirebaseAuth(app))e
 	// {
 
 	// }
