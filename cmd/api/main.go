@@ -21,19 +21,18 @@ import (
 // @BasePath /
 func main() {
 	config.ConfigDb()
-
-	config.InitMinioConfig()
-
-	db := database.PostgresConn()
+	config.InitMinioConfig() 
 	firebaseApp := config.InitFirebase()
 
-	minioClient := database.MinioConn()
+	db := database.PostgresConn()
+	minioClient := database.MinioConn() 
+
 	if minioClient == nil {
-		log.Fatal("Failed to connect to MinIO")
+		log.Fatal("Failed to connect to MinIO. Please check your configuration or server.")
 	}
 
-	
-	r := routes.Routes(db, firebaseApp)
+	r := routes.Routes(db, firebaseApp, minioClient, config.MinioConfig.Bucket, config.MinioConfig.Endpoint)
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if config.DbConfig.ServerEnv == "production" {
@@ -42,13 +41,9 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	serverAddr := fmt.Sprintf("%s:%s",
-		config.DbConfig.ServerHost,
-		config.DbConfig.ServerPort,
-	)
+	serverAddr := fmt.Sprintf("%s:%s", config.DbConfig.ServerHost, config.DbConfig.ServerPort)
 
 	log.Printf("Server running on http://%s", serverAddr)
-	log.Println()
 
 	if err := r.Run(serverAddr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
