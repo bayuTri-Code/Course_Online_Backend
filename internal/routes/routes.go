@@ -41,7 +41,7 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	
 
 	authService := services.NewAuthService(db, app)
-	biodataService := services.NewBiodataService(db, minioClient, minioBucket, minioURL)
+	biodataService := services.NewBiodataService(db)
 
 	authHandler := handler.NewAuthHandler(authService)
 	biodataHandler := handler.NewBiodataHandler(biodataService)
@@ -60,9 +60,9 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 		biodata := protectedRoutes.Group("/profile")
 		{
 			biodata.POST("/biodata", biodataHandler.CreateBiodata)    
-			// biodata.GET("/biodata", biodataHandler.GetBiodata)        
-			// biodata.PUT("/biodata", biodataHandler.UpdateBiodata)      
-			// biodata.DELETE("/biodata", biodataHandler.DeleteBiodata)  
+			biodata.GET("/biodata", biodataHandler.GetBiodata)        
+			biodata.PUT("/biodata", biodataHandler.UpdateBiodata)      
+			biodata.DELETE("/biodata", biodataHandler.DeleteBiodata)  
 		}
 
 	

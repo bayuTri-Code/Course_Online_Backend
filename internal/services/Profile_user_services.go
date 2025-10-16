@@ -1,64 +1,141 @@
 package services
 
 import (
-	"context"
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/models"
+	"errors"
 	"fmt"
 	"mime/multipart"
 
-	"github.com/minio/minio-go/v7"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type BiodataService struct {
 	DB          *gorm.DB
-	MinioClient *minio.Client
-	BucketName  string
-	MinioURL    string
+	MinioHelper *MinioHelper
 }
 
-func NewBiodataService(db *gorm.DB, minioClient *minio.Client, bucketName, minioURL string) *BiodataService {
+func NewBiodataService(db *gorm.DB) *BiodataService {
 	return &BiodataService{
 		DB:          db,
-		MinioClient: minioClient,
-		BucketName:  bucketName,
-		MinioURL:    minioURL,
+		MinioHelper: &MinioHelper{},
 	}
 }
 
-func (s *BiodataService) CreateBiodata(userID string, req dto.CreateBiodataRequest, file multipart.File, fileHeader *multipart.FileHeader) (*models.Biodata, error) {
-	var profilePictureURL string
+func (s *BiodataService) CreateBiodata(firebaseUID string, req dto.CreateBiodataRequest, file multipart.File, fileHeader *multipart.FileHeader) (*models.Biodata, error) {
+	var user models.User
+	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
 
-	if file != nil {
-		objectName := fmt.Sprintf("profiles/%s_%s", userID, fileHeader.Filename)
-
-		_, err := s.MinioClient.PutObject(
-			context.Background(),
-			s.BucketName,
-			objectName,
-			file,
-			fileHeader.Size,
-			minio.PutObjectOptions{ContentType: fileHeader.Header.Get("Content-Type")},
-		)
+	profileURL := ""
+	if file != nil && fileHeader != nil {
+		uploadedURL, err := s.MinioHelper.UploadProfilePicture(file, fileHeader)
 		if err != nil {
-			return nil, fmt.Errorf("gagal upload ke MinIO: %v", err)
+			return nil, errors.New("failed to upload profile picture: " + err.Error())
 		}
-
-		profilePictureURL = fmt.Sprintf("%s/%s/%s", s.MinioURL, s.BucketName, objectName)
+		profileURL = uploadedURL
 	}
 
 	biodata := models.Biodata{
-		UserID:         userID,
+		ID:             uuid.New(),
+		UserID:         user.ID,
 		Name:           req.Name,
 		Age:            req.Age,
 		School:         req.School,
-		ProfilePicture: profilePictureURL,
+		ProfilePicture: profileURL,
 	}
 
 	if err := s.DB.Create(&biodata).Error; err != nil {
+		if profileURL != "" {
+			s.MinioHelper.DeleteProfilePicture(profileURL)
+		}
 		return nil, err
 	}
 
 	return &biodata, nil
+}
+
+func (s *BiodataService) GetBiodata(firebaseUID string) (*models.Biodata, error) {
+	var user models.User
+	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	var biodata models.Biodata
+	if err := s.DB.Where("user_id = ?", user.ID).First(&biodata).Error; err != nil {
+		return nil, err
+	}
+
+	return &biodata, nil
+}
+
+func (s *BiodataService) UpdateBiodata(firebaseUID string, req dto.UpdateBiodataRequest, file multipart.File, fileHeader *multipart.FileHeader) (*models.Biodata, error) {
+	var user models.User
+	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	var biodata models.Biodata
+	if err := s.DB.Where("user_id = ?", user.ID).First(&biodata).Error; err != nil {
+		return nil, err
+	}
+
+	if req.Name != "" {
+		biodata.Name = req.Name
+	}
+	if req.Age != 0 {
+		biodata.Age = req.Age
+	}
+	if req.School != "" {
+		biodata.School = req.School
+	}
+
+	if file != nil && fileHeader != nil {
+		uploadedURL, err := s.MinioHelper.UploadProfilePicture(file, fileHeader)
+		if err != nil {
+			return nil, errors.New("failed to upload profile picture: " + err.Error())
+		}
+
+		oldProfileURL := biodata.ProfilePicture
+		if oldProfileURL != "" {
+			if err := s.MinioHelper.DeleteProfilePicture(oldProfileURL); err != nil {
+				fmt.Printf("erorr to delete old file")
+				fmt.Printf("failed to delete old profile picture")
+			}
+		}
+
+		biodata.ProfilePicture = uploadedURL
+	}
+
+	if err := s.DB.Save(&biodata).Error; err != nil {
+		return nil, err
+	}
+
+	return &biodata, nil
+}
+
+func (s *BiodataService) DeleteBiodata(firebaseUID string) error {
+	var user models.User
+	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		return errors.New("user not found")
+	}
+
+	var biodata models.Biodata
+	if err := s.DB.Where("user_id = ?", user.ID).First(&biodata).Error; err != nil {
+		return err
+	}
+
+	if biodata.ProfilePicture != "" {
+		if err := s.MinioHelper.DeleteProfilePicture(biodata.ProfilePicture); err != nil {
+			fmt.Printf("failed to delete old profile picture")
+		}
+	}
+
+	if err := s.DB.Where("user_id = ?", user.ID).Delete(&models.Biodata{}).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
