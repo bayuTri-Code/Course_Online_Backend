@@ -66,6 +66,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/history/activity": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all activities belonging to the authenticated user. The user is identified using Firebase UID from the JWT token.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activity"
+                ],
+                "summary": "Get all user activities",
+                "responses": {
+                    "200": {
+                        "description": "Success get All activity",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ActivityResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/profile/biodata": {
             "get": {
                 "consumes": [
@@ -271,6 +323,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ActivityResponse": {
+            "type": "object",
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserSimpleDTO"
+                },
+                "when": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.BaseResponseBiodata": {
             "type": "object",
             "properties": {
@@ -305,6 +374,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.BiodataResponseForAct": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "school": {
                     "type": "string"
                 }
             }
@@ -354,6 +440,29 @@ const docTemplate = `{
                 },
                 "roles": {
                     "$ref": "#/definitions/models.Role"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserSimpleDTO": {
+            "type": "object",
+            "properties": {
+                "biodata": {
+                    "$ref": "#/definitions/dto.BiodataResponseForAct"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "username": {
                     "type": "string"
