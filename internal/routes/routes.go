@@ -43,7 +43,7 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	biodataService := services.NewBiodataService(db)
 
 	authHandler := handler.NewAuthHandler(authService, activityService)
-	biodataHandler := handler.NewBiodataHandler(biodataService)
+	biodataHandler := handler.NewBiodataHandler(biodataService, activityService)
 	ActivityHandler := handler.NewActivityHandler(activityService)
 
 	publicRoutes := r.Group("/api")
