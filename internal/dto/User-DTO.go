@@ -5,29 +5,9 @@ import (
 	"time"
 )
 
+// login dto
 type FirebaseLoginRequest struct {
 	Token string `json:"token"`
-}
-
-type CreateBiodataRequest struct {
-	Name   string                `form:"name" binding:"required"`
-	Age    int                   `form:"age" binding:"required"`
-	School string                `form:"school" binding:"required"`
-}
-
-type UpdateBiodataRequest struct {
-	Name   string                `form:"name"`
-	Age    int                   `form:"age"`
-	School string                `form:"school"`
-}
-
-type BiodataResponse struct {
-	ID             string `json:"id"`
-	UserID         string `json:"user_id"`
-	Name           string `json:"name"`
-	Age            int    `json:"age"`
-	School         string `json:"school"`
-	ProfilePicture string `json:"profile_picture"`
 }
 
 type UserResponseDTO struct {
@@ -45,4 +25,32 @@ type UserLoginResponse struct {
 	Status  string          `json:"status"`
 	Message string          `json:"message"`
 	Data    UserResponseDTO `json:"data"`
+}
+
+// biodata dto
+type CreateBiodataRequest struct {
+	Name   string `form:"name" binding:"required"`
+	Age    int    `form:"age" binding:"required"`
+	School string `form:"school" binding:"required"`
+}
+
+type UpdateBiodataRequest struct {
+	Name   string `form:"name"`
+	Age    int    `form:"age"`
+	School string `form:"school"`
+}
+
+type BiodataResponse struct {
+	ID             string `json:"id"`
+	UserID         string `json:"user_id"`
+	Name           string `json:"name"`
+	Age            int    `json:"age"`
+	School         string `json:"school"`
+	ProfilePicture string `json:"profile_picture"`
+}
+
+type BaseResponseBiodata struct {
+	Status  bool            `json:"status" example:"true"`
+	Message string          `json:"message"`
+	Data    BiodataResponse `json:"data"`
 }
