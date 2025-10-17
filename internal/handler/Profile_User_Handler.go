@@ -4,6 +4,7 @@ import (
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/services"
 	"course_online_backend/internal/utils"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 
@@ -12,10 +13,14 @@ import (
 
 type BiodataHandler struct {
 	BiodataService *services.BiodataService
+	Activity       *services.ActivityService
 }
 
-func NewBiodataHandler(svc *services.BiodataService) *BiodataHandler {
-	return &BiodataHandler{BiodataService: svc}
+func NewBiodataHandler(svc *services.BiodataService, Act *services.ActivityService) *BiodataHandler {
+	return &BiodataHandler{
+		BiodataService: svc,
+		Activity:       Act,
+	}
 }
 
 // @Summary Create Biodata
@@ -66,7 +71,15 @@ func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 	}
 
 	utils.JSONCreated(ctx, createBiodata, "succses")
+	go func() {
+	user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+	if err != nil {
+		fmt.Printf("User not found")
+	}
+	_ = c.Activity.LogActivity(user.ID, "User created biodata")
+}()
 }
+
 
 // @Summary Get Biodata
 // @Tags Profile
@@ -151,6 +164,13 @@ func (c *BiodataHandler) UpdateBiodata(ctx *gin.Context) {
 	}
 
 	utils.JSONSuccess(ctx, updateBiodata, "Succes Update biodata")
+		go func() {
+	user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+	if err != nil {
+		fmt.Printf("User not found")
+	}
+	_ = c.Activity.LogActivity(user.ID, "User Update biodata")
+}()
 }
 
 // @Summary Delete Biodata
@@ -178,5 +198,13 @@ func (c *BiodataHandler) DeleteBiodata(ctx *gin.Context) {
 		Status:  true,
 		Message: "Biodata successfully deleted",
 	})
+
+		go func() {
+	user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+	if err != nil {
+		fmt.Printf("User not found")
+	}
+	_ = c.Activity.LogActivity(user.ID, "Biodata deleted")
+}()
 
 }
