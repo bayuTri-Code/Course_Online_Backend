@@ -3,33 +3,34 @@ package handler
 import (
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/services"
-	"net/http"
+	"course_online_backend/internal/utils"
 	"mime/multipart"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type BiodataController struct {
+type BiodataHandler struct {
 	BiodataService *services.BiodataService
 }
 
-func NewBiodataHandler(svc *services.BiodataService) *BiodataController {
-	return &BiodataController{BiodataService: svc}
+func NewBiodataHandler(svc *services.BiodataService) *BiodataHandler {
+	return &BiodataHandler{BiodataService: svc}
 }
 
 // @Summary Create Biodata
 // @Tags Profile
 // @Accept multipart/form-data
 // @Produce json
-// @Param name formData string true
-// @Param age formData int true
-// @Param school formData string true
-// @Param profile_picture formData file false
-// @Success 200 {object} dto.BiodataResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /profile/biodata [post]
-func (c *BiodataController) CreateBiodata(ctx *gin.Context) {
+// @Param name formData string true "User name"
+// @Param age formData int true "User age"
+// @Param school formData string true "User school"
+// @Param profile_picture formData file false "Profile picture upload"
+// @Success 200 {object} dto.BaseResponseBiodata "Biodata successfully created"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request body"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Router /api/profile/biodata [post]
+func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 	firebaseUID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -55,23 +56,28 @@ func (c *BiodataController) CreateBiodata(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.BiodataResponse{
+	createBiodata := dto.BiodataResponse{
 		ID:             biodata.ID.String(),
 		UserID:         biodata.UserID.String(),
 		Name:           biodata.Name,
 		Age:            biodata.Age,
 		School:         biodata.School,
 		ProfilePicture: biodata.ProfilePicture,
-	})
+	}
+
+	utils.JSONCreated(ctx, createBiodata, "succses")
 }
 
 // @Summary Get Biodata
 // @Tags Profile
+// @Accept json
 // @Produce json
-// @Success 200 {object} dto.BiodataResponse
-// @Failure 401 {object} map[string]string
-// @Router /profile/biodata [get]
-func (c *BiodataController) GetBiodata(ctx *gin.Context) {
+// @Success 200 {object} dto.BaseResponseBiodata "Get Biodata successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponse "Biodata not found"
+// @Router /api/profile/biodata [get]
+func (c *BiodataHandler) GetBiodata(ctx *gin.Context) {
 	firebaseUID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -84,29 +90,32 @@ func (c *BiodataController) GetBiodata(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.BiodataResponse{
+	GetBiodata := dto.BiodataResponse{
 		ID:             biodata.ID.String(),
 		UserID:         biodata.UserID.String(),
 		Name:           biodata.Name,
 		Age:            biodata.Age,
 		School:         biodata.School,
 		ProfilePicture: biodata.ProfilePicture,
-	})
+	}
+
+	utils.JSONSuccess(ctx, GetBiodata, "Succses get data")
 }
 
 // @Summary Update Biodata
 // @Tags Profile
 // @Accept multipart/form-data
 // @Produce json
-// @Param name formData string false
-// @Param age formData int false
-// @Param school formData string false
-// @Param profile_picture formData file false
-// @Success 200 {object} dto.BiodataResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /profile/biodata [put]
-func (c *BiodataController) UpdateBiodata(ctx *gin.Context) {
+// @Param name formData string false "User name (optional)"
+// @Param age formData int false "User age (optional)"
+// @Param school formData string false "User school (optional)"
+// @Param profile_picture formData file false "Profile picture upload (optional)"
+// @Success 200 {object} dto.BaseResponseBiodata "Biodata successfully updated"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request body"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponse "Biodata not found"
+// @Router /api/profile/biodata [put]
+func (c *BiodataHandler) UpdateBiodata(ctx *gin.Context) {
 	firebaseUID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -132,23 +141,28 @@ func (c *BiodataController) UpdateBiodata(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.BiodataResponse{
+	updateBiodata := dto.BiodataResponse{
 		ID:             biodata.ID.String(),
 		UserID:         biodata.UserID.String(),
 		Name:           biodata.Name,
 		Age:            biodata.Age,
 		School:         biodata.School,
 		ProfilePicture: biodata.ProfilePicture,
-	})
+	}
+
+	utils.JSONSuccess(ctx, updateBiodata, "Succes Update biodata")
 }
 
 // @Summary Delete Biodata
 // @Tags Profile
+// @Accept json
 // @Produce json
-// @Success 200 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /profile/biodata [delete]
-func (c *BiodataController) DeleteBiodata(ctx *gin.Context) {
+// @Success 200 {object} utils.BaseResponse "Biodata successfully deleted"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponse "Biodata not found"
+// @Router /api/profile/biodata [delete]
+func (c *BiodataHandler) DeleteBiodata(ctx *gin.Context) {
 	firebaseUID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -160,5 +174,9 @@ func (c *BiodataController) DeleteBiodata(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Biodata deleted successfully"})
+	ctx.JSON(http.StatusOK, utils.BaseResponse{
+		Status:  true,
+		Message: "Biodata successfully deleted",
+	})
+
 }

@@ -30,10 +30,10 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 // @Produce json
 // @Param Authorization header string false "Bearer Firebase ID Token"
 // @Param body body dto.FirebaseLoginRequest false "Firebase token in JSON body (optional)"
-// @Success 200 {object} map[string]interface{} "Login successful"
-// @Failure 400 {object} map[string]string "Invalid request body"
-// @Failure 401 {object} map[string]string "Unauthorized or invalid Firebase token"
-// @Router /auth/firebase-login [post]
+// @Success 200 {object} dto.UserLoginResponse "Login successful"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request body"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized or invalid Firebase token"
+// @Router /api/auth/firebase-login [post]
 func (h *AuthHandler) FirebaseLoginHandler(c *gin.Context) {
 	var req dto.FirebaseLoginRequest
 	authHeader := c.GetHeader("Authorization")

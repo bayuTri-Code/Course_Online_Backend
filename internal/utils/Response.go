@@ -6,6 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type BaseResponse struct {
+	Status  bool      `json:"status"`           
+	Message string      `json:"message,omitempty"`
+}
+
 type StandardResponse struct {
 	Status  string      `json:"status"`           
 	Message string      `json:"message,omitempty"`
@@ -14,10 +19,11 @@ type StandardResponse struct {
 }
 
 type ErrorResponse struct {
-	Status  string      `json:"status"`           
-	Message string      `json:"message,omitempty"`
-	Errors  interface{} `json:"errors,omitempty"` 
+	Status  string      `json:"status" example:"error"`
+	Message string      `json:"message" example:"Invalid request body"`
+	Errors  interface{} `json:"errors,omitempty"`
 }
+
 
 func JSONSuccess(c *gin.Context, data interface{}, message string) {
 	c.JSON(http.StatusOK, StandardResponse{
