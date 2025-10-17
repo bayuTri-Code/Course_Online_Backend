@@ -42,7 +42,7 @@ type UserRole struct {
 
 type Biodata struct {
 	ID             uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	UserID         uuid.UUID `json:"user_id" gorm:"type:uuid;not null"` 
+	UserID         uuid.UUID `json:"user_id" gorm:"type:uuid;not null;unique"` 
 	Name           string    `json:"name"`
 	Age            int       `json:"age"`
 	School         string    `json:"school"`
