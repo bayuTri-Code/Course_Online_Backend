@@ -16,6 +16,16 @@ func NewActivityHandler(svc *services.ActivityService) *ActivityHandler {
 	return &ActivityHandler{ActivityService: svc}
 }
 
+// GetAllActivity godoc
+// @Summary Get all user activities
+// @Description Retrieve all activities belonging to the authenticated user. The user is identified using Firebase UID from the JWT token.
+// @Tags Activity
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} utils.BaseResponse{data=[]dto.ActivityResponse} "Success get All activity"
+// @Failure 401 {object} utils.BaseResponse "Unauthorized"
+// @Failure 500 {object} utils.BaseResponse "Internal Server Error"
+// @Router /api/history/activity [get]
 func (h *ActivityHandler) GetAllActivity(ctx *gin.Context) {
 	firebaseUID, exists := ctx.Get("user_id")
 	if !exists {
