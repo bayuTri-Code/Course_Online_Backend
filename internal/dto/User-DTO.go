@@ -49,6 +49,13 @@ type BiodataResponse struct {
 	ProfilePicture string `json:"profile_picture"`
 }
 
+type BiodataResponseForAct struct {
+	Name           string `json:"name"`
+	Age            int    `json:"age"`
+	School         string `json:"school"`
+	ProfilePicture string `json:"profile_picture"`
+}
+
 type BaseResponseBiodata struct {
 	Status  bool            `json:"status" example:"true"`
 	Message string          `json:"message"`
