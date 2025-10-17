@@ -14,11 +14,14 @@ import (
 )
 
 type AuthHandler struct {
-	Service *services.AuthService
+	Service  *services.AuthService
+	Activity *services.ActivityService
 }
 
-func NewAuthHandler(service *services.AuthService) *AuthHandler {
-	return &AuthHandler{Service: service}
+func NewAuthHandler(service *services.AuthService, activityServices *services.ActivityService ) *AuthHandler {
+	return &AuthHandler{Service: service,
+	Activity: activityServices,
+	}
 }
 
 // FirebaseLoginHandler godoc
@@ -64,5 +67,7 @@ func (h *AuthHandler) FirebaseLoginHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, userResponse, "Login success")
+	go func() {
+		_ = h.Activity.LogActivity(user.ID, "User logged in")
+	}()
 }
-
