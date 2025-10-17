@@ -1,5 +1,16 @@
 basePath: /
 definitions:
+  dto.ActivityResponse:
+    properties:
+      activity_name:
+        type: string
+      id:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserSimpleDTO'
+      when:
+        type: string
+    type: object
   dto.BaseResponseBiodata:
     properties:
       data:
@@ -23,6 +34,17 @@ definitions:
       school:
         type: string
       user_id:
+        type: string
+    type: object
+  dto.BiodataResponseForAct:
+    properties:
+      age:
+        type: integer
+      name:
+        type: string
+      profile_picture:
+        type: string
+      school:
         type: string
     type: object
   dto.FirebaseLoginRequest:
@@ -55,6 +77,21 @@ definitions:
         type: string
       roles:
         $ref: '#/definitions/models.Role'
+      username:
+        type: string
+    type: object
+  dto.UserSimpleDTO:
+    properties:
+      biodata:
+        $ref: '#/definitions/dto.BiodataResponseForAct'
+      email:
+        type: string
+      id:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
       username:
         type: string
     type: object
@@ -123,6 +160,37 @@ paths:
       summary: Login user using Firebase ID Token
       tags:
       - Authentication
+  /api/history/activity:
+    get:
+      description: Retrieve all activities belonging to the authenticated user. The
+        user is identified using Firebase UID from the JWT token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get All activity
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ActivityResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all user activities
+      tags:
+      - Activity
   /api/profile/biodata:
     delete:
       consumes:
