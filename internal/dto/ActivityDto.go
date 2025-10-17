@@ -1,0 +1,18 @@
+package dto
+
+import "time"
+
+type ActivityResponse struct {
+	ID           string        `json:"id"`
+	ActivityName string        `json:"activity_name"`
+	When         time.Time     `json:"when"`
+	User         UserSimpleDTO `json:"user"`
+}
+
+type UserSimpleDTO struct {
+	ID       string   `json:"id"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Roles    []string `json:"roles"`
+	Biodata  *BiodataResponseForAct `json:"biodata,omitempty"`
+}
