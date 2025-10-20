@@ -61,3 +61,24 @@ type BaseResponseBiodata struct {
 	Message string          `json:"message"`
 	Data    BiodataResponse `json:"data"`
 }
+
+
+
+//user Management
+type UpdateUserRequest struct {
+	Username     string `json:"name"`
+	EmailAddress string `json:"email"`
+	IsActive     *bool   `json:"is_active"`
+	RoleIDs      []string `json:"role_ids" example:"role_id"`
+}
+
+type BaseResponse struct {
+	Status  bool        `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type BaseResponseDelete struct {
+	Status  bool        `json:"status"`
+	Message string      `json:"message"`
+}

@@ -16,9 +16,13 @@ import (
 
 // @title Course Online API
 // @version 1.0
-// @description API documentation for recipe API
-// @host http://192.168.100.247:7070
+// @description API documentation for Course Online
+// @host 192.168.100.247:7070
 // @BasePath /
+// @schemes http
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	config.ConfigDb()
 	config.InitMinioConfig() 
