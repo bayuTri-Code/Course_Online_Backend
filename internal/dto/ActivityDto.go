@@ -16,3 +16,9 @@ type UserSimpleDTO struct {
 	Roles    []string `json:"roles"`
 	Biodata  *BiodataResponseForAct `json:"biodata,omitempty"`
 }
+
+type BaseResponseActivityByUserId struct {
+	Status  bool            `json:"status" example:"true"`
+	Message string          `json:"message"`
+	Data    ActivityResponse `json:"data"`
+}

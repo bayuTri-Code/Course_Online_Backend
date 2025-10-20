@@ -11,6 +11,24 @@ definitions:
       when:
         type: string
     type: object
+  dto.BaseResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+  dto.BaseResponseActivityByUserId:
+    properties:
+      data:
+        $ref: '#/definitions/dto.ActivityResponse'
+      message:
+        type: string
+      status:
+        example: true
+        type: boolean
+    type: object
   dto.BaseResponseBiodata:
     properties:
       data:
@@ -19,6 +37,13 @@ definitions:
         type: string
       status:
         example: true
+        type: boolean
+    type: object
+  dto.BaseResponseDelete:
+    properties:
+      message:
+        type: string
+      status:
         type: boolean
     type: object
   dto.BiodataResponse:
@@ -51,6 +76,21 @@ definitions:
     properties:
       token:
         type: string
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role_ids:
+        example:
+        - role_id
+        items:
+          type: string
+        type: array
     type: object
   dto.UserLoginResponse:
     properties:
@@ -95,11 +135,291 @@ definitions:
       username:
         type: string
     type: object
+  models.Activity:
+    properties:
+      activity_name:
+        type: string
+      id:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: string
+      when:
+        type: string
+    type: object
+  models.Biodata:
+    properties:
+      age:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      school:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Course:
+    properties:
+      course_type:
+        $ref: '#/definitions/models.CourseType'
+      course_type_id:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      creator:
+        $ref: '#/definitions/models.User'
+      description:
+        type: string
+      enrollments:
+        items:
+          $ref: '#/definitions/models.Enrollment'
+        type: array
+      id:
+        type: string
+      is_progress_limited:
+        type: boolean
+      modules:
+        items:
+          $ref: '#/definitions/models.Module'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      quizzes:
+        items:
+          $ref: '#/definitions/models.Quiz'
+        type: array
+      zoom:
+        $ref: '#/definitions/models.Zoom'
+    type: object
+  models.CourseType:
+    properties:
+      courses:
+        items:
+          $ref: '#/definitions/models.Course'
+        type: array
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  models.Enrollment:
+    properties:
+      completed_datetime:
+        type: string
+      course:
+        $ref: '#/definitions/models.Course'
+      course_id:
+        type: string
+      enrollment_datetime:
+        type: string
+      id:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: string
+    type: object
+  models.Lesson:
+    properties:
+      course_order:
+        type: integer
+      id:
+        type: string
+      module:
+        $ref: '#/definitions/models.Module'
+      module_id:
+        type: string
+      name:
+        type: string
+      user_completions:
+        items:
+          $ref: '#/definitions/models.UserLesson'
+        type: array
+      video_details:
+        type: string
+      video_id:
+        type: string
+    type: object
+  models.Module:
+    properties:
+      course:
+        $ref: '#/definitions/models.Course'
+      course_id:
+        type: string
+      id:
+        type: string
+      lessons:
+        items:
+          $ref: '#/definitions/models.Lesson'
+        type: array
+      name:
+        type: string
+      number:
+        type: integer
+    type: object
+  models.Quiz:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/models.UserQuizAttempt'
+        type: array
+      course:
+        $ref: '#/definitions/models.Course'
+      course_id:
+        type: string
+      created_by:
+        type: string
+      creator:
+        $ref: '#/definitions/models.User'
+      id:
+        type: string
+      is_pass_required:
+        type: boolean
+      min_pass_score:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+      questions:
+        items:
+          $ref: '#/definitions/models.QuizQuestion'
+        type: array
+    type: object
+  models.QuizAnswer:
+    properties:
+      answer_text:
+        type: string
+      id:
+        type: string
+      is_correct:
+        type: boolean
+      question:
+        $ref: '#/definitions/models.QuizQuestion'
+      question_id:
+        type: string
+    type: object
+  models.QuizQuestion:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/models.QuizAnswer'
+        type: array
+      id:
+        type: string
+      question_title:
+        type: string
+      quiz:
+        $ref: '#/definitions/models.Quiz'
+      quiz_id:
+        type: string
+    type: object
   models.Role:
     properties:
       id:
         type: string
       name:
+        type: string
+    type: object
+  models.User:
+    properties:
+      activities:
+        items:
+          $ref: '#/definitions/models.Activity'
+        type: array
+      biodata:
+        $ref: '#/definitions/models.Biodata'
+      completed_lessons:
+        items:
+          $ref: '#/definitions/models.UserLesson'
+        type: array
+      created_at:
+        type: string
+      created_courses:
+        items:
+          $ref: '#/definitions/models.Course'
+        type: array
+      created_quizzes:
+        items:
+          $ref: '#/definitions/models.Quiz'
+        type: array
+      email_address:
+        type: string
+      enrollments:
+        items:
+          $ref: '#/definitions/models.Enrollment'
+        type: array
+      firebase_uid:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_login:
+        type: string
+      quiz_attempts:
+        items:
+          $ref: '#/definitions/models.UserQuizAttempt'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      username:
+        type: string
+    type: object
+  models.UserLesson:
+    properties:
+      completed_datetime:
+        type: string
+      id:
+        type: string
+      lesson:
+        $ref: '#/definitions/models.Lesson'
+      lesson_id:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: string
+    type: object
+  models.UserQuizAttempt:
+    properties:
+      attempt_datetime:
+        type: string
+      id:
+        type: string
+      quiz:
+        $ref: '#/definitions/models.Quiz'
+      quiz_id:
+        type: string
+      score_achieved:
+        type: integer
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: string
+    type: object
+  models.Zoom:
+    properties:
+      course:
+        $ref: '#/definitions/models.Course'
+      course_id:
+        type: string
+      id:
+        type: string
+      link:
         type: string
     type: object
   utils.BaseResponse:
@@ -113,19 +433,48 @@ definitions:
     properties:
       errors: {}
       message:
-        example: Invalid request body
+        example: Server Internal error 500
         type: string
       status:
-        example: error
-        type: string
+        example: false
+        type: boolean
     type: object
-host: http://192.168.100.247:7070
+host: 192.168.100.247:7070
 info:
   contact: {}
-  description: API documentation for recipe API
+  description: API documentation for Course Online
   title: Course Online API
   version: "1.0"
 paths:
+  /activity/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil semua aktivitas berdasarkan ID user yang diberikan
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get activity by user
+          schema:
+            $ref: '#/definitions/dto.BaseResponseActivityByUserId'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get Activity By User ID
+      tags:
+      - Activity
   /api/auth/firebase-login:
     post:
       consumes:
@@ -220,6 +569,7 @@ paths:
     get:
       consumes:
       - application/json
+      description: Get biodata of the currently authenticated user (token required)
       produces:
       - application/json
       responses:
@@ -239,7 +589,9 @@ paths:
           description: Biodata not found
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      summary: Get Biodata
+      security:
+      - BearerAuth: []
+      summary: Get My Biodata
       tags:
       - Profile
     post:
@@ -325,4 +677,125 @@ paths:
       summary: Update Biodata
       tags:
       - Profile
+  /api/user:
+    get:
+      description: Retrieve a list of all users with their basic info, biodata, and
+        roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All users retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.User'
+                  type: array
+              type: object
+        "500":
+          description: Failed to get users
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all users
+      tags:
+      - Users
+  /api/user/{id}:
+    delete:
+      description: Delete a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            $ref: '#/definitions/dto.BaseResponseDelete'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      description: Retrieve user details including biodata, roles, and other relations
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.BaseResponse'
+      summary: Get user by ID
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user info, roles, and biodata by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User data to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/dto.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Update user
+      tags:
+      - Users
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

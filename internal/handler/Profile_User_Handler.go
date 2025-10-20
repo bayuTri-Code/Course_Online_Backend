@@ -81,8 +81,10 @@ func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 }
 
 
-// @Summary Get Biodata
+// @Summary Get My Biodata
 // @Tags Profile
+// @Description Get biodata of the currently authenticated user (token required)
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Success 200 {object} dto.BaseResponseBiodata "Get Biodata successfully"
