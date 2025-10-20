@@ -19,8 +19,8 @@ type StandardResponse struct {
 }
 
 type ErrorResponse struct {
-	Status  string      `json:"status" example:"error"`
-	Message string      `json:"message" example:"Invalid request body"`
+	Status  bool      `json:"status" example:"false"`
+	Message string      `json:"message" example:"Server Internal error 500"`
 	Errors  interface{} `json:"errors,omitempty"`
 }
 
@@ -43,7 +43,7 @@ func JSONCreated(c *gin.Context, data interface{}, message string) {
 
 func JSONError(c *gin.Context, message string, code int, errors interface{}) {
 	c.JSON(code, ErrorResponse{
-		Status:  "error",
+		Status:  false,
 		Message: message,
 		Errors: errors,
 	})
