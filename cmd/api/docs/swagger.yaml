@@ -11,6 +11,13 @@ definitions:
       when:
         type: string
     type: object
+  dto.AdminDashboardResponse:
+    properties:
+      total_courses:
+        type: integer
+      total_users:
+        type: integer
+    type: object
   dto.BaseResponse:
     properties:
       data: {}
@@ -66,6 +73,29 @@ definitions:
     properties:
       token:
         type: string
+    type: object
+  dto.InstructorDashboardResponse:
+    properties:
+      message:
+        type: string
+      my_courses:
+        type: integer
+    type: object
+  dto.StudentDashboardResponse:
+    properties:
+      enrolled_courses:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.SuperAdminDashboardResponse:
+    properties:
+      system_status:
+        type: string
+      total_instructors:
+        type: integer
+      total_students:
+        type: integer
     type: object
   dto.UpdateUserRequest:
     properties:
@@ -419,6 +449,14 @@ definitions:
       status:
         type: boolean
     type: object
+  utils.BaseResponsedata:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
   utils.ErrorResponse:
     properties:
       errors: {}
@@ -470,6 +508,146 @@ paths:
       summary: Login user using Firebase ID Token
       tags:
       - Authentication
+  /api/dashboard/admin:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve overview data for Admin, including total users and total
+        courses.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AdminDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Admin Dashboard
+      tags:
+      - Dashboard
+  /api/dashboard/instructor:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve dashboard data for Instructor, including number of created
+        courses.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.InstructorDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Instructor Dashboard
+      tags:
+      - Dashboard
+  /api/dashboard/student:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve dashboard data for Student, including enrolled courses
+        and motivational message.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.StudentDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Student Dashboard
+      tags:
+      - Dashboard
+  /api/dashboard/super_admin:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve overview data for Super Admin, including total instructors
+        and students.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SuperAdminDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Super Admin Dashboard
+      tags:
+      - Dashboard
   /api/history/All-activity:
     get:
       description: Retrieve all activities belonging to the authenticated user based
