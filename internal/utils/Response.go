@@ -7,23 +7,27 @@ import (
 )
 
 type BaseResponse struct {
-	Status  bool      `json:"status"`           
-	Message string      `json:"message,omitempty"`
+	Status  bool   `json:"status"`
+	Message string `json:"message,omitempty"`
+}
+type BaseResponsedata struct {
+	Status  bool   `json:"status"`
+	Message string `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type StandardResponse struct {
-	Status  bool      `json:"status"`           
+	Status  bool        `json:"status"`
 	Message string      `json:"message,omitempty"`
-	Data    interface{} `json:"data,omitempty"`   
-	Errors  interface{} `json:"errors,omitempty"` 
-}
-
-type ErrorResponse struct {
-	Status  bool      `json:"status" example:"false"`
-	Message string      `json:"message" example:"Server Internal error 500"`
+	Data    interface{} `json:"data,omitempty"`
 	Errors  interface{} `json:"errors,omitempty"`
 }
 
+type ErrorResponse struct {
+	Status  bool        `json:"status" example:"false"`
+	Message string      `json:"message" example:"Server Internal error 500"`
+	Errors  interface{} `json:"errors,omitempty"`
+}
 
 func JSONSuccess(c *gin.Context, data interface{}, message string) {
 	c.JSON(http.StatusOK, StandardResponse{
@@ -45,10 +49,9 @@ func JSONError(c *gin.Context, message string, code int, errors interface{}) {
 	c.JSON(code, ErrorResponse{
 		Status:  false,
 		Message: message,
-		Errors: errors,
+		Errors:  errors,
 	})
 }
-
 
 func JSONNotFound(c *gin.Context, message string) {
 	if message == "" {
@@ -69,4 +72,3 @@ func JSONUnauthorized(c *gin.Context, message string) {
 		Message: message,
 	})
 }
-
