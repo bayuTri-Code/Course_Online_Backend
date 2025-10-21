@@ -12,7 +12,7 @@ type BaseResponse struct {
 }
 
 type StandardResponse struct {
-	Status  string      `json:"status"`           
+	Status  bool      `json:"status"`           
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`   
 	Errors  interface{} `json:"errors,omitempty"` 
@@ -27,7 +27,7 @@ type ErrorResponse struct {
 
 func JSONSuccess(c *gin.Context, data interface{}, message string) {
 	c.JSON(http.StatusOK, StandardResponse{
-		Status:  "success",
+		Status:  true,
 		Message: message,
 		Data:    data,
 	})
@@ -35,7 +35,7 @@ func JSONSuccess(c *gin.Context, data interface{}, message string) {
 
 func JSONCreated(c *gin.Context, data interface{}, message string) {
 	c.JSON(http.StatusCreated, StandardResponse{
-		Status:  "success",
+		Status:  true,
 		Message: message,
 		Data:    data,
 	})
@@ -55,7 +55,7 @@ func JSONNotFound(c *gin.Context, message string) {
 		message = "Resource not found"
 	}
 	c.JSON(http.StatusNotFound, StandardResponse{
-		Status:  "error",
+		Status:  false,
 		Message: message,
 	})
 }
@@ -65,7 +65,7 @@ func JSONUnauthorized(c *gin.Context, message string) {
 		message = "Unauthorized"
 	}
 	c.JSON(http.StatusUnauthorized, StandardResponse{
-		Status:  "error",
+		Status:  false,
 		Message: message,
 	})
 }
