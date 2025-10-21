@@ -76,7 +76,7 @@ func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 	if err != nil {
 		fmt.Printf("User not found")
 	}
-	_ = c.Activity.LogActivity(user.ID, "User created biodata")
+	_ = c.Activity.LogActivity(user.ID, "biodata created")
 }()
 }
 
@@ -171,7 +171,7 @@ func (c *BiodataHandler) UpdateBiodata(ctx *gin.Context) {
 	if err != nil {
 		fmt.Printf("User not found")
 	}
-	_ = c.Activity.LogActivity(user.ID, "User Update biodata")
+	_ = c.Activity.LogActivity(user.ID, "biodata updated")
 }()
 }
 

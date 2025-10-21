@@ -10,11 +10,15 @@ import (
 )
 
 type UserHandler struct {
-	UserService *services.UserService
+	UserService     *services.UserService
+	ActivityService *services.ActivityService
 }
 
-func NewUserHandler(us *services.UserService) *UserHandler {
-	return &UserHandler{UserService: us}
+func NewUserHandler(us *services.UserService, act *services.ActivityService) *UserHandler {
+	return &UserHandler{
+		UserService:     us,
+		ActivityService: act,
+	}
 }
 
 // GetAllUsers godoc
@@ -40,6 +44,15 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 		Message: "success",
 		Data:    users,
 	})
+
+	// if firebaseUID, exists := c.Get("user_id"); exists {
+	// 	go func() {
+	// 		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+	// 		if err == nil {
+	// 			_ = h.ActivityService.LogActivity(user.ID, "Viewed all users list")
+	// 		}
+	// 	}()
+	// }
 }
 
 // GetUserByID godoc
@@ -68,6 +81,15 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		Message: "success",
 		Data:    user,
 	})
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			fUser, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err == nil {
+				_ = h.ActivityService.LogActivity(fUser.ID, "Viewed user details: "+id)
+			}
+		}()
+	}
 }
 
 // UpdateUser godoc
@@ -120,8 +142,16 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		Message: "user updated successfully",
 		Data:    user,
 	})
-}
 
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			fUser, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err == nil {
+				_ = h.ActivityService.LogActivity(fUser.ID, "Updated user: "+id)
+			}
+		}()
+	}
+}
 
 // DeleteUser godoc
 // @Summary Delete user
@@ -134,6 +164,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Router /api/user/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
+
 	if err := h.UserService.DeleteUser(id); err != nil {
 		c.JSON(http.StatusInternalServerError, dto.BaseResponseDelete{
 			Status:  false,
@@ -146,4 +177,13 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		Status:  true,
 		Message: "user deleted successfully",
 	})
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			fUser, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err == nil {
+				_ = h.ActivityService.LogActivity(fUser.ID, "Deleted user: "+id)
+			}
+		}()
+	}
 }

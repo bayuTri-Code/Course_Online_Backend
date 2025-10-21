@@ -43,8 +43,8 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	activityService := services.NewActivityService(db)
 	biodataService := services.NewBiodataService(db)
 
-	authHandler := handler.NewAuthHandler(authService, activityService) 
-	UserHandler := handler.NewUserHandler(userServices) 
+	authHandler := handler.NewAuthHandler(authService, activityService)
+	UserHandler := handler.NewUserHandler(userServices, activityService)
 	biodataHandler := handler.NewBiodataHandler(biodataService, activityService)
 	ActivityHandler := handler.NewActivityHandler(activityService)
 
@@ -66,11 +66,17 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 			biodata.PUT("/biodata", biodataHandler.UpdateBiodata)
 			biodata.DELETE("/biodata", biodataHandler.DeleteBiodata)
 		}
+		
 		activity := protectedRoutes.Group("/history")
 		{
 			activity.GET("/All-activity", ActivityHandler.GetAllActivity)
-			activity.GET("/ByUser-activity/:id", ActivityHandler.GetActivityByUser)
+			activity.GET("/ByUser-activity/:id", ActivityHandler.GetActivityByUserId)
+			activity.GET("/Recent-activity", ActivityHandler.GetRecentActivities)
+			activity.GET("/Search-activity", ActivityHandler.SearchActivity)
+			activity.GET("/Summary-activity/:id", ActivityHandler.GetActivitySummary)
+			activity.GET("/ByRole-activity/:role", ActivityHandler.GetActivityByRole)
 		}
+
 		user := protectedRoutes.Group("/user")
 		{
 			user.GET("/", UserHandler.GetAllUsers)
@@ -78,7 +84,7 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 			user.PUT("/:id", UserHandler.UpdateUser)
 			user.DELETE("/:id", UserHandler.DeleteUser)
 		}
-		
+
 	}
 	return r
 }
