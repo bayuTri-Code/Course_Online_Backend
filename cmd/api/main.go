@@ -27,12 +27,19 @@ func main() {
 	config.ConfigDb()
 	config.InitMinioConfig() 
 	firebaseApp := config.InitFirebase()
-
+	
+	
+	
 	db := database.PostgresConn()
 	minioClient := database.MinioConn() 
+	rdb := database.RedisConn()
 
 	if minioClient == nil {
 		log.Fatal("Failed to connect to MinIO. Please check your configuration or server.")
+	}
+
+	if rdb == nil {
+		log.Fatal("Failed to connect to Redis")
 	}
 
 	r := routes.Routes(db, firebaseApp, minioClient, config.MinioConfig.Bucket, config.MinioConfig.Endpoint)

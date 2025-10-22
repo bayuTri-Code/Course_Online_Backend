@@ -15,12 +15,15 @@ type Config struct {
 	DBName     string
 	DBSslmode  string
 
+	REDISHost     string
+	REDISPort     string
+	REDISPassword string
+	REDISDb       string
+
 	ServerHost string
 	ServerPort string
 	ServerEnv  string
-
 }
-
 
 var DbConfig *Config
 
@@ -46,6 +49,11 @@ func ConfigDb() {
 		DBName:     viper.GetString("DB_NAME"),
 		DBSslmode:  viper.GetString("DB_SSLMODE"),
 
+		REDISHost: viper.GetString("REDIS_HOST"),
+		REDISPort: viper.GetString("REDIS_PORT"),
+		REDISPassword: viper.GetString("REDIS_PASSWORd"),
+		REDISDb: viper.GetString("REDIS_DB"),
+
 		ServerHost: viper.GetString("SERVER_HOST"),
 		ServerPort: viper.GetString("SERVER_PORT"),
 		ServerEnv:  viper.GetString("SERVER_ENV"),
@@ -62,10 +70,14 @@ func setDefaults() {
 	viper.SetDefault("DB_NAME", "course_online_db")
 	viper.SetDefault("DB_SSLMODE", "disable")
 
+	viper.SetDefault("REDIS_HOST", "localhost")
+	viper.SetDefault("REDIS_PORT", "6379")
+	viper.SetDefault("REDIS_PASSWORD", "")
+	viper.SetDefault("REDIS_DB", "0")
+
 	viper.SetDefault("SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("SERVER_PORT", "7070")
 	viper.SetDefault("SERVER_ENV", "development")
-
 }
 
 func GetString(key string) string {
