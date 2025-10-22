@@ -210,3 +210,75 @@ func (c *BiodataHandler) DeleteBiodata(ctx *gin.Context) {
 }()
 
 }
+
+
+// @Summary Soft Delete Biodata
+// @Tags Profile
+// @Produce json
+// @Success 200 {object} utils.BaseResponse "Biodata soft deleted successfully"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponse "User or Biodata not found"
+// @Router /api/profile/biodata/soft-delete [delete]
+func (c *BiodataHandler) SoftDeleteBiodata(ctx *gin.Context) {
+	firebaseUID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if err := c.BiodataService.SoftDeleteBiodata(firebaseUID.(string)); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.BaseResponse{
+		Status:  true,
+		Message: "Biodata soft deleted successfully",
+	})
+
+	go func() {
+		user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			_ = c.Activity.LogActivity(user.ID, "Soft deleted biodata")
+		}
+	}()
+}
+
+// @Summary Restore Biodata
+// @Tags Profile
+// @Produce json
+// @Success 200 {object} dto.BaseResponseBiodata "Biodata successfully restored"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponse "Biodata not found"
+// @Router /api/profile/biodata/restore [put]
+func (c *BiodataHandler) RestoreBiodata(ctx *gin.Context) {
+	firebaseUID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	biodata, err := c.BiodataService.RestoreBiodata(firebaseUID.(string))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	restoreData := dto.BiodataResponse{
+		ID:             biodata.ID.String(),
+		UserID:         biodata.UserID.String(),
+		Name:           biodata.Name,
+		Age:            biodata.Age,
+		School:         biodata.School,
+		ProfilePicture: biodata.ProfilePicture,
+	}
+
+	utils.JSONSuccess(ctx, restoreData, "Biodata successfully restored")
+
+	go func() {
+		user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			_ = c.Activity.LogActivity(user.ID, "Restored biodata")
+		}
+	}()
+}

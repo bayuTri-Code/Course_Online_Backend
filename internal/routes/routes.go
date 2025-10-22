@@ -68,6 +68,8 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 			biodata.GET("/mybiodata", biodataHandler.GetBiodata)
 			biodata.PUT("/biodata", biodataHandler.UpdateBiodata)
 			biodata.DELETE("/biodata", biodataHandler.DeleteBiodata)
+			biodata.DELETE("/biodata/soft-delete", biodataHandler.SoftDeleteBiodata)
+			biodata.PUT("/biodata/restore", biodataHandler.RestoreBiodata)
 		}
 
 	
@@ -83,11 +85,14 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 		}
 
 		user := protected.Group("/user")
+		user.Use(middleware.RoleMiddleware("super_admin"))
 		{
 			user.GET("/", userHandler.GetAllUsers)
 			user.GET("/:id", userHandler.GetUserByID)
 			user.PUT("/:id", userHandler.UpdateUser)
 			user.DELETE("/:id", userHandler.DeleteUser)
+			user.DELETE("/:id/soft", userHandler.SoftDeleteUser)
+			user.PATCH("/:id/restore", userHandler.RestoreUser)
 		}
 
 		dashboard := protected.Group("/dashboard")
