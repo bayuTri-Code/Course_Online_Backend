@@ -49,7 +49,7 @@ func (m *MinioHelper) UploadProfilePicture(file multipart.File, fileHeader *mult
 	if cfg.UseSSL {
 		protocol = "https"
 	}
-	fullURL := fmt.Sprintf("%s://%s/%s/%s", protocol, cfg.Endpoint, cfg.Bucket, filename)
+	fullURL := fmt.Sprintf("%s://%s/%s/%s", protocol, cfg.ImageENDPOINT, cfg.Bucket, filename)
 
 	return fullURL, nil
 }

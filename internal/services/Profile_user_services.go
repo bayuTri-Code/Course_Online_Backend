@@ -141,7 +141,6 @@ func (s *BiodataService) DeleteBiodata(firebaseUID string) error {
 }
 
 
-// SoftDeleteBiodata marks biodata as deleted without removing from database
 func (s *BiodataService) SoftDeleteBiodata(firebaseUID string) error {
 	var user models.User
 	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
