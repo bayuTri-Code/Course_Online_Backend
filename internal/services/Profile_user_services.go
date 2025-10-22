@@ -139,3 +139,42 @@ func (s *BiodataService) DeleteBiodata(firebaseUID string) error {
 
 	return nil
 }
+
+
+// SoftDeleteBiodata marks biodata as deleted without removing from database
+func (s *BiodataService) SoftDeleteBiodata(firebaseUID string) error {
+	var user models.User
+	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		return errors.New("user not found")
+	}
+
+	// update deleted_at instead of permanent delete
+	if err := s.DB.Where("user_id = ?", user.ID).Delete(&models.Biodata{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *BiodataService) RestoreBiodata(firebaseUID string) (*models.Biodata, error) {
+	var user models.User
+	if err := s.DB.Unscoped().Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	var biodata models.Biodata
+	if err := s.DB.Unscoped().Where("user_id = ?", user.ID).First(&biodata).Error; err != nil {
+		return nil, errors.New("biodata not found or already active")
+	}
+
+	if biodata.DeletedAt.Valid {
+		biodata.DeletedAt = gorm.DeletedAt{} 
+		if err := s.DB.Unscoped().Save(&biodata).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	return &biodata, nil
+}
+
+
