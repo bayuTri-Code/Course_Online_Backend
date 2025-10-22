@@ -829,6 +829,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/profile/biodata/restore": {
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Restore Biodata",
+                "responses": {
+                    "200": {
+                        "description": "Biodata successfully restored",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseBiodata"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Biodata not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/profile/biodata/soft-delete": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Soft Delete Biodata",
+                "responses": {
+                    "200": {
+                        "description": "Biodata soft deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User or Biodata not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user": {
             "get": {
                 "description": "Retrieve a list of all users with their basic info, biodata, and roles",
@@ -1000,6 +1062,88 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "User deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/{id}/restore": {
+            "patch": {
+                "description": "Mengembalikan user yang sudah di-soft delete",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Restore soft deleted user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User restored successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found or already restored",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/{id}/soft": {
+            "delete": {
+                "description": "Soft delete user by ID (data tidak dihapus permanen, hanya ditandai terhapus)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Soft delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User soft deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/dto.BaseResponseDelete"
                         }
@@ -1279,6 +1423,10 @@ const docTemplate = `{
             "properties": {
                 "age": {
                     "type": "integer"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "id": {
                     "type": "string"
@@ -1588,6 +1736,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Quiz"
                     }
                 },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
                 "email_address": {
                     "type": "string"
                 },
@@ -1742,7 +1894,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "192.168.100.247:7070",
+	Host:             "192.168.100.247:8080",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
 	Title:            "Course Online API",

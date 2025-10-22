@@ -172,6 +172,9 @@ definitions:
     properties:
       age:
         type: integer
+      deleted_at:
+        format: date-time
+        type: string
       id:
         type: string
       name:
@@ -374,6 +377,9 @@ definitions:
         items:
           $ref: '#/definitions/models.Quiz'
         type: array
+      deleted_at:
+        format: date-time
+        type: string
       email_address:
         type: string
       enrollments:
@@ -467,7 +473,7 @@ definitions:
         example: false
         type: boolean
     type: object
-host: 192.168.100.247:7070
+host: 192.168.100.247:8080
 info:
   contact: {}
   description: API documentation for Course Online
@@ -979,6 +985,46 @@ paths:
       summary: Update Biodata
       tags:
       - Profile
+  /api/profile/biodata/restore:
+    put:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Biodata successfully restored
+          schema:
+            $ref: '#/definitions/dto.BaseResponseBiodata'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Biodata not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Restore Biodata
+      tags:
+      - Profile
+  /api/profile/biodata/soft-delete:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Biodata soft deleted successfully
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User or Biodata not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Soft Delete Biodata
+      tags:
+      - Profile
   /api/user:
     get:
       description: Retrieve a list of all users with their basic info, biodata, and
@@ -1091,6 +1137,61 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Update user
+      tags:
+      - Users
+  /api/user/{id}/restore:
+    patch:
+      description: Mengembalikan user yang sudah di-soft delete
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User restored successfully
+          schema:
+            $ref: '#/definitions/dto.BaseResponseDelete'
+        "404":
+          description: User not found or already restored
+          schema:
+            $ref: '#/definitions/dto.BaseResponseDelete'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Restore soft deleted user
+      tags:
+      - Users
+  /api/user/{id}/soft:
+    delete:
+      description: Soft delete user by ID (data tidak dihapus permanen, hanya ditandai
+        terhapus)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User soft deleted successfully
+          schema:
+            $ref: '#/definitions/dto.BaseResponseDelete'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.BaseResponseDelete'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Soft delete user
       tags:
       - Users
 schemes:

@@ -17,7 +17,7 @@ import (
 // @title Course Online API
 // @version 1.0
 // @description API documentation for Course Online
-// @host 192.168.100.247:7070
+// @host 192.168.100.247:8080
 // @BasePath /
 // @schemes http
 // @securityDefinitions.apikey BearerAuth
@@ -27,7 +27,6 @@ func main() {
 	config.ConfigDb()
 	config.InitMinioConfig() 
 	firebaseApp := config.InitFirebase()
-	
 	
 	
 	db := database.PostgresConn()
