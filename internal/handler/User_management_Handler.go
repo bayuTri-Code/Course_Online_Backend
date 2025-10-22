@@ -187,3 +187,86 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		}()
 	}
 }
+
+// SoftDeleteUser godoc
+// @Summary Soft delete user
+// @Description Soft delete user by ID (data tidak dihapus permanen, hanya ditandai terhapus)
+// @Tags Users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} dto.BaseResponseDelete "User soft deleted successfully"
+// @Failure 404 {object} dto.BaseResponseDelete "User not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/user/{id}/soft [delete]
+func (h *UserHandler) SoftDeleteUser(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := h.UserService.SoftDeleteUser(id); err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "user not found" {
+			statusCode = http.StatusNotFound
+		}
+
+		c.JSON(statusCode, dto.BaseResponseDelete{
+			Status:  false,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.BaseResponseDelete{
+		Status:  true,
+		Message: "user soft deleted successfully",
+	})
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			fUser, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err == nil {
+				_ = h.ActivityService.LogActivity(fUser.ID, "Soft deleted user: "+id)
+			}
+		}()
+	}
+}
+
+
+// RestoreUser godoc
+// @Summary Restore soft deleted user
+// @Description Mengembalikan user yang sudah di-soft delete
+// @Tags Users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} dto.BaseResponseDelete "User restored successfully"
+// @Failure 404 {object} dto.BaseResponseDelete "User not found or already restored"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/user/{id}/restore [patch]
+func (h *UserHandler) RestoreUser(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := h.UserService.RestoreUser(id); err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "user not found or already permanently deleted" || err.Error() == "user is not deleted" {
+			statusCode = http.StatusNotFound
+		}
+
+		c.JSON(statusCode, dto.BaseResponseDelete{
+			Status:  false,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.BaseResponseDelete{
+		Status:  true,
+		Message: "user restored successfully",
+	})
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			fUser, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err == nil {
+				_ = h.ActivityService.LogActivity(fUser.ID, "Restored user: "+id)
+			}
+		}()
+	}
+}
