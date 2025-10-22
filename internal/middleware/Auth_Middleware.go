@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
+	"course_online_backend/database"
 	"course_online_backend/internal/models"
 	"net/http"
 	"strings"
+	"time"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gin-gonic/gin"
@@ -35,6 +37,27 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		uidRedis, err := database.RedisConn().Get(context.Background(), "token:"+idToken).Result()
+		if err == nil && uidRedis != "" {
+			var user models.User
+			if err := db.Preload("Roles").Where("firebase_uid = ?", uidRedis).First(&user).Error; err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+				c.Abort()
+				return
+			}
+
+			roleNames := make([]string, len(user.Roles))
+			for i, role := range user.Roles {
+				roleNames[i] = role.Name
+			}
+
+			c.Set("user_id", user.FirebaseUID)
+			c.Set("roles", roleNames)
+			c.Set("user", user)
+			c.Next()
+			return
+		}
+
 		token, err := client.VerifyIDToken(context.Background(), idToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
@@ -49,14 +72,16 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		_ = database.RedisConn().Set(context.Background(), "token:"+idToken, token.UID, time.Hour).Err()
+
 		roleNames := make([]string, len(user.Roles))
 		for i, role := range user.Roles {
 			roleNames[i] = role.Name
 		}
 
 		c.Set("user_id", user.FirebaseUID)
-		c.Set("roles", roleNames) 
-		c.Set("user", user)       
+		c.Set("roles", roleNames)
+		c.Set("user", user)
 
 		c.Next()
 	}
