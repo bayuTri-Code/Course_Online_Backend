@@ -1221,6 +1221,105 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all roles in the system (super_admin \u0026 admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Get all roles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Role"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/assignable": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get roles that the current user is allowed to assign",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Get assignable roles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Role"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a single role by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Get role by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Role"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1463,977 +1562,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Activity": {
-            "type": "object",
-            "properties": {
-                "activity_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "when": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Biodata": {
-            "type": "object",
-            "properties": {
-                "age": {
-                    "type": "integer"
-                },
-                "deleted_at": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "school": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Course": {
-            "type": "object",
-            "properties": {
-                "course_type": {
-                    "$ref": "#/definitions/models.CourseType"
-                },
-                "course_type_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "creator": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enrollments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Enrollment"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_progress_limited": {
-                    "type": "boolean"
-                },
-                "modules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Module"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "quizzes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Quiz"
-                    }
-                },
-                "zoom": {
-                    "$ref": "#/definitions/models.Zoom"
-                }
-            }
-        },
-        "/api/profile/biodata/restore": {
-            "put": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Restore Biodata",
-                "responses": {
-                    "200": {
-                        "description": "Biodata successfully restored",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseBiodata"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Biodata not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/profile/biodata/soft-delete": {
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Soft Delete Biodata",
-                "responses": {
-                    "200": {
-                        "description": "Biodata soft deleted successfully",
-                        "schema": {
-                            "$ref": "#/definitions/utils.BaseResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User or Biodata not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user": {
-            "get": {
-                "description": "Retrieve a list of all users with their basic info, biodata, and roles",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Get all users",
-                "responses": {
-                    "200": {
-                        "description": "All users retrieved successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.BaseResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/models.User"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to get users",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user/{id}": {
-            "get": {
-                "description": "Retrieve user details including biodata, roles, and other relations",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Get user by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User retrieved successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.BaseResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.User"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update user info, roles, and biodata by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Update user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "User data to update",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User updated successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.BaseResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.User"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid input",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete a user by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Delete user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User deleted successfully",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseDelete"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user/{id}/restore": {
-            "patch": {
-                "description": "Mengembalikan user yang sudah di-soft delete",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Restore soft deleted user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User restored successfully",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseDelete"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found or already restored",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseDelete"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user/{id}/soft": {
-            "delete": {
-                "description": "Soft delete user by ID (data tidak dihapus permanen, hanya ditandai terhapus)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Soft delete user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User soft deleted successfully",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseDelete"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseDelete"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/roles": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve all roles in the system (super_admin \u0026 admin only)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Roles"
-                ],
-                "summary": "Get all roles",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Role"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/roles/assignable": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get roles that the current user is allowed to assign",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Roles"
-                ],
-                "summary": "Get assignable roles",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Role"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/roles/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve a single role by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Roles"
-                ],
-                "summary": "Get role by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Role ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Role"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-    },
-    "definitions": {
-        "dto.ActivityResponse": {
-            "type": "object",
-            "properties": {
-                "activity_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserSimpleDTO"
-                },
-                "when": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.BaseResponseBiodata": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/dto.BiodataResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "dto.BiodataResponse": {
-            "type": "object",
-            "properties": {
-                "age": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "school": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.BiodataResponseForAct": {
-            "type": "object",
-            "properties": {
-                "age": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "school": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.FirebaseLoginRequest": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserLoginResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/dto.UserResponseDTO"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserResponseDTO": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "firebaseId": {
-=======
-        },
-        "models.CourseType": {
-            "type": "object",
-            "properties": {
-                "courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Course"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Enrollment": {
-            "type": "object",
-            "properties": {
-                "completed_datetime": {
-                    "type": "string"
-                },
-                "course": {
-                    "$ref": "#/definitions/models.Course"
-                },
-                "course_id": {
-                    "type": "string"
-                },
-                "enrollment_datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Lesson": {
-            "type": "object",
-            "properties": {
-                "course_order": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "module": {
-                    "$ref": "#/definitions/models.Module"
-                },
-                "module_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "user_completions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserLesson"
-                    }
-                },
-                "video_details": {
-                    "type": "string"
-                },
-                "video_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Module": {
-            "type": "object",
-            "properties": {
-                "course": {
-                    "$ref": "#/definitions/models.Course"
-                },
-                "course_id": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lessons": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Lesson"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.Quiz": {
-            "type": "object",
-            "properties": {
-                "attempts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserQuizAttempt"
-                    }
-                },
-                "course": {
-                    "$ref": "#/definitions/models.Course"
-                },
-                "course_id": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "creator": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_pass_required": {
-                    "type": "boolean"
-                },
-                "min_pass_score": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "integer"
-                },
-                "questions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.QuizQuestion"
-                    }
-                }
-            }
-        },
-        "models.QuizAnswer": {
-            "type": "object",
-            "properties": {
-                "answer_text": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_correct": {
-                    "type": "boolean"
-                },
-                "question": {
-                    "$ref": "#/definitions/models.QuizQuestion"
-                },
-                "question_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.QuizQuestion": {
-            "type": "object",
-            "properties": {
-                "answers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.QuizAnswer"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "question_title": {
-                    "type": "string"
-                },
-                "quiz": {
-                    "$ref": "#/definitions/models.Quiz"
-                },
-                "quiz_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Role": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.User": {
-            "type": "object",
-            "properties": {
-                "activities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Activity"
-                    }
-                },
-                "biodata": {
-                    "$ref": "#/definitions/models.Biodata"
-                },
-                "completed_lessons": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserLesson"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Course"
-                    }
-                },
-                "created_quizzes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Quiz"
-                    }
-                },
-                "deleted_at": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "email_address": {
-                    "type": "string"
-                },
-                "enrollments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Enrollment"
-                    }
-                },
-                "firebase_uid": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-
-                "isActive": {
-                    "type": "boolean"
-                },
-                "lastLogin": {
-                "is_active": {
-                    "type": "boolean"
-                },
-                "last_login": {
-                    "type": "string"
-                },
-                "quiz_attempts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserQuizAttempt"
-                    }
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Role"
-                    }
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UserLesson": {
-            "type": "object",
-            "properties": {
-                "completed_datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lesson": {
-                    "$ref": "#/definitions/models.Lesson"
-                },
-                "lesson_id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UserQuizAttempt": {
-            "type": "object",
-            "properties": {
-                "attempt_datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "quiz": {
-                    "$ref": "#/definitions/models.Quiz"
-                },
-                "quiz_id": {
-                    "type": "string"
-                },
-                "score_achieved": {
-                    "type": "integer"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-
         "handler.AssignRoleRequest": {
             "type": "object",
             "required": [
@@ -2739,7 +1867,142 @@ const docTemplate = `{
                 }
             }
         },
-
+        "models.Role": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Activity"
+                    }
+                },
+                "biodata": {
+                    "$ref": "#/definitions/models.Biodata"
+                },
+                "completed_lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserLesson"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Course"
+                    }
+                },
+                "created_quizzes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Quiz"
+                    }
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "enrollments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Enrollment"
+                    }
+                },
+                "firebase_uid": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "quiz_attempts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserQuizAttempt"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Role"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserLesson": {
+            "type": "object",
+            "properties": {
+                "completed_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lesson": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "lesson_id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserQuizAttempt": {
+            "type": "object",
+            "properties": {
+                "attempt_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "quiz": {
+                    "$ref": "#/definitions/models.Quiz"
+                },
+                "quiz_id": {
+                    "type": "string"
+                },
+                "score_achieved": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Zoom": {
             "type": "object",
             "properties": {
                 "course": {
