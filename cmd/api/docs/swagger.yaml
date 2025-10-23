@@ -1034,7 +1034,6 @@ paths:
       summary: Update Biodata
       tags:
       - Profile
-
   /api/profile/biodata/restore:
     put:
       produces:
@@ -1244,7 +1243,6 @@ paths:
       summary: Soft delete user
       tags:
       - Users
-
   /roles:
     get:
       description: Retrieve all roles in the system (super_admin & admin only)
@@ -1306,7 +1304,6 @@ paths:
       summary: Get assignable roles
       tags:
       - Roles
-
 schemes:
 - http
 securityDefinitions:
