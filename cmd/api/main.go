@@ -10,6 +10,7 @@ import (
 	_ "course_online_backend/cmd/api/docs"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -24,6 +25,12 @@ import (
 // @in header
 // @name Authorization
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println(" No .env file found, using system environment variables")
+	} else {
+		log.Println(".env file loaded successfully")
+	}
+
 	config.ConfigDb()
 	config.InitMinioConfig() 
 	firebaseApp := config.InitFirebase()

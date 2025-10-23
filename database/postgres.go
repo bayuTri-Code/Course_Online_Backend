@@ -52,6 +52,9 @@ func PostgresConn() *gorm.DB {
 	if err := SeedRoles(db); err != nil {
 		log.Fatalf("failed to seed roles: %v", err)
 	}
+	if err := SeedSuperAdmin(db); err != nil {
+		log.Printf("Seed super admin warning: %v", err)
+	}
 
 	log.Println("Database connected and migrated successfully.")
 	return db
