@@ -2,6 +2,7 @@ package routes
 
 import (
 	"course_online_backend/internal/handler"
+	"course_online_backend/internal/handler/dashboard"
 	"course_online_backend/internal/middleware"
 	"course_online_backend/internal/services"
 	"log"
@@ -32,42 +33,86 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	}
 
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "success",
-			"message": "Course Online Backend API Succes",
-		})
+		c.JSON(200, gin.H{"status": "success", "message": "Course Online Backend API Success"})
 	})
 
 	authService := services.NewAuthService(db, app)
+	userService := services.NewUserService(db)
+	userRoleServices := services.NewUserRoleService(db)
 	activityService := services.NewActivityService(db)
 	biodataService := services.NewBiodataService(db)
+	dashboardService := services.NewDashboardService(db)
 
 	authHandler := handler.NewAuthHandler(authService, activityService)
+	userRoleHandler := handler.NewUserRoleHandler(userRoleServices)
+	userHandler := handler.NewUserHandler(userService, activityService)
 	biodataHandler := handler.NewBiodataHandler(biodataService, activityService)
-	ActivityHandler := handler.NewActivityHandler(activityService)
+	activityHandler := handler.NewActivityHandler(activityService)
 
-	publicRoutes := r.Group("/api")
+	superAdminHandler := dashboard.NewSuperAdminDashboardHandler(dashboardService)
+	adminHandler := dashboard.NewAdminDashboardHandler(dashboardService)
+	instructorHandler := dashboard.NewInstructorDashboardHandler(dashboardService)
+	studentHandler := dashboard.NewStudentDashboardHandler(dashboardService)
+
+	public := r.Group("/api")
 	{
-		auth := publicRoutes.Group("/auth")
-		{
-			auth.POST("/firebase-login", authHandler.FirebaseLoginHandler)
-		}
+		auth := public.Group("/auth")
+		auth.POST("/firebase-login", authHandler.FirebaseLoginHandler)
 	}
 
-	protectedRoutes := r.Group("/api")
-	protectedRoutes.Use(middleware.FirebaseAuth(app))
+	protected := r.Group("/api")
+	protected.Use(middleware.FirebaseAuth(app, db))
 	{
-		biodata := protectedRoutes.Group("/profile")
+		biodata := protected.Group("/profile")
+		biodata.Use(middleware.RoleMiddleware("student", "super_admin", "admin", "instructor"))
 		{
 			biodata.POST("/biodata", biodataHandler.CreateBiodata)
 			biodata.GET("/mybiodata", biodataHandler.GetBiodata)
 			biodata.PUT("/biodata", biodataHandler.UpdateBiodata)
 			biodata.DELETE("/biodata", biodataHandler.DeleteBiodata)
+			biodata.DELETE("/biodata/soft-delete", biodataHandler.SoftDeleteBiodata)
+			biodata.PUT("/biodata/restore", biodataHandler.RestoreBiodata)
 		}
-		activity := protectedRoutes.Group("/history")
+
+		activity := protected.Group("/history")
+		activity.Use(middleware.RoleMiddleware("admin", "super_admin"))
 		{
-			activity.GET("/All-activity", ActivityHandler.GetAllActivity)
+			activity.GET("/All-activity", activityHandler.GetAllActivity)
+			activity.GET("/ByUser-activity/:id", activityHandler.GetActivityByUserId)
+			activity.GET("/Recent-activity", activityHandler.GetRecentActivities)
+			activity.GET("/Search-activity", activityHandler.SearchActivity)
+			activity.GET("/Summary-activity/:id", activityHandler.GetActivitySummary)
+			activity.GET("/ByRole-activity/:role", activityHandler.GetActivityByRole)
+		}
+
+		user := protected.Group("/user")
+		user.Use(middleware.RoleMiddleware("super_admin"))
+		{
+			user.GET("/", userHandler.GetAllUsers)
+			user.GET("/:id", userHandler.GetUserByID)
+			user.PUT("/:id", userHandler.UpdateUser)
+			user.DELETE("/:id", userHandler.DeleteUser)
+			user.DELETE("/:id/soft", userHandler.SoftDeleteUser)
+			user.PATCH("/:id/restore", userHandler.RestoreUser)
+		}
+		userRole := protected.Group("/admin")
+		userRole.Use(middleware.RoleMiddleware("super_admin", "admin"))
+		{
+			userRole.PUT("/users/:user_id/role", userRoleHandler.AssignRole)
+			
+			userRole.GET("/role", userRoleHandler.GetAllRoles)
+			userRole.GET("role/assignable", userRoleHandler.GetAssignableRoles)
+			userRole.GET("role/:id", userRoleHandler.GetRoleByID)
+		}
+
+		dashboard := protected.Group("/dashboard")
+		{
+			dashboard.GET("/super_admin", middleware.RoleMiddleware("super_admin"), superAdminHandler.GetDashboardSuperAdmin)
+			dashboard.GET("/admin", middleware.RoleMiddleware("admin"), adminHandler.GetDashboardAdmin)
+			dashboard.GET("/instructor", middleware.RoleMiddleware("instructor"), instructorHandler.GetDashboardInstructor)
+			dashboard.GET("/student", middleware.RoleMiddleware("student"), studentHandler.GetDashboardStudent)
 		}
 	}
+
 	return r
 }

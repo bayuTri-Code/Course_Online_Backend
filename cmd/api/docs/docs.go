@@ -131,14 +131,246 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/history/activity": {
+        "/api/dashboard/admin": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve all activities belonging to the authenticated user. The user is identified using Firebase UID from the JWT token.",
+                "description": "Retrieve overview data for Admin, including total users and total courses.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Admin Dashboard",
+                "responses": {
+                    "200": {
+                        "description": "Success get admin dashboard",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponsedata"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.AdminDashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient role",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/instructor": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve dashboard data for Instructor, including number of created courses.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Instructor Dashboard",
+                "responses": {
+                    "200": {
+                        "description": "Success get admin dashboard",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponsedata"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.InstructorDashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient role",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/student": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve dashboard data for Student, including enrolled courses and motivational message.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Student Dashboard",
+                "responses": {
+                    "200": {
+                        "description": "Success get admin dashboard",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponsedata"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.StudentDashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient role",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/super_admin": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve overview data for Super Admin, including total instructors and students.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Super Admin Dashboard",
+                "responses": {
+                    "200": {
+                        "description": "Success get admin dashboard",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponsedata"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SuperAdminDashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient role",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/history/All-activity": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all activities belonging to the authenticated user based on Firebase UID from JWT token",
                 "produces": [
                     "application/json"
                 ],
@@ -148,7 +380,7 @@ const docTemplate = `{
                 "summary": "Get all user activities",
                 "responses": {
                     "200": {
-                        "description": "Success get All activity",
+                        "description": "Success get all activity",
                         "schema": {
                             "allOf": [
                                 {
@@ -171,13 +403,283 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/utils.BaseResponse"
+                            "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/utils.BaseResponse"
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/history/ByRole-activity/{role}": {
+            "get": {
+                "description": "Retrieve all activities performed by users with a specific role",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activity"
+                ],
+                "summary": "Get Activity By Role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Role (e.g. student, instructor, admin, student)",
+                        "name": "role",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success get activity by role",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ActivityResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/history/ByUser-activity/{id}": {
+            "get": {
+                "description": "Get all activities associated with a specific user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activity"
+                ],
+                "summary": "Get Activity By User ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success get activity by user",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ActivityResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/history/Recent-activity": {
+            "get": {
+                "description": "Retrieve a list of the most recent user activities",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activity"
+                ],
+                "summary": "Get Recent Activities",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of recent activities to return (default 10)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success get recent activities",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ActivityResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/history/Search-activity": {
+            "get": {
+                "description": "Search activity records by keyword",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activity"
+                ],
+                "summary": "Search Activity",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Keyword to search activity",
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success search activity",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ActivityResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Keyword is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/history/Summary-activity/{id}": {
+            "get": {
+                "description": "Get summarized activity statistics for a specific user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activity"
+                ],
+                "summary": "Get Activity Summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success get activity summary",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ActivityResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     }
                 }
@@ -185,6 +687,12 @@ const docTemplate = `{
         },
         "/api/profile/biodata": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get biodata of the currently authenticated user (token required)",
                 "consumes": [
                     "application/json"
                 ],
@@ -194,7 +702,7 @@ const docTemplate = `{
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Get Biodata",
+                "summary": "Get My Biodata",
                 "responses": {
                     "200": {
                         "description": "Get Biodata successfully",
@@ -383,6 +891,678 @@ const docTemplate = `{
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     }
+                }
+            }
+        },
+        "/api/profile/biodata/restore": {
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Restore Biodata",
+                "responses": {
+                    "200": {
+                        "description": "Biodata successfully restored",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseBiodata"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Biodata not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/profile/biodata/soft-delete": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Soft Delete Biodata",
+                "responses": {
+                    "200": {
+                        "description": "Biodata soft deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User or Biodata not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user": {
+            "get": {
+                "description": "Retrieve a list of all users with their basic info, biodata, and roles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "All users retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.User"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get users",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/{id}": {
+            "get": {
+                "description": "Retrieve user details including biodata, roles, and other relations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update user info, roles, and biodata by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User data to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.BaseResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a user by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/{id}/restore": {
+            "patch": {
+                "description": "Mengembalikan user yang sudah di-soft delete",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Restore soft deleted user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User restored successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found or already restored",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/{id}/soft": {
+            "delete": {
+                "description": "Soft delete user by ID (data tidak dihapus permanen, hanya ditandai terhapus)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Soft delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User soft deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseDelete"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.ActivityResponse": {
+            "type": "object",
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserSimpleDTO"
+                },
+                "when": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.AdminDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "total_courses": {
+                    "type": "integer"
+                },
+                "total_users": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.BaseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.BaseResponseBiodata": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.BiodataResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.BaseResponseDelete": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.BiodataResponse": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.BiodataResponseForAct": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.FirebaseLoginRequest": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.InstructorDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "my_courses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.StudentDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "enrolled_courses": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SuperAdminDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "system_status": {
+                    "type": "string"
+                },
+                "total_instructors": {
+                    "type": "integer"
+                },
+                "total_students": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "role_id"
+                    ]
+                }
+            }
+        },
+        "dto.UserLoginResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.UserResponseDTO"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserResponseDTO": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firebaseId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "lastLogin": {
+                    "type": "string"
+                },
+                "roles": {
+                    "$ref": "#/definitions/models.Role"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserSimpleDTO": {
+            "type": "object",
+            "properties": {
+                "biodata": {
+                    "$ref": "#/definitions/dto.BiodataResponseForAct"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Activity": {
+            "type": "object",
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "when": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Biodata": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Course": {
+            "type": "object",
+            "properties": {
+                "course_type": {
+                    "$ref": "#/definitions/models.CourseType"
+                },
+                "course_type_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "creator": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enrollments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Enrollment"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_progress_limited": {
+                    "type": "boolean"
+                },
+                "modules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Module"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "quizzes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Quiz"
+                    }
+                },
+                "zoom": {
+                    "$ref": "#/definitions/models.Zoom"
                 }
             }
         },
@@ -920,41 +2100,283 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "firebaseId": {
+=======
+        },
+        "models.CourseType": {
+            "type": "object",
+            "properties": {
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Course"
+                    }
+                },
+                "description": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "isActive": {
-                    "type": "boolean"
-                },
-                "lastLogin": {
-                    "type": "string"
-                },
-                "roles": {
-                    "$ref": "#/definitions/models.Role"
-                },
-                "username": {
+                "name": {
                     "type": "string"
                 }
             }
         },
-        "dto.UserSimpleDTO": {
+        "models.Enrollment": {
             "type": "object",
             "properties": {
-                "biodata": {
-                    "$ref": "#/definitions/dto.BiodataResponseForAct"
+                "completed_datetime": {
+                    "type": "string"
                 },
-                "email": {
+                "course": {
+                    "$ref": "#/definitions/models.Course"
+                },
+                "course_id": {
+                    "type": "string"
+                },
+                "enrollment_datetime": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Lesson": {
+            "type": "object",
+            "properties": {
+                "course_order": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "module": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "module_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "user_completions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserLesson"
+                    }
+                },
+                "video_details": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Module": {
+            "type": "object",
+            "properties": {
+                "course": {
+                    "$ref": "#/definitions/models.Course"
+                },
+                "course_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Lesson"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Quiz": {
+            "type": "object",
+            "properties": {
+                "attempts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserQuizAttempt"
+                    }
+                },
+                "course": {
+                    "$ref": "#/definitions/models.Course"
+                },
+                "course_id": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "creator": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_pass_required": {
+                    "type": "boolean"
+                },
+                "min_pass_score": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.QuizQuestion"
+                    }
+                }
+            }
+        },
+        "models.QuizAnswer": {
+            "type": "object",
+            "properties": {
+                "answer_text": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "question": {
+                    "$ref": "#/definitions/models.QuizQuestion"
+                },
+                "question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.QuizQuestion": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.QuizAnswer"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "question_title": {
+                    "type": "string"
+                },
+                "quiz": {
+                    "$ref": "#/definitions/models.Quiz"
+                },
+                "quiz_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Role": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Activity"
+                    }
+                },
+                "biodata": {
+                    "$ref": "#/definitions/models.Biodata"
+                },
+                "completed_lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserLesson"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Course"
+                    }
+                },
+                "created_quizzes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Quiz"
+                    }
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "enrollments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Enrollment"
+                    }
+                },
+                "firebase_uid": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+
+                "isActive": {
+                    "type": "boolean"
+                },
+                "lastLogin": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "quiz_attempts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserQuizAttempt"
+                    }
+                },
                 "roles": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/models.Role"
                     }
                 },
                 "username": {
@@ -962,8 +2384,56 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
-=======
+        "models.UserLesson": {
+            "type": "object",
+            "properties": {
+                "completed_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lesson": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "lesson_id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserQuizAttempt": {
+            "type": "object",
+            "properties": {
+                "attempt_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "quiz": {
+                    "$ref": "#/definitions/models.Quiz"
+                },
+                "quiz_id": {
+                    "type": "string"
+                },
+                "score_achieved": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+
         "handler.AssignRoleRequest": {
             "type": "object",
             "required": [
@@ -1269,14 +2739,19 @@ const docTemplate = `{
                 }
             }
         },
->>>>>>> 7a300a7 (add: add swagger docs roles)
-        "models.Role": {
+
             "type": "object",
             "properties": {
+                "course": {
+                    "$ref": "#/definitions/models.Course"
+                },
+                "course_id": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
-                "name": {
+                "link": {
                     "type": "string"
                 }
             }
@@ -1292,19 +2767,38 @@ const docTemplate = `{
                 }
             }
         },
+        "utils.BaseResponsedata": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
         "utils.ErrorResponse": {
             "type": "object",
             "properties": {
                 "errors": {},
                 "message": {
                     "type": "string",
-                    "example": "Invalid request body"
+                    "example": "Server Internal error 500"
                 },
                 "status": {
-                    "type": "string",
-                    "example": "error"
+                    "type": "boolean",
+                    "example": false
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -1312,11 +2806,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "http://192.168.100.247:7070",
+	Host:             "192.168.100.247:8080",
 	BasePath:         "/",
-	Schemes:          []string{},
+	Schemes:          []string{"http"},
 	Title:            "Course Online API",
-	Description:      "API documentation for recipe API",
+	Description:      "API documentation for Course Online",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
