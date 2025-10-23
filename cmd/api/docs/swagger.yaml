@@ -11,6 +11,21 @@ definitions:
       when:
         type: string
     type: object
+  dto.AdminDashboardResponse:
+    properties:
+      total_courses:
+        type: integer
+      total_users:
+        type: integer
+    type: object
+  dto.BaseResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
   dto.BaseResponseBiodata:
     properties:
       data:
@@ -19,6 +34,13 @@ definitions:
         type: string
       status:
         example: true
+        type: boolean
+    type: object
+  dto.BaseResponseDelete:
+    properties:
+      message:
+        type: string
+      status:
         type: boolean
     type: object
   dto.BiodataResponse:
@@ -51,6 +73,44 @@ definitions:
     properties:
       token:
         type: string
+    type: object
+  dto.InstructorDashboardResponse:
+    properties:
+      message:
+        type: string
+      my_courses:
+        type: integer
+    type: object
+  dto.StudentDashboardResponse:
+    properties:
+      enrolled_courses:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.SuperAdminDashboardResponse:
+    properties:
+      system_status:
+        type: string
+      total_instructors:
+        type: integer
+      total_students:
+        type: integer
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role_ids:
+        example:
+        - role_id
+        items:
+          type: string
+        type: array
     type: object
   dto.UserLoginResponse:
     properties:
@@ -302,8 +362,109 @@ definitions:
       name:
         type: string
     type: object
+  models.User:
+    properties:
+      activities:
+        items:
+          $ref: '#/definitions/models.Activity'
+        type: array
+      biodata:
+        $ref: '#/definitions/models.Biodata'
+      completed_lessons:
+        items:
+          $ref: '#/definitions/models.UserLesson'
+        type: array
+      created_at:
+        type: string
+      created_courses:
+        items:
+          $ref: '#/definitions/models.Course'
+        type: array
+      created_quizzes:
+        items:
+          $ref: '#/definitions/models.Quiz'
+        type: array
+      deleted_at:
+        format: date-time
+        type: string
+      email_address:
+        type: string
+      enrollments:
+        items:
+          $ref: '#/definitions/models.Enrollment'
+        type: array
+      firebase_uid:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_login:
+        type: string
+      quiz_attempts:
+        items:
+          $ref: '#/definitions/models.UserQuizAttempt'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      username:
+        type: string
+    type: object
+  models.UserLesson:
+    properties:
+      completed_datetime:
+        type: string
+      id:
+        type: string
+      lesson:
+        $ref: '#/definitions/models.Lesson'
+      lesson_id:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: string
+    type: object
+  models.UserQuizAttempt:
+    properties:
+      attempt_datetime:
+        type: string
+      id:
+        type: string
+      quiz:
+        $ref: '#/definitions/models.Quiz'
+      quiz_id:
+        type: string
+      score_achieved:
+        type: integer
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: string
+    type: object
+  models.Zoom:
+    properties:
+      course:
+        $ref: '#/definitions/models.Course'
+      course_id:
+        type: string
+      id:
+        type: string
+      link:
+        type: string
+    type: object
   utils.BaseResponse:
     properties:
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+  utils.BaseResponsedata:
+    properties:
+      data: {}
       message:
         type: string
       status:
@@ -313,16 +474,16 @@ definitions:
     properties:
       errors: {}
       message:
-        example: Invalid request body
+        example: Server Internal error 500
         type: string
       status:
-        example: error
-        type: string
+        example: false
+        type: boolean
     type: object
-host: http://192.168.100.247:7070
+host: 192.168.100.247:8080
 info:
   contact: {}
-  description: API documentation for recipe API
+  description: API documentation for Course Online
   title: Course Online API
   version: "1.0"
 paths:
@@ -402,15 +563,155 @@ paths:
       summary: Login user using Firebase ID Token
       tags:
       - Authentication
-  /api/history/activity:
+  /api/dashboard/admin:
     get:
-      description: Retrieve all activities belonging to the authenticated user. The
-        user is identified using Firebase UID from the JWT token.
+      consumes:
+      - application/json
+      description: Retrieve overview data for Admin, including total users and total
+        courses.
       produces:
       - application/json
       responses:
         "200":
-          description: Success get All activity
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AdminDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Admin Dashboard
+      tags:
+      - Dashboard
+  /api/dashboard/instructor:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve dashboard data for Instructor, including number of created
+        courses.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.InstructorDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Instructor Dashboard
+      tags:
+      - Dashboard
+  /api/dashboard/student:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve dashboard data for Student, including enrolled courses
+        and motivational message.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.StudentDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Student Dashboard
+      tags:
+      - Dashboard
+  /api/dashboard/super_admin:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve overview data for Super Admin, including total instructors
+        and students.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get admin dashboard
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponsedata'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SuperAdminDashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "403":
+          description: Forbidden - insufficient role
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Super Admin Dashboard
+      tags:
+      - Dashboard
+  /api/history/All-activity:
+    get:
+      description: Retrieve all activities belonging to the authenticated user based
+        on Firebase UID from JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get all activity
           schema:
             allOf:
             - $ref: '#/definitions/utils.BaseResponse'
@@ -423,14 +724,177 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/utils.BaseResponse'
+            $ref: '#/definitions/utils.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/utils.BaseResponse'
+            $ref: '#/definitions/utils.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get all user activities
+      tags:
+      - Activity
+  /api/history/ByRole-activity/{role}:
+    get:
+      description: Retrieve all activities performed by users with a specific role
+      parameters:
+      - description: User Role (e.g. student, instructor, admin, student)
+        in: path
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get activity by role
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ActivityResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get Activity By Role
+      tags:
+      - Activity
+  /api/history/ByUser-activity/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all activities associated with a specific user ID
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get activity by user
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ActivityResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get Activity By User ID
+      tags:
+      - Activity
+  /api/history/Recent-activity:
+    get:
+      description: Retrieve a list of the most recent user activities
+      parameters:
+      - description: Number of recent activities to return (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get recent activities
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ActivityResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get Recent Activities
+      tags:
+      - Activity
+  /api/history/Search-activity:
+    get:
+      description: Search activity records by keyword
+      parameters:
+      - description: Keyword to search activity
+        in: query
+        name: keyword
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success search activity
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ActivityResponse'
+                  type: array
+              type: object
+        "400":
+          description: Keyword is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Search Activity
+      tags:
+      - Activity
+  /api/history/Summary-activity/{id}:
+    get:
+      description: Get summarized activity statistics for a specific user
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success get activity summary
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.BaseResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ActivityResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get Activity Summary
       tags:
       - Activity
   /api/profile/biodata:
@@ -462,6 +926,7 @@ paths:
     get:
       consumes:
       - application/json
+      description: Get biodata of the currently authenticated user (token required)
       produces:
       - application/json
       responses:
@@ -481,7 +946,9 @@ paths:
           description: Biodata not found
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
-      summary: Get Biodata
+      security:
+      - BearerAuth: []
+      summary: Get My Biodata
       tags:
       - Profile
     post:
@@ -777,6 +1244,7 @@ paths:
       summary: Soft delete user
       tags:
       - Users
+
   /roles:
     get:
       description: Retrieve all roles in the system (super_admin & admin only)
@@ -838,6 +1306,7 @@ paths:
       summary: Get assignable roles
       tags:
       - Roles
+
 schemes:
 - http
 securityDefinitions:
