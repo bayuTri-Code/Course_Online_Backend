@@ -38,11 +38,13 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 
 	authService := services.NewAuthService(db, app)
 	userService := services.NewUserService(db)
+	userRoleServices := services.NewUserRoleService(db)
 	activityService := services.NewActivityService(db)
 	biodataService := services.NewBiodataService(db)
 	dashboardService := services.NewDashboardService(db)
 
 	authHandler := handler.NewAuthHandler(authService, activityService)
+	userRoleHandler := handler.NewUserRoleHandler(userRoleServices)
 	userHandler := handler.NewUserHandler(userService, activityService)
 	biodataHandler := handler.NewBiodataHandler(biodataService, activityService)
 	activityHandler := handler.NewActivityHandler(activityService)
@@ -72,7 +74,6 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 			biodata.PUT("/biodata/restore", biodataHandler.RestoreBiodata)
 		}
 
-	
 		activity := protected.Group("/history")
 		activity.Use(middleware.RoleMiddleware("admin", "super_admin"))
 		{
@@ -93,6 +94,15 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 			user.DELETE("/:id", userHandler.DeleteUser)
 			user.DELETE("/:id/soft", userHandler.SoftDeleteUser)
 			user.PATCH("/:id/restore", userHandler.RestoreUser)
+		}
+		userRole := protected.Group("/admin")
+		userRole.Use(middleware.RoleMiddleware("super_admin", "admin"))
+		{
+			userRole.PUT("/users/:user_id/role", userRoleHandler.AssignRole)
+			
+			userRole.GET("/role", userRoleHandler.GetAllRoles)
+			userRole.GET("role/assignable", userRoleHandler.GetAssignableRoles)
+			userRole.GET("role/:id", userRoleHandler.GetRoleByID)
 		}
 
 		dashboard := protected.Group("/dashboard")
