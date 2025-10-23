@@ -18,7 +18,6 @@ func NewActivityService(db *gorm.DB) *ActivityService {
 	return &ActivityService{DB: db}
 }
 
-// 🔄 Fungsi helper untuk Preload semua relasi utama
 func (s *ActivityService) preloadActivityAll(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("User").
@@ -26,9 +25,7 @@ func (s *ActivityService) preloadActivityAll(db *gorm.DB) *gorm.DB {
 		Preload("User.Biodata")
 }
 
-// 🧠 LogActivity - Mencatat aktivitas baru (tanpa duplikasi)
 func (s *ActivityService) LogActivity(userID uuid.UUID, activityName string) error {
-	// Cek apakah aktivitas sama pernah dicatat dalam 1 menit terakhir untuk user yang sama
 	var count int64
 	oneMinuteAgo := time.Now().Add(-1 * time.Minute)
 	if err := s.DB.Model(&models.Activity{}).
@@ -38,7 +35,6 @@ func (s *ActivityService) LogActivity(userID uuid.UUID, activityName string) err
 	}
 
 	if count > 0 {
-		// Jangan log lagi kalau baru saja dilakukan
 		return nil
 	}
 
@@ -86,7 +82,7 @@ func (s *ActivityService) GetAllActivity(userID uuid.UUID) ([]dto.ActivityRespon
 
 		response = append(response, dto.ActivityResponse{
 			ID:           act.ID.String(),
-			ActivityName: act.ActivityName,
+				ActivityName: act.ActivityName,
 			When:         act.When,
 			User: dto.UserSimpleDTO{
 				ID:       act.User.ID.String(),

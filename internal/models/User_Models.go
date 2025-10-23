@@ -51,3 +51,21 @@ type Biodata struct {
 	ProfilePicture string    `json:"profile_picture"`
 	DeletedAt    gorm.DeletedAt `json:"deleted_at,omitempty" swaggertype:"string" format:"date-time"`
 }
+
+
+
+func (u *User) HasRole(roleName string) bool {
+	for _, role := range u.Roles {
+		if role.Name == roleName {
+			return true
+		}
+	}
+	return false
+}
+
+func (u *User) GetRoleName() string {
+	if len(u.Roles) > 0 {
+		return u.Roles[0].Name
+	}
+	return ""
+}
