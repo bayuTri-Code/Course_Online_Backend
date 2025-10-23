@@ -487,7 +487,68 @@ info:
   title: Course Online API
   version: "1.0"
 paths:
-  /admin/users/{user_id}/role:
+  /api/admin/roles:
+    get:
+      description: Retrieve all roles in the system (super_admin & admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Role'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all roles
+      tags:
+      - Roles
+  /api/admin/roles/{id}:
+    get:
+      description: Retrieve a single role by its ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Role'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get role by ID
+      tags:
+      - Roles
+  /api/admin/roles/assignable:
+    get:
+      description: Get roles that the current user is allowed to assign
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Role'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get assignable roles
+      tags:
+      - Roles
+  /api/admin/users/{user_id}/role:
     put:
       consumes:
       - application/json
@@ -1243,67 +1304,6 @@ paths:
       summary: Soft delete user
       tags:
       - Users
-  /roles:
-    get:
-      description: Retrieve all roles in the system (super_admin & admin only)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Role'
-            type: array
-      security:
-      - BearerAuth: []
-      summary: Get all roles
-      tags:
-      - Roles
-  /roles/{id}:
-    get:
-      description: Retrieve a single role by its ID
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Role'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get role by ID
-      tags:
-      - Roles
-  /roles/assignable:
-    get:
-      description: Get roles that the current user is allowed to assign
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Role'
-            type: array
-      security:
-      - BearerAuth: []
-      summary: Get assignable roles
-      tags:
-      - Roles
 schemes:
 - http
 securityDefinitions:

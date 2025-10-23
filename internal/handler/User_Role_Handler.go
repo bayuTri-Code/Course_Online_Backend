@@ -31,7 +31,7 @@ type AssignRoleRequest struct {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 403 {object} map[string]string
-// @Router /admin/users/{user_id}/role [put]
+// @Router /api/admin/users/{user_id}/role [put]
 // @Security BearerAuth
 func (h *UserRoleHandler) AssignRole(ctx *gin.Context) {
 	user, _ := ctx.Get("user")
@@ -69,7 +69,7 @@ func (h *UserRoleHandler) AssignRole(ctx *gin.Context) {
 // @Tags Roles
 // @Produce json
 // @Success 200 {array} models.Role
-// @Router /roles [get]
+// @Router /api/admin/roles [get]
 // @Security BearerAuth
 func (h *UserRoleHandler) GetAllRoles(c *gin.Context) {
 	roles, err := h.Service.GetAllRoles()
@@ -85,7 +85,7 @@ func (h *UserRoleHandler) GetAllRoles(c *gin.Context) {
 // @Tags Roles
 // @Produce json
 // @Success 200 {array} models.Role
-// @Router /roles/assignable [get]
+// @Router /api/admin/roles/assignable [get]
 // @Security BearerAuth
 func (h *UserRoleHandler) GetAssignableRoles(c *gin.Context) {
 	user, _ := c.Get("user")
@@ -106,7 +106,7 @@ func (h *UserRoleHandler) GetAssignableRoles(c *gin.Context) {
 // @Param id path string true "Role ID"
 // @Success 200 {object} models.Role
 // @Failure 404 {object} map[string]string
-// @Router /roles/{id} [get]
+// @Router /api/admin/roles/{id} [get]
 // @Security BearerAuth
 func (h *UserRoleHandler) GetRoleByID(c *gin.Context) {
 	roleID, err := uuid.Parse(c.Param("id"))
