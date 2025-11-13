@@ -6,11 +6,11 @@ import (
 )
 
 type CreateCourseRequest struct {
-	Name              string    `json:"name" binding:"required,min=3,max=200"`
-	Description       string    `json:"description" binding:"required"`
-	Price             float64   `json:"price" binding:"required,min=0"`
-	IsProgressLimited bool      `json:"is_progress_limited"`
-	CourseTypeID      string `form:"course_type_id" json:"course_type_id" binding:"required"`
+	Name              string  `json:"name" binding:"required,min=3,max=200"`
+	Description       string  `json:"description" binding:"required"`
+	Price             float64 `json:"price" binding:"required,min=0"`
+	IsProgressLimited bool    `json:"is_progress_limited"`
+	CourseTypeID      string  `form:"course_type_id" json:"course_type_id" binding:"required"`
 }
 
 type UpdateCourseRequest struct {
@@ -117,3 +117,4 @@ type PaginationResponse struct {
 	HasPrevious bool        `json:"has_previous"`
 	Data        interface{} `json:"data"`
 }
+

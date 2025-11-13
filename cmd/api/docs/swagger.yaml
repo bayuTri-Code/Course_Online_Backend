@@ -69,6 +69,98 @@ definitions:
       school:
         type: string
     type: object
+  dto.CourseDetailResponse:
+    properties:
+      course_type:
+        $ref: '#/definitions/dto.CourseTypeResponse'
+      course_type_id:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      creator:
+        $ref: '#/definitions/dto.CreatorResponse'
+      deleted_at:
+        type: string
+      description:
+        type: string
+      enrollments_count:
+        type: integer
+      id:
+        type: string
+      is_progress_limited:
+        type: boolean
+      modules:
+        items:
+          $ref: '#/definitions/dto.ModuleResponse'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      thumbnail:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CourseResponse:
+    properties:
+      course_type:
+        $ref: '#/definitions/dto.CourseTypeResponse'
+      course_type_id:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      creator:
+        $ref: '#/definitions/dto.CreatorResponse'
+      deleted_at:
+        type: string
+      description:
+        type: string
+      enrollments_count:
+        type: integer
+      id:
+        type: string
+      is_progress_limited:
+        type: boolean
+      lessons_count:
+        type: integer
+      modules_count:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      thumbnail:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CourseTypeResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CreatorResponse:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+    type: object
   dto.FirebaseLoginRequest:
     properties:
       token:
@@ -79,6 +171,50 @@ definitions:
       message:
         type: string
       my_courses:
+        type: integer
+    type: object
+  dto.LessonResponse:
+    properties:
+      course_order:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      video_details:
+        type: string
+      video_id:
+        type: string
+    type: object
+  dto.ModuleResponse:
+    properties:
+      id:
+        type: string
+      lessons:
+        items:
+          $ref: '#/definitions/dto.LessonResponse'
+        type: array
+      lessons_count:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+    type: object
+  dto.PaginationResponse:
+    properties:
+      data: {}
+      has_next:
+        type: boolean
+      has_previous:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
         type: integer
     type: object
   dto.StudentDashboardResponse:
@@ -205,6 +341,9 @@ definitions:
         type: string
       creator:
         $ref: '#/definitions/models.User'
+      deleted_at:
+        format: date-time
+        type: string
       description:
         type: string
       enrollments:
@@ -227,6 +366,10 @@ definitions:
         items:
           $ref: '#/definitions/models.Quiz'
         type: array
+      thumbnail:
+        type: string
+      updated_at:
+        type: string
       zoom:
         $ref: '#/definitions/models.Zoom'
     type: object
@@ -236,11 +379,15 @@ definitions:
         items:
           $ref: '#/definitions/models.Course'
         type: array
+      created_at:
+        type: string
       description:
         type: string
       id:
         type: string
       name:
+        type: string
+      updated_at:
         type: string
     type: object
   models.Enrollment:
@@ -264,6 +411,11 @@ definitions:
     properties:
       course_order:
         type: integer
+      created_at:
+        type: string
+      deleted_at:
+        format: date-time
+        type: string
       id:
         type: string
       module:
@@ -271,6 +423,8 @@ definitions:
       module_id:
         type: string
       name:
+        type: string
+      updated_at:
         type: string
       user_completions:
         items:
@@ -287,6 +441,11 @@ definitions:
         $ref: '#/definitions/models.Course'
       course_id:
         type: string
+      created_at:
+        type: string
+      deleted_at:
+        format: date-time
+        type: string
       id:
         type: string
       lessons:
@@ -297,6 +456,8 @@ definitions:
         type: string
       number:
         type: integer
+      updated_at:
+        type: string
     type: object
   models.Quiz:
     properties:
@@ -480,6 +641,15 @@ definitions:
         example: false
         type: boolean
     type: object
+  utils.StandardResponse:
+    properties:
+      data: {}
+      errors: {}
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
 host: 192.168.100.247:8080
 info:
   contact: {}
@@ -624,6 +794,309 @@ paths:
       summary: Login user using Firebase ID Token
       tags:
       - Authentication
+  /api/courses:
+    get:
+      consumes:
+      - application/json
+      description: Get all courses with pagination and filters
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all courses
+      tags:
+      - courses
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new course with optional thumbnail upload
+      parameters:
+      - description: Course name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Course description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Course price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Limit user progress (optional)
+        in: formData
+        name: is_progress_limited
+        type: boolean
+      - description: Course type ID (UUID)
+        in: formData
+        name: course_type_id
+        required: true
+        type: string
+      - description: Course thumbnail (optional)
+        in: formData
+        name: thumbnail
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseDetailResponse'
+              type: object
+        "400":
+          description: Invalid input or bad request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new course
+      tags:
+      - courses
+  /api/courses/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a course (it can be restored later)
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Course deleted successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Soft delete a course
+      tags:
+      - courses
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information of a course by its ID
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseDetailResponse'
+              type: object
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get course by ID
+      tags:
+      - courses
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update course information, optionally including thumbnail upload
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Course name
+        in: formData
+        name: name
+        type: string
+      - description: Course description
+        in: formData
+        name: description
+        type: string
+      - description: Course price
+        in: formData
+        name: price
+        type: number
+      - description: Limit user progress (optional)
+        in: formData
+        name: is_progress_limited
+        type: boolean
+      - description: Course type ID (UUID)
+        in: formData
+        name: course_type_id
+        type: string
+      - description: Course thumbnail (optional)
+        in: formData
+        name: thumbnail
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseDetailResponse'
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a course
+      tags:
+      - courses
+  /api/courses/{id}/permanent:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a course (cannot be restored)
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Course permanently deleted
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Permanently delete a course
+      tags:
+      - courses
+  /api/courses/{id}/restore:
+    patch:
+      consumes:
+      - application/json
+      description: Restore a previously soft deleted course
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Restore a soft deleted course
+      tags:
+      - courses
   /api/dashboard/admin:
     get:
       consumes:

@@ -42,13 +42,17 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	protected := r.Group("/api")
 	protected.Use(middleware.FirebaseAuth(app, db))
 
+	// public routes
 	AuthRoutes(public, db, app)
+	CoursePublicRoutes(public, db, app)
+
+	//private routes
 	UserRoutes(protected, db, app)
 	RoleRoutes(protected, db, app)
 	BiodataRoutes(protected, db, app)
 	ActivityRoutes(protected, db, app)
 	DashboardRoutes(protected, db, app)
-	CourseManagementRoutes(protected, db, app)
+	CourseProtectedRoutes(protected, db, app)
 
 	return r
 }
