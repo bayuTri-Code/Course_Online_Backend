@@ -10,31 +10,38 @@ import (
 	"gorm.io/gorm"
 )
 
-func CourseManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
+func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	courseServices := CourseManagementServices.NewCourseService(db)
 	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices)
 
 	course := r.Group("/courses")
+	{
+		course.GET("/", courseHandler.GetAllCourseHandler)
+		course.GET("/:id", courseHandler.GetByIDCourseHandler)
+	}
+}
 
-	course.GET("/", courseHandler.GetAllCourseHandler)
-	course.GET("/:id", courseHandler.GetByIDCourseHandler)
+func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
+	courseServices := CourseManagementServices.NewCourseService(db)
+	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices)
 
-	protected := course.Group("/")
-	protected.Use(middleware.RoleMiddleware("super_admin", "admin", "instructor"))
+	course := r.Group("/courses")
+	course.Use(middleware.RoleMiddleware("super_admin", "admin", "instructor"))
+	{
+		course.POST("/", courseHandler.CreateCourseHandler)
+		course.PUT("/:id", middleware.CheckCourseOwnership(db), courseHandler.UpdateCourseHandler)
+		course.DELETE("/:id", middleware.CheckCourseOwnership(db), courseHandler.SoftDeleteCourseHandler)
+		course.PATCH("/:id/restore", courseHandler.RestoreCourseHandler)
+		course.DELETE("/:id/permanent", courseHandler.PermanentDeleteCourseHandler)
+	}
 
-	protected.POST("/", courseHandler.CreateCourseHandler)
-	protected.PUT("/:id", middleware.CheckCourseOwnership(db), courseHandler.UpdateCourseHandler)
-	protected.DELETE("/:id", middleware.CheckCourseOwnership(db), courseHandler.SoftDeleteCourseHandler)
-	protected.PATCH("/:id/restore", courseHandler.RestoreCourseHandler)
-	protected.DELETE("/:id/permanent", courseHandler.PermanentDeleteCourseHandler)
-
-
-	//course type routes
 	courseTypeServices := CourseManagementServices.NewCourseTypeService(db)
 	courseTypeHandler := CourseManagementhandler.NewCourseTypeHandler(courseTypeServices)
 
 	courseType := r.Group("/course-types")
 	courseType.Use(middleware.RoleMiddleware("super_admin", "admin"))
-	courseType.POST("/", courseTypeHandler.CreateCourseTypeHandler)
-	courseType.GET("/", courseTypeHandler.GetAllCourseTypeHandler)
+	{
+		courseType.POST("/", courseTypeHandler.CreateCourseTypeHandler)
+		courseType.GET("/", courseTypeHandler.GetAllCourseTypeHandler)
+	}
 }
