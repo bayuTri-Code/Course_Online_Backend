@@ -48,6 +48,7 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	BiodataRoutes(protected, db, app)
 	ActivityRoutes(protected, db, app)
 	DashboardRoutes(protected, db, app)
+	CourseManagementRoutes(protected, db, app)
 
 	return r
 }
