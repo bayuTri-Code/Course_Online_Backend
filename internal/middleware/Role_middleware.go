@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"course_online_backend/internal/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
@@ -14,7 +16,6 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
 
 		isAllowed := false
 
@@ -27,7 +28,7 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 				}
 			}
 
-		case []string: 
+		case []string:
 			for _, userRole := range roles {
 				for _, allowed := range allowedRoles {
 					if userRole == allowed {
@@ -53,5 +54,92 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 		}
 
 		c.Next()
+	}
+}
+
+func CheckCourseOwnership(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exists := c.Get("user_id")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  false,
+				"message": "Unauthorized: user not found in context",
+			})
+			c.Abort()
+			return
+		}
+
+		roleValue, exists := c.Get("roles")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  false,
+				"message": "Unauthorized: roles not found in context",
+			})
+			c.Abort()
+			return
+		}
+
+		courseID := c.Param("id")
+
+		var course models.Course
+		if err := db.Select("created_by").Where("id = ?", courseID).First(&course).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, gin.H{
+					"status":  false,
+					"message": "Course not found",
+				})
+				c.Abort()
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  false,
+				"message": "Failed to check course ownership",
+			})
+			c.Abort()
+			return
+		}
+
+		userIDStr := userID.(string)
+		isAdmin := false
+		isInstructor := false
+
+		switch roles := roleValue.(type) {
+		case string:
+			if roles == "super_admin" || roles == "admin" {
+				isAdmin = true
+			}
+			if roles == "instructor" {
+				isInstructor = true
+			}
+
+		case []string:
+			for _, r := range roles {
+				if r == "super_admin" || r == "admin" {
+					isAdmin = true
+					break
+				}
+				if r == "instructor" {
+					isInstructor = true
+				}
+			}
+		}
+
+		if isAdmin {
+			c.Next()
+			return
+		}
+
+		if isInstructor {
+			if course.CreatedBy != nil && course.CreatedBy.String() == userIDStr {
+				c.Next()
+				return
+			}
+		}
+
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  false,
+			"message": "Forbidden: you don't have access to this course",
+		})
+		c.Abort()
 	}
 }
