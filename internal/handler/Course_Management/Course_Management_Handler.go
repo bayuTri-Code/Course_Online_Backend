@@ -20,22 +20,22 @@ func NewCourseHandler(service *CourseManagementServices.CourseService) *CourseHa
 	}
 }
 
-// Create godoc
+// CreateCourseHandler godoc
 // @Summary Create a new course
-// @Description Create a new course with optional thumbnail
+// @Description Create a new course with optional thumbnail upload
 // @Tags courses
 // @Accept multipart/form-data
 // @Produce json
 // @Param name formData string true "Course name"
 // @Param description formData string true "Course description"
 // @Param price formData number true "Course price"
-// @Param is_progress_limited formData boolean false "Is progress limited"
-// @Param course_type_id formData string true "Course type ID"
-// @Param thumbnail formData file false "Course thumbnail"
+// @Param is_progress_limited formData boolean false "Limit user progress (optional)"
+// @Param course_type_id formData string true "Course type ID (UUID)"
+// @Param thumbnail formData file false "Course thumbnail (optional)"
 // @Success 201 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /courses [post]
+// @Failure 400 {object} utils.ErrorResponse "Invalid input or bad request"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/courses [post]
 // @Security BearerAuth
 func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 	var req dto.CreateCourseRequest
@@ -74,26 +74,16 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 	utils.JSONCreated(c, course, "Course created successfully")
 }
 
-// GetAll godoc
+// GetAllCourseHandler godoc
 // @Summary Get all courses
 // @Description Get all courses with pagination and filters
 // @Tags courses
 // @Accept json
 // @Produce json
-// @Param page query int false "Page number" default(1)
-// @Param limit query int false "Items per page" default(10)
-// @Param search query string false "Search by name or description"
-// @Param course_type_id query string false "Filter by course type ID"
-// @Param created_by query string false "Filter by creator ID"
-// @Param min_price query number false "Minimum price"
-// @Param max_price query number false "Maximum price"
-// @Param sort_by query string false "Sort by field" Enums(name, price, created_at)
-// @Param sort_order query string false "Sort order" Enums(asc, desc)
-// @Param include_deleted query boolean false "Include soft deleted items"
-// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse}
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /courses [get]
+// @Router /api/courses [get]
 func (h *CourseHandler) GetAllCourseHandler(c *gin.Context) {
 	var params dto.CourseQueryParams
 
@@ -111,18 +101,18 @@ func (h *CourseHandler) GetAllCourseHandler(c *gin.Context) {
 	utils.JSONSuccess(c, courses, "Courses retrieved successfully")
 }
 
-// GetByID godoc
+// GetByIDCourseHandler godoc
 // @Summary Get course by ID
-// @Description Get detailed course information by ID
+// @Description Retrieve detailed information of a course by its ID
 // @Tags courses
 // @Accept json
 // @Produce json
-// @Param id path string true "Course ID"
-// @Param include_deleted query boolean false "Include if soft deleted"
+// @Param id path string true "Course ID (UUID)"
 // @Success 200 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /courses/{id} [get]
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/courses/{id} [get]
 func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)
@@ -146,24 +136,24 @@ func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
 	utils.JSONSuccess(c, course, "Course retrieved successfully")
 }
 
-// Update godoc
+// UpdateCourseHandler godoc
 // @Summary Update a course
-// @Description Update course information with optional thumbnail
+// @Description Update course information, optionally including thumbnail upload
 // @Tags courses
 // @Accept multipart/form-data
 // @Produce json
-// @Param id path string true "Course ID"
+// @Param id path string true "Course ID (UUID)"
 // @Param name formData string false "Course name"
 // @Param description formData string false "Course description"
 // @Param price formData number false "Course price"
-// @Param is_progress_limited formData boolean false "Is progress limited"
-// @Param course_type_id formData string false "Course type ID"
-// @Param thumbnail formData file false "Course thumbnail"
+// @Param is_progress_limited formData boolean false "Limit user progress (optional)"
+// @Param course_type_id formData string false "Course type ID (UUID)"
+// @Param thumbnail formData file false "Course thumbnail (optional)"
 // @Success 200 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /courses/{id} [put]
+// @Failure 400 {object} utils.ErrorResponse "Invalid request data"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/courses/{id} [put]
 // @Security BearerAuth
 func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
 	idParam := c.Param("id")
@@ -198,18 +188,18 @@ func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
 	utils.JSONSuccess(c, course, "Course updated successfully")
 }
 
-// Delete godoc
+// SoftDeleteCourseHandler godoc
 // @Summary Soft delete a course
-// @Description Soft delete a course (can be restored)
+// @Description Soft delete a course (it can be restored later)
 // @Tags courses
 // @Accept json
 // @Produce json
-// @Param id path string true "Course ID"
-// @Success 200 {object} utils.StandardResponse
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /courses/{id} [delete]
+// @Param id path string true "Course ID (UUID)"
+// @Success 200 {object} utils.StandardResponse "Course deleted successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/courses/{id} [delete]
 // @Security BearerAuth
 func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
 	idParam := c.Param("id")
@@ -231,7 +221,7 @@ func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
 	utils.JSONSuccess(c, nil, "Course deleted successfully")
 }
 
-// Restore godoc
+// RestoreCourseHandler godoc
 // @Summary Restore a soft deleted course
 // @Description Restore a previously soft deleted course
 // @Tags courses
@@ -242,7 +232,7 @@ func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /courses/{id}/restore [post]
+// @Router /api/courses/{id}/restore [patch]
 // @Security BearerAuth
 func (h *CourseHandler) RestoreCourseHandler(c *gin.Context) {
 	idParam := c.Param("id")
@@ -269,18 +259,18 @@ func (h *CourseHandler) RestoreCourseHandler(c *gin.Context) {
 	utils.JSONSuccess(c, course, "Course restored successfully")
 }
 
-// PermanentDelete godoc
+// PermanentDeleteCourseHandler godoc
 // @Summary Permanently delete a course
 // @Description Permanently delete a course (cannot be restored)
 // @Tags courses
 // @Accept json
 // @Produce json
-// @Param id path string true "Course ID"
-// @Success 200 {object} utils.StandardResponse
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /courses/{id}/permanent [delete]
+// @Param id path string true "Course ID (UUID)"
+// @Success 200 {object} utils.StandardResponse "Course permanently deleted"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/courses/{id}/permanent [delete]
 // @Security BearerAuth
 func (h *CourseHandler) PermanentDeleteCourseHandler(c *gin.Context) {
 	idParam := c.Param("id")

@@ -44,7 +44,7 @@ type Module struct {
 	Number    int            `gorm:"not null" json:"number"`
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"string" format:"date-time"`
 
 	Course  Course   `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"course,omitempty"`
 	Lessons []Lesson `gorm:"foreignKey:ModuleID;constraint:OnDelete:CASCADE" json:"lessons,omitempty"`
@@ -59,7 +59,7 @@ type Lesson struct {
 	CourseOrder  int            `json:"course_order"`
 	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"string" format:"date-time"`
 
 	Module          Module       `gorm:"foreignKey:ModuleID;constraint:OnDelete:CASCADE" json:"module,omitempty"`
 	UserCompletions []UserLesson `gorm:"foreignKey:LessonID;constraint:OnDelete:CASCADE" json:"user_completions,omitempty"`
