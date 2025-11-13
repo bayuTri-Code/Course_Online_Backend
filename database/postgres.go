@@ -44,6 +44,11 @@ func PostgresConn() *gorm.DB {
 		&models.UserRole{},
 		&models.Biodata{},
 		&models.Activity{},
+		&models.Course{},
+		&models.CourseType{},
+		&models.Module{},
+		&models.Lesson{},
+		&models.Enrollment{},
 	)
 	if err != nil {
 		log.Fatalf("auto migration failed: %v", err)
