@@ -5,6 +5,7 @@ import (
 	CourseManagementServices "course_online_backend/internal/services/Course_management_Services"
 	"course_online_backend/internal/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -72,68 +73,6 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONCreated(c, course, "Course created successfully")
-}
-
-// GetAllCourseHandler godoc
-// @Summary Get all courses
-// @Description Get all courses with pagination and filters
-// @Tags courses
-// @Accept json
-// @Produce json
-// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /api/courses [get]
-func (h *CourseHandler) GetAllCourseHandler(c *gin.Context) {
-	var params dto.CourseQueryParams
-
-	if err := c.ShouldBindQuery(&params); err != nil {
-		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
-		return
-	}
-
-	courses, err := h.service.GetAllCourse(c.Request.Context(), &params)
-	if err != nil {
-		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
-		return
-	}
-
-	utils.JSONSuccess(c, courses, "Courses retrieved successfully")
-}
-
-// GetByIDCourseHandler godoc
-// @Summary Get course by ID
-// @Description Retrieve detailed information of a course by its ID
-// @Tags courses
-// @Accept json
-// @Produce json
-// @Param id path string true "Course ID (UUID)"
-// @Success 200 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
-// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
-// @Failure 404 {object} utils.ErrorResponse "Course not found"
-// @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/courses/{id} [get]
-func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := uuid.Parse(idParam)
-	if err != nil {
-		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
-		return
-	}
-
-	includeDeleted := c.Query("include_deleted") == "true"
-
-	course, err := h.service.GetByIDCourse(c.Request.Context(), id, includeDeleted)
-	if err != nil {
-		if err.Error() == "course not found" {
-			utils.JSONNotFound(c, "Course not found")
-			return
-		}
-		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
-		return
-	}
-
-	utils.JSONSuccess(c, course, "Course retrieved successfully")
 }
 
 // UpdateCourseHandler godoc
@@ -290,4 +229,337 @@ func (h *CourseHandler) PermanentDeleteCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Course permanently deleted")
+}
+
+
+//course handlers for browsing
+
+
+// GetAllCourseHandler godoc
+// @Summary Get all courses
+// @Description Get all courses with pagination and filters
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses [get]
+func (h *CourseHandler) GetAllCourseHandler(c *gin.Context) {
+	var params dto.CourseQueryParams
+
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	courses, err := h.service.GetAllCourse(c.Request.Context(), &params)
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, courses, "Courses retrieved successfully")
+}
+
+// GetByIDCourseHandler godoc
+// @Summary Get course by ID
+// @Description Retrieve detailed information of a course by its ID
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID (UUID)"
+// @Success 200 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/courses/{id} [get]
+func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	includeDeleted := c.Query("include_deleted") == "true"
+
+	course, err := h.service.GetByIDCourse(c.Request.Context(), id, includeDeleted)
+	if err != nil {
+		if err.Error() == "course not found" {
+			utils.JSONNotFound(c, "Course not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, course, "Course retrieved successfully")
+}
+
+
+// GetCoursesByCategoryHandler godoc
+// @Summary Get courses by category
+// @Description Get all courses in a specific category with pagination
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param categoryId path string true "Category ID (UUID)"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.StandardResponse{data=dto.CourseByCategoryResponse}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/category/{categoryId} [get]
+func (h *CourseHandler) GetCoursesByCategoryHandler(c *gin.Context) {
+	categoryIDParam := c.Param("categoryId")
+	categoryID, err := uuid.Parse(categoryIDParam)
+	if err != nil {
+		utils.JSONError(c, "Invalid category ID", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.service.GetCoursesByCategory(c.Request.Context(), categoryID, &params)
+	if err != nil {
+		if err.Error() == "category not found" {
+			utils.JSONNotFound(c, "Category not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, result, "Courses retrieved successfully")
+}
+
+// GetPopularCoursesHandler godoc
+// @Summary Get popular courses
+// @Description Get most popular courses sorted by enrollment count
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param limit query int false "Number of courses to return" default(10)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseResponse}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/popular [get]
+func (h *CourseHandler) GetPopularCoursesHandler(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		limit = 10
+	}
+
+	courses, err := h.service.GetPopularCourses(c.Request.Context(), limit)
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, courses, "Popular courses retrieved successfully")
+}
+
+// GetLatestCoursesHandler godoc
+// @Summary Get latest courses
+// @Description Get newest courses sorted by creation date
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param limit query int false "Number of courses to return" default(10)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseResponse}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/latest [get]
+func (h *CourseHandler) GetLatestCoursesHandler(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		limit = 10
+	}
+
+	courses, err := h.service.GetLatestCourses(c.Request.Context(), limit)
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, courses, "Latest courses retrieved successfully")
+}
+
+// GetAllCourseTypesHandler godoc
+// @Summary Get all course types
+// @Description Get all course categories with course count
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseTypeWithCountResponse}
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/course-types [get]
+func (h *CourseHandler) GetAllCourseTypesHandler(c *gin.Context) {
+	courseTypes, err := h.service.GetAllCourseTypes(c.Request.Context())
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, courseTypes, "Course types retrieved successfully")
+}
+
+// GetCoursesByInstructorHandler godoc
+// @Summary Get courses by instructor
+// @Description Get all courses created by a specific instructor
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param instructorId path string true "Instructor ID (UUID)"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.StandardResponse{data=dto.CoursesByInstructorResponse}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/instructor/{instructorId} [get]
+func (h *CourseHandler) GetCoursesByInstructorHandler(c *gin.Context) {
+	instructorIDParam := c.Param("instructorId")
+	instructorID, err := uuid.Parse(instructorIDParam)
+	if err != nil {
+		utils.JSONError(c, "Invalid instructor ID", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.service.GetCoursesByInstructor(c.Request.Context(), instructorID, &params)
+	if err != nil {
+		if err.Error() == "instructor not found" {
+			utils.JSONNotFound(c, "Instructor not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, result, "Instructor courses retrieved successfully")
+}
+
+// GetRelatedCoursesHandler godoc
+// @Summary Get related courses
+// @Description Get courses related to a specific course (same category)
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID (UUID)"
+// @Param limit query int false "Number of courses to return" default(5)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseResponse}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/{id}/related [get]
+func (h *CourseHandler) GetRelatedCoursesHandler(c *gin.Context) {
+	idParam := c.Param("id")
+	courseID, err := uuid.Parse(idParam)
+	if err != nil {
+		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "5")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		limit = 5
+	}
+
+	courses, err := h.service.GetRelatedCourses(c.Request.Context(), courseID, limit)
+	if err != nil {
+		if err.Error() == "course not found" {
+			utils.JSONNotFound(c, "Course not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, courses, "Related courses retrieved successfully")
+}
+
+// GetCourseStatsHandler godoc
+// @Summary Get course statistics
+// @Description Get overall course statistics including total courses, enrollments, and category breakdown
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.StandardResponse{data=dto.CourseStatsResponse}
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/stats [get]
+// @Security BearerAuth
+func (h *CourseHandler) GetCourseStatsHandler(c *gin.Context) {
+	stats, err := h.service.GetCourseStats(c.Request.Context())
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, stats, "Course statistics retrieved successfully")
+}
+
+// GetMyCoursesHandler godoc
+// @Summary Get my courses
+// @Description Get all courses created by the authenticated instructor
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Param search query string false "Search keyword"
+// @Param course_type_id query string false "Filter by course type"
+// @Param sort_by query string false "Sort field" Enums(name, price, created_at)
+// @Param sort_order query string false "Sort order" Enums(asc, desc)
+// @Param include_deleted query bool false "Include deleted courses"
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 401 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/courses/my-courses [get]
+// @Security BearerAuth
+func (h *CourseHandler) GetMyCoursesHandler(c *gin.Context) {
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.JSONUnauthorized(c, "User not authenticated")
+		return
+	}
+
+	userID, ok := userIDInterface.(string)
+	if !ok {
+		utils.JSONError(c, "Invalid user ID format from Firebase token", http.StatusBadRequest, nil)
+		return
+	}
+
+	var params dto.CourseQueryParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	courses, err := h.service.GetMyCourses(c.Request.Context(), userID, &params)
+	if err != nil {
+		if err.Error() == "user not found" {
+			utils.JSONNotFound(c, "User not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, courses, "My courses retrieved successfully")
 }

@@ -18,6 +18,12 @@ func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	{
 		course.GET("/", courseHandler.GetAllCourseHandler)
 		course.GET("/:id", courseHandler.GetByIDCourseHandler)
+		course.GET("/category/:categoryId", courseHandler.GetCoursesByCategoryHandler)
+		course.GET("/popular", courseHandler.GetPopularCoursesHandler)
+		course.GET("/latest", courseHandler.GetLatestCoursesHandler)
+		course.GET("/instructor/:instructorId", courseHandler.GetCoursesByInstructorHandler)
+		course.GET("/:id/related", courseHandler.GetRelatedCoursesHandler)
+		course.GET("/stats",  courseHandler.GetCourseStatsHandler)
 	}
 }
 
