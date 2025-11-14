@@ -192,107 +192,6 @@ func (s *CourseService) CreateCourse(
 }
 
 
-func (s *CourseService) GetAllCourse(ctx context.Context, params *dto.CourseQueryParams) (*dto.PaginationResponse, error) {
-	if params.Page < 1 {
-		params.Page = 1
-	}
-	if params.Limit < 1 {
-		params.Limit = 10
-	}
-	if params.SortBy == "" {
-		params.SortBy = "created_at"
-	}
-	if params.SortOrder == "" {
-		params.SortOrder = "desc"
-	}
-
-	query := s.db.Model(&models.Course{})
-
-	if params.IncludeDeleted {
-		query = query.Unscoped()
-	}
-
-	if params.Search != "" {
-		searchPattern := "%" + params.Search + "%"
-		query = query.Where("name ILIKE ? OR description ILIKE ?", searchPattern, searchPattern)
-	}
-
-	if params.CourseTypeID != uuid.Nil {
-		query = query.Where("course_type_id = ?", params.CourseTypeID)
-	}
-
-	if params.CreatedBy != uuid.Nil {
-		query = query.Where("created_by = ?", params.CreatedBy)
-	}
-
-	if params.MinPrice > 0 {
-		query = query.Where("price >= ?", params.MinPrice)
-	}
-
-	if params.MaxPrice > 0 {
-		query = query.Where("price <= ?", params.MaxPrice)
-	}
-
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
-		return nil, err
-	}
-
-	orderClause := fmt.Sprintf("%s %s", params.SortBy, params.SortOrder)
-	query = query.Order(orderClause)
-
-	offset := (params.Page - 1) * params.Limit
-	query = query.Offset(offset).Limit(params.Limit)
-
-	query = query.Preload("CourseType").
-		Preload("Creator").
-		Preload("Modules").
-		Preload("Enrollments")
-
-	var courses []models.Course
-	if err := query.Find(&courses).Error; err != nil {
-		return nil, err
-	}
-
-	courseResponses := make([]dto.CourseResponse, len(courses))
-	for i, course := range courses {
-		courseResponses[i] = s.mapToCourseResponse(&course)
-	}
-
-	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
-
-	return &dto.PaginationResponse{
-		Total:       total,
-		Page:        params.Page,
-		Limit:       params.Limit,
-		TotalPages:  totalPages,
-		HasNext:     params.Page < totalPages,
-		HasPrevious: params.Page > 1,
-		Data:        courseResponses,
-	}, nil
-}
-
-func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
-	query := s.db.Preload("CourseType").
-		Preload("Creator").
-		Preload("Modules.Lessons").
-		Preload("Enrollments")
-
-	if includeDeleted {
-		query = query.Unscoped()
-	}
-
-	var course models.Course
-	if err := query.First(&course, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("course not found")
-		}
-		return nil, err
-	}
-
-	return s.mapToCourseDetailResponse(&course), nil
-}
-
 func (s *CourseService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCourseRequest, thumbnail *multipart.FileHeader) (*dto.CourseDetailResponse, error) {
 	var course models.Course
 	if err := s.db.First(&course, id).Error; err != nil {
@@ -399,4 +298,489 @@ func (s *CourseService) PermanentDeleteCourse(ctx context.Context, id uuid.UUID)
 	}
 
 	return s.db.Unscoped().Delete(&course).Error
+}
+
+//course browsing
+
+func (s *CourseService) GetAllCourse(ctx context.Context, params *dto.CourseQueryParams) (*dto.PaginationResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+	if params.SortBy == "" {
+		params.SortBy = "created_at"
+	}
+	if params.SortOrder == "" {
+		params.SortOrder = "desc"
+	}
+
+	query := s.db.Model(&models.Course{})
+
+	if params.IncludeDeleted {
+		query = query.Unscoped()
+	}
+
+	if params.Search != "" {
+		searchPattern := "%" + params.Search + "%"
+		query = query.Where("name ILIKE ? OR description ILIKE ?", searchPattern, searchPattern)
+	}
+
+	if params.CourseTypeID != uuid.Nil {
+		query = query.Where("course_type_id = ?", params.CourseTypeID)
+	}
+
+	if params.CreatedBy != uuid.Nil {
+		query = query.Where("created_by = ?", params.CreatedBy)
+	}
+
+	if params.MinPrice > 0 {
+		query = query.Where("price >= ?", params.MinPrice)
+	}
+
+	if params.MaxPrice > 0 {
+		query = query.Where("price <= ?", params.MaxPrice)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	orderClause := fmt.Sprintf("%s %s", params.SortBy, params.SortOrder)
+	query = query.Order(orderClause)
+
+	offset := (params.Page - 1) * params.Limit
+	query = query.Offset(offset).Limit(params.Limit)
+
+	query = query.Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments")
+
+	var courses []models.Course
+	if err := query.Find(&courses).Error; err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
+	}, nil
+}
+
+func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
+	query := s.db.Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules.Lessons").
+		Preload("Enrollments")
+
+	if includeDeleted {
+		query = query.Unscoped()
+	}
+
+	var course models.Course
+	if err := query.First(&course, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("course not found")
+		}
+		return nil, err
+	}
+
+	return s.mapToCourseDetailResponse(&course), nil
+}
+
+
+func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.CourseByCategoryResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+
+	var category models.CourseType
+	if err := s.db.First(&category, categoryID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("category not found")
+		}
+		return nil, err
+	}
+
+	query := s.db.Model(&models.Course{}).Where("course_type_id = ?", categoryID)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	offset := (params.Page - 1) * params.Limit
+	query = query.Offset(offset).Limit(params.Limit)
+
+	query = query.Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments").
+		Order("created_at DESC")
+
+	var courses []models.Course
+	if err := query.Find(&courses).Error; err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	return &dto.CourseByCategoryResponse{
+		Category: dto.CourseTypeWithCountResponse{
+			ID:           category.ID,
+			Name:         category.Name,
+			Description:  category.Description,
+			CoursesCount: total,
+			CreatedAt:    category.CreatedAt,
+			UpdatedAt:    category.UpdatedAt,
+		},
+		Courses: courseResponses,
+		Total:   total,
+	}, nil
+}
+
+func (s *CourseService) GetPopularCourses(ctx context.Context, limit int) ([]dto.CourseResponse, error) {
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	type CourseWithEnrollmentCount struct {
+		models.Course
+		EnrollmentCount int64
+	}
+
+	var coursesWithCount []CourseWithEnrollmentCount
+	err := s.db.Model(&models.Course{}).
+		Select("courses.*, COUNT(enrollments.id) as enrollment_count").
+		Joins("LEFT JOIN enrollments ON enrollments.course_id = courses.id").
+		Group("courses.id").
+		Order("enrollment_count DESC").
+		Limit(limit).
+		Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments").
+		Find(&coursesWithCount).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(coursesWithCount))
+	for i, item := range coursesWithCount {
+		courseResponses[i] = s.mapToCourseResponse(&item.Course)
+	}
+
+	return courseResponses, nil
+}
+
+func (s *CourseService) GetLatestCourses(ctx context.Context, limit int) ([]dto.CourseResponse, error) {
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	var courses []models.Course
+	err := s.db.Model(&models.Course{}).
+		Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments").
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&courses).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	return courseResponses, nil
+}
+
+func (s *CourseService) GetAllCourseTypes(ctx context.Context) ([]dto.CourseTypeWithCountResponse, error) {
+	type CourseTypeWithCount struct {
+		models.CourseType
+		CoursesCount int64
+	}
+
+	var typesWithCount []CourseTypeWithCount
+	err := s.db.Model(&models.CourseType{}).
+		Select("course_types.*, COUNT(courses.id) as courses_count").
+		Joins("LEFT JOIN courses ON courses.course_type_id = course_types.id AND courses.deleted_at IS NULL").
+		Group("course_types.id").
+		Order("course_types.name ASC").
+		Find(&typesWithCount).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]dto.CourseTypeWithCountResponse, len(typesWithCount))
+	for i, item := range typesWithCount {
+		responses[i] = dto.CourseTypeWithCountResponse{
+			ID:           item.ID,
+			Name:         item.Name,
+			Description:  item.Description,
+			CoursesCount: item.CoursesCount,
+			CreatedAt:    item.CreatedAt,
+			UpdatedAt:    item.UpdatedAt,
+		}
+	}
+
+	return responses, nil
+}
+
+func (s *CourseService) GetCoursesByInstructor(ctx context.Context, instructorID uuid.UUID, params *dto.SimplePaginationParams) (*dto.CoursesByInstructorResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+
+	var instructor models.User
+	if err := s.db.First(&instructor, instructorID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("instructor not found")
+		}
+		return nil, err
+	}
+
+	query := s.db.Model(&models.Course{}).Where("created_by = ?", instructorID)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	offset := (params.Page - 1) * params.Limit
+	query = query.Offset(offset).Limit(params.Limit)
+
+	query = query.Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments").
+		Order("created_at DESC")
+
+	var courses []models.Course
+	if err := query.Find(&courses).Error; err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	return &dto.CoursesByInstructorResponse{
+		Instructor: dto.InstructorResponse{
+			ID:       instructor.ID,
+			FullName: instructor.Username,
+			Email:    instructor.EmailAddress,
+		},
+		Courses: courseResponses,
+		Total:   total,
+	}, nil
+}
+
+func (s *CourseService) GetRelatedCourses(ctx context.Context, courseID uuid.UUID, limit int) ([]dto.CourseResponse, error) {
+	if limit < 1 {
+		limit = 5
+	}
+	if limit > 20 {
+		limit = 20
+	}
+
+	var currentCourse models.Course
+	if err := s.db.First(&currentCourse, courseID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("course not found")
+		}
+		return nil, err
+	}
+
+	var courses []models.Course
+	err := s.db.Model(&models.Course{}).
+		Where("course_type_id = ? AND id != ?", currentCourse.CourseTypeID, courseID).
+		Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments").
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&courses).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	return courseResponses, nil
+}
+
+
+
+func (s *CourseService) GetCourseStats(ctx context.Context) (*dto.CourseStatsResponse, error) {
+	var totalCourses int64
+	if err := s.db.Model(&models.Course{}).Count(&totalCourses).Error; err != nil {
+		return nil, err
+	}
+
+	var totalEnrollments int64
+	if err := s.db.Model(&models.Enrollment{}).Count(&totalEnrollments).Error; err != nil {
+		return nil, err
+	}
+
+	var avgPrice struct {
+		Average float64
+	}
+	if err := s.db.Model(&models.Course{}).Select("AVG(price) as average").Scan(&avgPrice).Error; err != nil {
+		return nil, err
+	}
+
+	type CategoryCount struct {
+		CategoryID   uuid.UUID
+		CategoryName string
+		Count        int64
+	}
+
+	var categoryCounts []CategoryCount
+	err := s.db.Model(&models.Course{}).
+		Select("course_types.id as category_id, course_types.name as category_name, COUNT(courses.id) as count").
+		Joins("JOIN course_types ON course_types.id = courses.course_type_id").
+		Where("courses.deleted_at IS NULL").
+		Group("course_types.id, course_types.name").
+		Order("count DESC").
+		Find(&categoryCounts).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	categoryResponses := make([]dto.CourseCountByCategoryResponse, len(categoryCounts))
+	for i, cc := range categoryCounts {
+		categoryResponses[i] = dto.CourseCountByCategoryResponse{
+			CategoryID:   cc.CategoryID,
+			CategoryName: cc.CategoryName,
+			Count:        cc.Count,
+		}
+	}
+
+	return &dto.CourseStatsResponse{
+		TotalCourses:      totalCourses,
+		TotalEnrollments:  totalEnrollments,
+		AveragePrice:      avgPrice.Average,
+		CoursesByCategory: categoryResponses,
+	}, nil
+}
+
+func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, params *dto.CourseQueryParams) (*dto.PaginationResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+	if params.SortBy == "" {
+		params.SortBy = "created_at"
+	}
+	if params.SortOrder == "" {
+		params.SortOrder = "desc"
+	}
+
+	var user models.User
+	if err := s.db.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	query := s.db.Model(&models.Course{}).Where("created_by = ?", user.ID)
+
+	if params.IncludeDeleted {
+		query = query.Unscoped()
+	}
+
+	if params.Search != "" {
+		searchPattern := "%" + params.Search + "%"
+		query = query.Where("name ILIKE ? OR description ILIKE ?", searchPattern, searchPattern)
+	}
+
+	if params.CourseTypeID != uuid.Nil {
+		query = query.Where("course_type_id = ?", params.CourseTypeID)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	orderClause := fmt.Sprintf("%s %s", params.SortBy, params.SortOrder)
+	query = query.Order(orderClause)
+
+	offset := (params.Page - 1) * params.Limit
+	query = query.Offset(offset).Limit(params.Limit)
+
+	query = query.Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules").
+		Preload("Enrollments")
+
+	var courses []models.Course
+	if err := query.Find(&courses).Error; err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
+	}, nil
 }

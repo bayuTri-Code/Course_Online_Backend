@@ -118,3 +118,50 @@ type PaginationResponse struct {
 	Data        interface{} `json:"data"`
 }
 
+
+//course browsing response
+
+type CourseTypeWithCountResponse struct {
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	CoursesCount int64     `json:"courses_count"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type CourseByCategoryResponse struct {
+	Category CourseTypeWithCountResponse `json:"category"`
+	Courses  []CourseResponse            `json:"courses"`
+	Total    int64                       `json:"total"`
+}
+
+type CoursesByInstructorResponse struct {
+	Instructor InstructorResponse `json:"instructor"`
+	Courses    []CourseResponse   `json:"courses"`
+	Total      int64              `json:"total"`
+}
+
+type InstructorResponse struct {
+	ID       uuid.UUID `json:"id"`
+	FullName string    `json:"full_name"`
+	Email    string    `json:"email"`
+}
+
+type CourseStatsResponse struct {
+	TotalCourses      int64                         `json:"total_courses"`
+	TotalEnrollments  int64                         `json:"total_enrollments"`
+	AveragePrice      float64                       `json:"average_price"`
+	CoursesByCategory []CourseCountByCategoryResponse `json:"courses_by_category"`
+}
+
+type CourseCountByCategoryResponse struct {
+	CategoryID   uuid.UUID `json:"category_id"`
+	CategoryName string    `json:"category_name"`
+	Count        int64     `json:"count"`
+}
+
+type SimplePaginationParams struct {
+	Page  int `form:"page" binding:"omitempty,min=1"`
+	Limit int `form:"limit" binding:"omitempty,min=1,max=100"`
+}
