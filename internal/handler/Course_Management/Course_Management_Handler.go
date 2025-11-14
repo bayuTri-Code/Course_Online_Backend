@@ -401,7 +401,7 @@ func (h *CourseHandler) GetLatestCoursesHandler(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} utils.StandardResponse{data=[]dto.CourseTypeWithCountResponse}
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/course-types [get]
+// @Router /api/courses/course-types [get]
 func (h *CourseHandler) GetAllCourseTypesHandler(c *gin.Context) {
 	courseTypes, err := h.service.GetAllCourseTypes(c.Request.Context())
 	if err != nil {
