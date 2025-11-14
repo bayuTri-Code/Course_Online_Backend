@@ -16,8 +16,6 @@ func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 
 	course := r.Group("/courses")
 	{
-		course.GET("/", courseHandler.GetAllCourseHandler)
-		course.GET("/:id", courseHandler.GetByIDCourseHandler)
 		course.GET("/category/:categoryId", courseHandler.GetCoursesByCategoryHandler)
 		course.GET("/popular", courseHandler.GetPopularCoursesHandler)
 		course.GET("/latest", courseHandler.GetLatestCoursesHandler)
@@ -25,6 +23,8 @@ func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		course.GET("/:id/related", courseHandler.GetRelatedCoursesHandler)
 		course.GET("/stats",  courseHandler.GetCourseStatsHandler)
 	}
+
+	
 }
 
 func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
@@ -40,7 +40,19 @@ func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		course.PATCH("/:id/restore", courseHandler.RestoreCourseHandler)
 		course.DELETE("/:id/permanent", courseHandler.PermanentDeleteCourseHandler)
 	}
+	
+	//course Browsing Routes for all roles
+	courses := r.Group("/courses")
+	courses.Use(middleware.RoleMiddleware("student","super_admin", "admin", "instructor"))
+	{
+		course.GET("/", courseHandler.GetAllCourseHandler)
+		course.GET("/:id", courseHandler.GetByIDCourseHandler)
+		courses.GET("/my-courses", courseHandler.GetMyCoursesHandler)
+		course.GET("/course-types", courseHandler.GetAllCourseTypesHandler)
+	}
 
+
+	// Course Type Routes
 	courseTypeServices := CourseManagementServices.NewCourseTypeService(db)
 	courseTypeHandler := CourseManagementhandler.NewCourseTypeHandler(courseTypeServices)
 

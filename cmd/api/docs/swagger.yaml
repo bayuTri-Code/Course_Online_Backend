@@ -69,6 +69,26 @@ definitions:
       school:
         type: string
     type: object
+  dto.CourseByCategoryResponse:
+    properties:
+      category:
+        $ref: '#/definitions/dto.CourseTypeWithCountResponse'
+      courses:
+        items:
+          $ref: '#/definitions/dto.CourseResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.CourseCountByCategoryResponse:
+    properties:
+      category_id:
+        type: string
+      category_name:
+        type: string
+      count:
+        type: integer
+    type: object
   dto.CourseDetailResponse:
     properties:
       course_type:
@@ -139,6 +159,19 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.CourseStatsResponse:
+    properties:
+      average_price:
+        type: number
+      courses_by_category:
+        items:
+          $ref: '#/definitions/dto.CourseCountByCategoryResponse'
+        type: array
+      total_courses:
+        type: integer
+      total_enrollments:
+        type: integer
+    type: object
   dto.CourseTypeResponse:
     properties:
       created_at:
@@ -151,6 +184,32 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  dto.CourseTypeWithCountResponse:
+    properties:
+      courses_count:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CoursesByInstructorResponse:
+    properties:
+      courses:
+        items:
+          $ref: '#/definitions/dto.CourseResponse'
+        type: array
+      instructor:
+        $ref: '#/definitions/dto.InstructorResponse'
+      total:
+        type: integer
     type: object
   dto.CreatorResponse:
     properties:
@@ -172,6 +231,15 @@ definitions:
         type: string
       my_courses:
         type: integer
+    type: object
+  dto.InstructorResponse:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
     type: object
   dto.LessonResponse:
     properties:
@@ -1057,6 +1125,51 @@ paths:
       summary: Permanently delete a course
       tags:
       - courses
+  /api/courses/{id}/related:
+    get:
+      consumes:
+      - application/json
+      description: Get courses related to a specific course (same category)
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 5
+        description: Number of courses to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.CourseResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get related courses
+      tags:
+      - courses-browsing
   /api/courses/{id}/restore:
     patch:
       consumes:
@@ -1097,6 +1210,306 @@ paths:
       summary: Restore a soft deleted course
       tags:
       - courses
+  /api/courses/category/{categoryId}:
+    get:
+      consumes:
+      - application/json
+      description: Get all courses in a specific category with pagination
+      parameters:
+      - description: Category ID (UUID)
+        in: path
+        name: categoryId
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseByCategoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get courses by category
+      tags:
+      - courses-browsing
+  /api/courses/course-types:
+    get:
+      consumes:
+      - application/json
+      description: Get all course categories with course count
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.CourseTypeWithCountResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all course types
+      tags:
+      - courses-browsing
+  /api/courses/instructor/{instructorId}:
+    get:
+      consumes:
+      - application/json
+      description: Get all courses created by a specific instructor
+      parameters:
+      - description: Instructor ID (UUID)
+        in: path
+        name: instructorId
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CoursesByInstructorResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get courses by instructor
+      tags:
+      - courses-browsing
+  /api/courses/latest:
+    get:
+      consumes:
+      - application/json
+      description: Get newest courses sorted by creation date
+      parameters:
+      - default: 10
+        description: Number of courses to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.CourseResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get latest courses
+      tags:
+      - courses-browsing
+  /api/courses/my-courses:
+    get:
+      consumes:
+      - application/json
+      description: Get all courses created by the authenticated instructor
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search keyword
+        in: query
+        name: search
+        type: string
+      - description: Filter by course type
+        in: query
+        name: course_type_id
+        type: string
+      - description: Sort field
+        enum:
+        - name
+        - price
+        - created_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      - description: Include deleted courses
+        in: query
+        name: include_deleted
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my courses
+      tags:
+      - courses-browsing
+  /api/courses/popular:
+    get:
+      consumes:
+      - application/json
+      description: Get most popular courses sorted by enrollment count
+      parameters:
+      - default: 10
+        description: Number of courses to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.CourseResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get popular courses
+      tags:
+      - courses-browsing
+  /api/courses/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get overall course statistics including total courses, enrollments,
+        and category breakdown
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseStatsResponse'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get course statistics
+      tags:
+      - courses-browsing
   /api/dashboard/admin:
     get:
       consumes:
