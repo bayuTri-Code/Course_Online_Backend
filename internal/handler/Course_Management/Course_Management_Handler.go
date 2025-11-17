@@ -2,8 +2,10 @@ package CourseManagementhandler
 
 import (
 	"course_online_backend/internal/dto"
+	"course_online_backend/internal/services"
 	CourseManagementServices "course_online_backend/internal/services/Course_management_Services"
 	"course_online_backend/internal/utils"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -12,12 +14,14 @@ import (
 )
 
 type CourseHandler struct {
-	service *CourseManagementServices.CourseService
+	service         *CourseManagementServices.CourseService
+	ActivityService *services.ActivityService
 }
 
-func NewCourseHandler(service *CourseManagementServices.CourseService) *CourseHandler {
+func NewCourseHandler(service *CourseManagementServices.CourseService, act *services.ActivityService) *CourseHandler {
 	return &CourseHandler{
-		service: service,
+		service:         service,
+		ActivityService: act,
 	}
 }
 
@@ -73,6 +77,18 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONCreated(c, course, "Course created successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Created course: %s (ID: %s)", req.Name, course.ID.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // UpdateCourseHandler godoc
@@ -125,6 +141,22 @@ func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, course, "Course updated successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			courseName := course.Name
+			if req.Name != "" {
+				courseName = req.Name
+			}
+			activityMsg := fmt.Sprintf("Updated course: %s (ID: %s)", courseName, id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // SoftDeleteCourseHandler godoc
@@ -148,6 +180,16 @@ func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
 		return
 	}
 
+	course, err := h.service.GetByIDCourse(c.Request.Context(), id, false)
+	if err != nil {
+		if err.Error() == "course not found" {
+			utils.JSONNotFound(c, "Course not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
 	if err := h.service.SoftDeleteCourse(c.Request.Context(), id); err != nil {
 		if err.Error() == "course not found" {
 			utils.JSONNotFound(c, "Course not found")
@@ -158,6 +200,18 @@ func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Course deleted successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Soft deleted course: %s (ID: %s)", course.Name, id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // RestoreCourseHandler godoc
@@ -196,6 +250,18 @@ func (h *CourseHandler) RestoreCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, course, "Course restored successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Restored course: %s (ID: %s)", course.Name, id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // PermanentDeleteCourseHandler godoc
@@ -219,6 +285,16 @@ func (h *CourseHandler) PermanentDeleteCourseHandler(c *gin.Context) {
 		return
 	}
 
+	course, err := h.service.GetByIDCourse(c.Request.Context(), id, true)
+	if err != nil {
+		if err.Error() == "course not found" {
+			utils.JSONNotFound(c, "Course not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
 	if err := h.service.PermanentDeleteCourse(c.Request.Context(), id); err != nil {
 		if err.Error() == "course not found" {
 			utils.JSONNotFound(c, "Course not found")
@@ -229,11 +305,19 @@ func (h *CourseHandler) PermanentDeleteCourseHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Course permanently deleted")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Permanently deleted course: %s (ID: %s)", course.Name, id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
-
-
-//course handlers for browsing
-
 
 // GetAllCourseHandler godoc
 // @Summary Get all courses
@@ -296,7 +380,6 @@ func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
 
 	utils.JSONSuccess(c, course, "Course retrieved successfully")
 }
-
 
 // GetCoursesByCategoryHandler godoc
 // @Summary Get courses by category
