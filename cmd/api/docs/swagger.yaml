@@ -211,6 +211,17 @@ definitions:
       total:
         type: integer
     type: object
+  dto.CreateCourseTypeRequestSwagger:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - name
+    type: object
   dto.CreatorResponse:
     properties:
       email:
@@ -703,7 +714,6 @@ definitions:
     properties:
       errors: {}
       message:
-        example: Server Internal error 500
         type: string
       status:
         example: false
@@ -862,6 +872,68 @@ paths:
       summary: Login user using Firebase ID Token
       tags:
       - Authentication
+  /api/course-types:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all course types/categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.CourseTypeResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all course types
+      tags:
+      - course-types
+    post:
+      consumes:
+      - application/json
+      description: Create a new course type/category
+      parameters:
+      - description: Course type details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCourseTypeRequestSwagger'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CourseTypeResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new course type
+      tags:
+      - course-types
   /api/courses:
     get:
       consumes:
