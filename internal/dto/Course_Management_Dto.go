@@ -97,21 +97,8 @@ type CreatorResponse struct {
 	Email    string    `json:"email"`
 }
 
-type ModuleResponse struct {
-	ID           uuid.UUID        `json:"id"`
-	Name         string           `json:"name"`
-	Number       int              `json:"number"`
-	LessonsCount int              `json:"lessons_count"`
-	Lessons      []LessonResponse `json:"lessons,omitempty"`
-}
 
-type LessonResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
-	VideoID      string    `json:"video_id"`
-	VideoDetails string    `json:"video_details"`
-	CourseOrder  int       `json:"course_order"`
-}
+
 
 type PaginationResponse struct {
 	Total       int64       `json:"total"`
