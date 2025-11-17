@@ -78,6 +78,11 @@ type CreateCourseTypeRequest struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+type CreateCourseTypeRequestSwagger struct {
+	Name        string `json:"name" binding:"required,min=3,max=100"`
+	Description string `json:"description"`
+}
+
 type CourseTypeResponse struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
@@ -118,7 +123,6 @@ type PaginationResponse struct {
 	Data        interface{} `json:"data"`
 }
 
-
 //course browsing response
 
 type CourseTypeWithCountResponse struct {
@@ -149,9 +153,9 @@ type InstructorResponse struct {
 }
 
 type CourseStatsResponse struct {
-	TotalCourses      int64                         `json:"total_courses"`
-	TotalEnrollments  int64                         `json:"total_enrollments"`
-	AveragePrice      float64                       `json:"average_price"`
+	TotalCourses      int64                           `json:"total_courses"`
+	TotalEnrollments  int64                           `json:"total_enrollments"`
+	AveragePrice      float64                         `json:"average_price"`
 	CoursesByCategory []CourseCountByCategoryResponse `json:"courses_by_category"`
 }
 

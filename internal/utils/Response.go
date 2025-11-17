@@ -25,7 +25,7 @@ type StandardResponse struct {
 
 type ErrorResponse struct {
 	Status  bool        `json:"status" example:"false"`
-	Message string      `json:"message" example:"Server Internal error 500"`
+	Message string      `json:"message"`
 	Errors  interface{} `json:"errors,omitempty"`
 }
 

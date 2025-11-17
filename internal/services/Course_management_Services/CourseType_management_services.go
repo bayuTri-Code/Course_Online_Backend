@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 type CourseTypeService struct {
 	db *gorm.DB
 }
