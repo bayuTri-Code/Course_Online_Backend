@@ -30,7 +30,7 @@ func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	activityService := services.NewActivityService(db)
 
-	
+
 	courseServices := CourseManagementServices.NewCourseService(db)
 	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices, activityService)
 
