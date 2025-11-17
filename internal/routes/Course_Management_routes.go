@@ -23,8 +23,6 @@ func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		course.GET("/:id/related", courseHandler.GetRelatedCoursesHandler)
 		course.GET("/stats",  courseHandler.GetCourseStatsHandler)
 	}
-
-	
 }
 
 func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
