@@ -17,6 +17,16 @@ type UpdateModuleRequest struct {
 	Number *int    `json:"number" binding:"omitempty,min=1"`
 }
 
+type CreateModuleResponse struct {
+	ID           uuid.UUID `json:"id"`
+	CourseID     uuid.UUID `json:"course_id"`
+	Name         string    `json:"name"`
+	Number       int       `json:"number"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	LessonsCount int       `json:"lessons_count"`
+}
+
 type ModuleResponse struct {
 	ID           uuid.UUID        `json:"id"`
 	CourseID     uuid.UUID        `json:"course_id"`

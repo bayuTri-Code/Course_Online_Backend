@@ -28,7 +28,7 @@ func NewModuleHandler(service *modulemanagementServices.ModuleService) *ModuleHa
 // @Produce json
 // @Param courseId path string true "Course ID (UUID)"
 // @Param request body dto.CreateModuleRequest true "Module details"
-// @Success 201 {object} utils.StandardResponse{data=dto.ModuleResponse}
+// @Success 201 {object} utils.StandardResponse{data=dto.CreateModuleResponse}
 // @Failure 400 {object} utils.ErrorResponse "Invalid request"
 // @Failure 404 {object} utils.ErrorResponse "Course not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
@@ -71,7 +71,7 @@ func (h *ModuleHandler) CreateModuleHandler(c *gin.Context) {
 // @Produce json
 // @Param id path string true "Module ID (UUID)"
 // @Param request body dto.UpdateModuleRequest true "Module details"
-// @Success 200 {object} utils.StandardResponse{data=dto.ModuleResponse}
+// @Success 200 {object} utils.StandardResponse{data=dto.CreateModuleResponse}
 // @Failure 400 {object} utils.ErrorResponse "Invalid request data"
 // @Failure 404 {object} utils.ErrorResponse "Module not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
@@ -144,7 +144,7 @@ func (h *ModuleHandler) GetModuleByIDHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param courseId path string true "Course ID (UUID)"
-// @Success 200 {object} utils.StandardResponse{data=[]dto.ModuleResponse}
+// @Success 200 {object} utils.StandardResponse{data=[]dto.CreateModuleResponse}
 // @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
 // @Failure 404 {object} utils.ErrorResponse "Course not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
@@ -210,7 +210,7 @@ func (h *ModuleHandler) SoftDeleteModuleHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Module ID (UUID)"
-// @Success 200 {object} utils.StandardResponse{data=dto.ModuleResponse}
+// @Success 200 {object} utils.StandardResponse{data=dto.CreateModuleResponse}
 // @Failure 400 {object} utils.ErrorResponse "Invalid module ID"
 // @Failure 404 {object} utils.ErrorResponse "Module not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
