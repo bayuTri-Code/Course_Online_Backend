@@ -3,6 +3,7 @@ package routes
 import (
 	CourseManagementhandler "course_online_backend/internal/handler/Course_Management"
 	"course_online_backend/internal/middleware"
+	"course_online_backend/internal/services"
 	CourseManagementServices "course_online_backend/internal/services/Course_management_Services"
 
 	firebase "firebase.google.com/go/v4"
@@ -11,8 +12,9 @@ import (
 )
 
 func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
+	activityService := services.NewActivityService(db)
 	courseServices := CourseManagementServices.NewCourseService(db)
-	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices)
+	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices, activityService)
 
 	course := r.Group("/courses")
 	{
@@ -26,8 +28,11 @@ func CoursePublicRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 }
 
 func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
+	activityService := services.NewActivityService(db)
+
+	
 	courseServices := CourseManagementServices.NewCourseService(db)
-	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices)
+	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices, activityService)
 
 	course := r.Group("/courses")
 	course.Use(middleware.RoleMiddleware("super_admin", "admin", "instructor"))
@@ -52,7 +57,7 @@ func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 
 	// Course Type Routes
 	courseTypeServices := CourseManagementServices.NewCourseTypeService(db)
-	courseTypeHandler := CourseManagementhandler.NewCourseTypeHandler(courseTypeServices)
+	courseTypeHandler := CourseManagementhandler.NewCourseTypeHandler(courseTypeServices, activityService )
 
 	courseType := r.Group("/course-types")
 	courseType.Use(middleware.RoleMiddleware("super_admin", "admin"))
