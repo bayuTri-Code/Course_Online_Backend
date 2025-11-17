@@ -222,6 +222,36 @@ definitions:
     required:
     - name
     type: object
+  dto.CreateModuleRequest:
+    properties:
+      name:
+        maxLength: 200
+        minLength: 3
+        type: string
+      number:
+        minimum: 1
+        type: integer
+    required:
+    - name
+    - number
+    type: object
+  dto.CreateModuleResponse:
+    properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      lessons_count:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   dto.CreatorResponse:
     properties:
       email:
@@ -256,17 +286,46 @@ definitions:
     properties:
       course_order:
         type: integer
+      created_at:
+        type: string
       id:
         type: string
+      module_id:
+        type: string
       name:
+        type: string
+      updated_at:
         type: string
       video_details:
         type: string
       video_id:
         type: string
     type: object
+  dto.ModuleDetailResponse:
+    properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      lessons:
+        items:
+          $ref: '#/definitions/dto.LessonResponse'
+        type: array
+      name:
+        type: string
+      number:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   dto.ModuleResponse:
     properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
       id:
         type: string
       lessons:
@@ -279,6 +338,8 @@ definitions:
         type: string
       number:
         type: integer
+      updated_at:
+        type: string
     type: object
   dto.PaginationResponse:
     properties:
@@ -310,6 +371,16 @@ definitions:
       total_instructors:
         type: integer
       total_students:
+        type: integer
+    type: object
+  dto.UpdateModuleRequest:
+    properties:
+      name:
+        maxLength: 200
+        minLength: 3
+        type: string
+      number:
+        minimum: 1
         type: integer
     type: object
   dto.UpdateUserRequest:
@@ -1027,6 +1098,91 @@ paths:
       summary: Create a new course
       tags:
       - courses
+  /api/courses/{courseId}/modules:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all modules for a specific course
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.CreateModuleResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get modules by course ID
+      tags:
+      - modules
+    post:
+      consumes:
+      - application/json
+      description: Create a new module for a course
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: courseId
+        required: true
+        type: string
+      - description: Module details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateModuleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateModuleResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new module
+      tags:
+      - modules
   /api/courses/{id}:
     delete:
       consumes:
@@ -1916,6 +2072,198 @@ paths:
       summary: Get Activity Summary
       tags:
       - Activity
+  /api/modules/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a module (it can be restored later)
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module deleted successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid module ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Soft delete a module
+      tags:
+      - modules
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information of a module by its ID
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ModuleDetailResponse'
+              type: object
+        "400":
+          description: Invalid module ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get module by ID
+      tags:
+      - modules
+    put:
+      consumes:
+      - application/json
+      description: Update module information
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Module details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateModuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateModuleResponse'
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a module
+      tags:
+      - modules
+  /api/modules/{id}/permanent:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a module (cannot be restored)
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Module permanently deleted
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid module ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Permanently delete a module
+      tags:
+      - modules
+  /api/modules/{id}/restore:
+    patch:
+      consumes:
+      - application/json
+      description: Restore a previously soft deleted module
+      parameters:
+      - description: Module ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateModuleResponse'
+              type: object
+        "400":
+          description: Invalid module ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Module not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Restore a soft deleted module
+      tags:
+      - modules
   /api/profile/biodata:
     delete:
       consumes:

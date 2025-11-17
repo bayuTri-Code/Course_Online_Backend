@@ -1,4 +1,4 @@
-package CourseManagementServices
+package ModuleManagementServices
 
 import (
 	"context"
