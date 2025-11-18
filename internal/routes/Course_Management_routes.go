@@ -69,7 +69,7 @@ func CourseProtectedRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 
 	//module routes
 	moduleServices := modulemanagementServices.NewModuleService(db)
-	moduleHandler := ModuleMgmthandler.NewModuleHandler(moduleServices)
+	moduleHandler := ModuleMgmthandler.NewModuleHandler(moduleServices, activityService)
 
 	module := r.Group("/courses")
 	module.Use(middleware.RoleMiddleware("super_admin", "admin", "instructor"))
