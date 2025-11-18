@@ -2,8 +2,10 @@ package CourseManagementhandler
 
 import (
 	"course_online_backend/internal/dto"
+	"course_online_backend/internal/services"
 	modulemanagementServices "course_online_backend/internal/services/Module_Management_Services"
 	"course_online_backend/internal/utils"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,12 +13,14 @@ import (
 )
 
 type ModuleHandler struct {
-	service *modulemanagementServices.ModuleService
+	service         *modulemanagementServices.ModuleService
+	ActivityService *services.ActivityService
 }
 
-func NewModuleHandler(service *modulemanagementServices.ModuleService) *ModuleHandler {
+func NewModuleHandler(service *modulemanagementServices.ModuleService, act *services.ActivityService) *ModuleHandler {
 	return &ModuleHandler{
-		service: service,
+		service:         service,
+		ActivityService: act,
 	}
 }
 
@@ -61,6 +65,18 @@ func (h *ModuleHandler) CreateModuleHandler(c *gin.Context) {
 	}
 
 	utils.JSONCreated(c, module, "Module created successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Created module: %s (ID: %s) From Course: %s", req.Name, module.ID.String(), courseID.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // UpdateModuleHandler godoc
@@ -102,6 +118,18 @@ func (h *ModuleHandler) UpdateModuleHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, module, "Module updated successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Updated module: %s (ID: %s)", module.Name, module.ID.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // GetModuleByIDHandler godoc
@@ -201,6 +229,18 @@ func (h *ModuleHandler) SoftDeleteModuleHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Module deleted successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("soft Deleted module: (ID: %s)", id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // RestoreModuleHandler godoc
@@ -239,6 +279,18 @@ func (h *ModuleHandler) RestoreModuleHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, module, "Module restored successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Restore module: (ID: %s)", id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // PermanentDeleteModuleHandler godoc
@@ -272,4 +324,16 @@ func (h *ModuleHandler) PermanentDeleteModuleHandler(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Module permanently deleted")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+			activityMsg := fmt.Sprintf("Deleted Permanent module: (ID: %s)", id.String())
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
