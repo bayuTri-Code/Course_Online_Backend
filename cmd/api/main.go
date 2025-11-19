@@ -2,6 +2,7 @@ package main
 
 import (
 	"course_online_backend/database"
+	// "course_online_backend/database/Repository"
 	"course_online_backend/internal/config"
 	"course_online_backend/internal/routes"
 	"fmt"
@@ -48,7 +49,7 @@ func main() {
 		log.Fatal("Failed to connect to Redis")
 	}
 
-	r := routes.Routes(db, firebaseApp, minioClient, config.MinioConfig.Bucket, config.MinioConfig.Endpoint)
+	r := routes.Routes(db, firebaseApp, minioClient, config.MinioConfig.Bucket, config.MinioConfig.Endpoint )
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
