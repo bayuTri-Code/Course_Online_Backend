@@ -6,8 +6,8 @@ import (
 	"course_online_backend/internal/services"
 	CourseManagementServices "course_online_backend/internal/services/Course_management_Services"
 
-	ModuleMgmthandler "course_online_backend/internal/handler/Module_Management_Handler"
-	modulemanagementServices "course_online_backend/internal/services/Module_Management_Services"
+	ModuleMgmthandler "course_online_backend/internal/handler/Course_Management/Module_Management_Handler"
+	modulemanagementServices "course_online_backend/internal/services/Course_management_Services/Module_Management_Services"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gin-gonic/gin"
