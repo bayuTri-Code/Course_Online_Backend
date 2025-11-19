@@ -3,7 +3,7 @@ package CourseManagementhandler
 import (
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/services"
-	modulemanagementServices "course_online_backend/internal/services/Module_Management_Services"
+	modulemanagementServices "course_online_backend/internal/services/Course_management_Services/Module_Management_Services"
 	"course_online_backend/internal/utils"
 	"fmt"
 	"net/http"
