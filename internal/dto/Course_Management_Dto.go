@@ -8,7 +8,7 @@ import (
 type CreateCourseRequest struct {
 	Name              string  `json:"name" binding:"required,min=3,max=200"`
 	Description       string  `json:"description" binding:"required"`
-	Price             float64 `json:"price" binding:"required,min=0"`
+	Price             float64 `json:"price" binding:"min=0"`
 	IsProgressLimited bool    `json:"is_progress_limited"`
 	CourseTypeID      string  `form:"course_type_id" json:"course_type_id" binding:"required"`
 }
@@ -96,9 +96,6 @@ type CreatorResponse struct {
 	FullName string    `json:"full_name"`
 	Email    string    `json:"email"`
 }
-
-
-
 
 type PaginationResponse struct {
 	Total       int64       `json:"total"`

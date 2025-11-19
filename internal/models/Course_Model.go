@@ -35,6 +35,24 @@ type Course struct {
 	Quizzes     []Quiz       `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"quizzes,omitempty"`
 	Enrollments []Enrollment `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"enrollments,omitempty"`
 	Zoom        *Zoom        `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"zoom,omitempty"`
+
+	Status             string     `gorm:"type:varchar(20);not null;default:'published';index" json:"status"`
+	MaxStudents        int        `gorm:"default:0" json:"max_students"`
+	EnrollmentDeadline *time.Time `json:"enrollment_deadline,omitempty"`
+	Duration           int        `gorm:"default:0" json:"duration"`
+}
+
+func (c *Course) IsFree() bool {
+	return c.Price == 0
+}
+
+
+func (c *Course) IsPublished() bool {
+	return c.Status == "published"
+}
+
+func (c *Course) CanEnroll() bool {
+	return c.Status == "published" && c.DeletedAt.Time.IsZero()
 }
 
 type Module struct {

@@ -53,6 +53,7 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	ActivityRoutes(protected, db, app)
 	DashboardRoutes(protected, db, app)
 	CourseProtectedRoutes(protected, db, app)
+	EnrollmentProtectedRoutes(protected, db, app)
 
 	return r
 }
