@@ -100,45 +100,52 @@ func CheckCourseOwnership(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		userIDStr := userID.(string)
-		isAdmin := false
-		isInstructor := false
+		isSuperAdmin := false
+		isRegularAdmin := false
 
 		switch roles := roleValue.(type) {
 		case string:
-			if roles == "super_admin" || roles == "admin" {
-				isAdmin = true
-			}
-			if roles == "instructor" {
-				isInstructor = true
+			switch roles {
+			case "super_admin":
+				isSuperAdmin = true
+			case "admin":
+				isRegularAdmin = true
 			}
 
 		case []string:
 			for _, r := range roles {
-				if r == "super_admin" || r == "admin" {
-					isAdmin = true
+				if r == "super_admin" {
+					isSuperAdmin = true
 					break
 				}
-				if r == "instructor" {
-					isInstructor = true
+				if r == "admin" {
+					isRegularAdmin = true
 				}
 			}
 		}
 
-		if isAdmin {
+		if isSuperAdmin {
 			c.Next()
 			return
 		}
 
-		if isInstructor {
+		if isRegularAdmin {
 			if course.CreatedBy != nil && course.CreatedBy.String() == userIDStr {
 				c.Next()
 				return
 			}
+
+			c.JSON(http.StatusForbidden, gin.H{
+				"status":  false,
+				"message": "Forbidden: you can only manage courses you created",
+			})
+			c.Abort()
+			return
 		}
 
 		c.JSON(http.StatusForbidden, gin.H{
 			"status":  false,
-			"message": "Forbidden: you don't have access to this course",
+			"message": "Forbidden: insufficient permissions",
 		})
 		c.Abort()
 	}

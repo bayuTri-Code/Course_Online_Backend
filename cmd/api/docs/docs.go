@@ -751,7 +751,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all courses created by the authenticated instructor",
+                "description": "Get courses based on user role: Super Admin (all courses), Admin (created courses), Instructor (assigned courses), Student (enrolled courses)",
                 "consumes": [
                     "application/json"
                 ],
@@ -2927,6 +2927,455 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/courses/{id}/enrollments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin/Instructor gets list of students enrolled in a course",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Get course students",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of enrolled students (detail responses)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/enrollmentdto.EnrollmentDetailResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid course ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses/{id}/enrollments/check": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check whether the authenticated student is enrolled in the specified course",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Check enrollment status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enrollment status retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/enrollmentdto.CheckEnrollmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid course ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to check enrollment",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/enrollments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all enrollments belonging to the authenticated student",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Get student's enrollments",
+                "responses": {
+                    "200": {
+                        "description": "List of student enrollments",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/enrollmentdto.EnrollmentListResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve enrollments",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Student enrolls in a free course. Only courses with status \"published\", free price, not full, and not past enrollment deadline can be enrolled.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Enroll in a free course",
+                "parameters": [
+                    {
+                        "description": "Enrollment Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/enrollmentdto.EnrollFreeCourseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully enrolled",
+                        "schema": {
+                            "$ref": "#/definitions/enrollmentdto.EnrollmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid course ID, invalid request body, course not available, deadline passed, or course full",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "402": {
+                        "description": "Payment required - course is not free",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Only students can enroll",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "User already enrolled",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/enrollments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve specific enrollment detail. Only the owner of the enrollment can access this data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Get enrollment detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Enrollment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detailed enrollment information",
+                        "schema": {
+                            "$ref": "#/definitions/enrollmentdto.EnrollmentDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid enrollment ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - cannot access others' enrollment",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Enrollment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Student removes themselves from an active enrollment. Cannot unenroll if course is completed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Unenroll from a course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Enrollment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully unenrolled",
+                        "schema": {
+                            "$ref": "#/definitions/utils.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid enrollment ID or course already completed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Only students can unenroll or unauthorized to unenroll",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Enrollment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/enrollments/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update enrollment status to active, dropped, or completed. Only authorized roles (admin, super_admin, instructor) may update.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrollment"
+                ],
+                "summary": "Update enrollment status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Enrollment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/enrollmentdto.UpdateEnrollmentStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or invalid status",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient role or unauthorized user",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Enrollment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -3602,6 +4051,264 @@ const docTemplate = `{
                 }
             }
         },
+        "enrollmentdto.BiodataInfo": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                }
+            }
+        },
+        "enrollmentdto.CheckEnrollmentResponse": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "is_enrolled": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "enrollmentdto.CourseInfo": {
+            "type": "object",
+            "properties": {
+                "course_type": {
+                    "$ref": "#/definitions/enrollmentdto.CourseTypeInfo"
+                },
+                "created_by": {
+                    "description": "Changed from Instructor to CreatedBy",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/enrollmentdto.CreatorInfo"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "thumbnail": {
+                    "type": "string"
+                }
+            }
+        },
+        "enrollmentdto.CourseTypeInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "enrollmentdto.CreatorInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "enrollmentdto.EnrollFreeCourseRequest": {
+            "type": "object",
+            "required": [
+                "course_id"
+            ],
+            "properties": {
+                "course_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                }
+            }
+        },
+        "enrollmentdto.EnrollmentDetailResponse": {
+            "type": "object",
+            "properties": {
+                "completed_datetime": {
+                    "type": "string"
+                },
+                "course": {
+                    "$ref": "#/definitions/enrollmentdto.CourseInfo"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "enrollment_datetime": {
+                    "type": "string"
+                },
+                "expired_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "status_payment": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/enrollmentdto.UserInfo"
+                }
+            }
+        },
+        "enrollmentdto.EnrollmentListResponse": {
+            "type": "object",
+            "properties": {
+                "completed_datetime": {
+                    "type": "string"
+                },
+                "course": {
+                    "$ref": "#/definitions/enrollmentdto.CourseInfo"
+                },
+                "enrollment_datetime": {
+                    "type": "string"
+                },
+                "expired_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "status_payment": {
+                    "type": "string"
+                }
+            }
+        },
+        "enrollmentdto.EnrollmentResponse": {
+            "type": "object",
+            "properties": {
+                "completed_datetime": {
+                    "type": "string"
+                },
+                "course": {
+                    "$ref": "#/definitions/enrollmentdto.CourseInfo"
+                },
+                "course_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "enrollment_datetime": {
+                    "type": "string"
+                },
+                "expired_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number",
+                    "example": 0
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "status_payment": {
+                    "type": "string",
+                    "example": "free"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "enrollmentdto.UpdateEnrollmentStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "dropped",
+                        "completed"
+                    ],
+                    "example": "completed"
+                }
+            }
+        },
+        "enrollmentdto.UserInfo": {
+            "type": "object",
+            "properties": {
+                "biodata": {
+                    "$ref": "#/definitions/enrollmentdto.BiodataInfo"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.AssignRoleRequest": {
             "type": "object",
             "required": [
@@ -3685,6 +4392,12 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "duration": {
+                    "type": "integer"
+                },
+                "enrollment_deadline": {
+                    "type": "string"
+                },
                 "enrollments": {
                     "type": "array",
                     "items": {
@@ -3696,6 +4409,9 @@ const docTemplate = `{
                 },
                 "is_progress_limited": {
                     "type": "boolean"
+                },
+                "max_students": {
+                    "type": "integer"
                 },
                 "modules": {
                     "type": "array",
@@ -3714,6 +4430,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.Quiz"
                     }
+                },
+                "status": {
+                    "type": "string"
                 },
                 "thumbnail": {
                     "type": "string"
@@ -3764,10 +4483,28 @@ const docTemplate = `{
                 "course_id": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "enrollment_datetime": {
                     "type": "string"
                 },
+                "expired_date": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "status_payment": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user": {
@@ -4032,16 +4769,37 @@ const docTemplate = `{
         "models.UserLesson": {
             "type": "object",
             "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
                 "completed_datetime": {
+                    "type": "string"
+                },
+                "created_at": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
+                "is_completed": {
+                    "type": "boolean"
+                },
+                "last_accessed_at": {
+                    "type": "string"
+                },
+                "last_position": {
+                    "type": "integer"
+                },
                 "lesson": {
                     "$ref": "#/definitions/models.Lesson"
                 },
                 "lesson_id": {
+                    "type": "string"
+                },
+                "time_spent": {
+                    "type": "integer"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user": {

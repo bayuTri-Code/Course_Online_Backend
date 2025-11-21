@@ -12,7 +12,7 @@ import (
 )
 
 type EnrollmentService interface {
-	EnrollFreeCourse(userID, courseID uuid.UUID) (*models.Enrollment, error)
+	EnrollCourse(userID, courseID uuid.UUID) (*models.Enrollment, error)
 	CheckEnrollment(userID, courseID uuid.UUID) (bool, error)
 	GetMyEnrollments(userID uuid.UUID) ([]models.Enrollment, error)
 	GetEnrollmentDetail(userID, enrollmentID uuid.UUID) (*models.Enrollment, error)
@@ -33,7 +33,7 @@ func NewEnrollmentService(enrollmentRepo repository.EnrollmentRepository, db *go
 	}
 }
 
-func (s *enrollmentService) EnrollFreeCourse(userID, courseID uuid.UUID) (*models.Enrollment, error) {
+func (s *enrollmentService) EnrollCourse(userID, courseID uuid.UUID) (*models.Enrollment, error) {
 	if userID == uuid.Nil || courseID == uuid.Nil {
 		return nil, errors.New("invalid user ID or course ID")
 	}

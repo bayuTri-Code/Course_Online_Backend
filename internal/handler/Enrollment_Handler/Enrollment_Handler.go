@@ -21,9 +21,24 @@ func NewEnrollmentHandler(enrollmentService enrollmentservices.EnrollmentService
 	}
 }
 
-// EnrollFreeCourse - POST /api/enrollments/free
-func (h *EnrollmentHandler) EnrollFreeCourse(c *gin.Context) {
-	// 1. Get user from context
+// EnrollCourse godoc
+// @Summary Enroll in a free course
+// @Description Student enrolls in a free course. Only courses with status "published", free price, not full, and not past enrollment deadline can be enrolled.
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Param body body enrollmentdto.EnrollFreeCourseRequest true "Enrollment Request"
+// @Success 201 {object} enrollmentdto.EnrollmentResponse "Successfully enrolled"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID, invalid request body, course not available, deadline passed, or course full"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized - user not authenticated"
+// @Failure 402 {object} utils.ErrorResponse "Payment required - course is not free"
+// @Failure 403 {object} utils.ErrorResponse "Only students can enroll"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 409 {object} utils.ErrorResponse "User already enrolled"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /enrollments [post]
+func (h *EnrollmentHandler) EnrollCourse(c *gin.Context) {
 	userInterface, exists := c.Get("user")
 	if !exists {
 		utils.JSONUnauthorized(c, "User not authenticated")
@@ -36,7 +51,6 @@ func (h *EnrollmentHandler) EnrollFreeCourse(c *gin.Context) {
 		return
 	}
 
-	// 2. Validate student role
 	rolesInterface, exists := c.Get("roles")
 	if !exists {
 		utils.JSONUnauthorized(c, "User roles not found")
@@ -62,22 +76,19 @@ func (h *EnrollmentHandler) EnrollFreeCourse(c *gin.Context) {
 		return
 	}
 
-	// 3. Bind request to DTO
 	var req enrollmentdto.EnrollFreeCourseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.JSONError(c, "Invalid request body", http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// 4. Parse course ID
 	courseID, err := uuid.Parse(req.CourseID)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID format", http.StatusBadRequest, nil)
 		return
 	}
 
-	// 5. Call service
-	enrollment, err := h.enrollmentService.EnrollFreeCourse(user.ID, courseID)
+	enrollment, err := h.enrollmentService.EnrollCourse(user.ID, courseID)
 	if err != nil {
 		switch err.Error() {
 		case "course not found":
@@ -98,14 +109,24 @@ func (h *EnrollmentHandler) EnrollFreeCourse(c *gin.Context) {
 		return
 	}
 
-	// 6. Transform to DTO response
 	response := enrollmentdto.ToEnrollmentResponse(enrollment)
 	utils.JSONCreated(c, response, "Successfully enrolled in course")
 }
 
-// CheckEnrollment - GET /api/enrollments/check/:courseID
+// CheckEnrollment godoc
+// @Summary Check enrollment status
+// @Description Check whether the authenticated student is enrolled in the specified course
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID"
+// @Success 200 {object} enrollmentdto.CheckEnrollmentResponse "Enrollment status retrieved"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID format"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponse "Failed to check enrollment"
+// @Security BearerAuth
+// @Router /courses/{id}/enrollments/check [get]
 func (h *EnrollmentHandler) CheckEnrollment(c *gin.Context) {
-	// 1. Get user
 	userInterface, exists := c.Get("user")
 	if !exists {
 		utils.JSONUnauthorized(c, "User not authenticated")
@@ -118,29 +139,35 @@ func (h *EnrollmentHandler) CheckEnrollment(c *gin.Context) {
 		return
 	}
 
-	// 2. Parse course ID
-	courseIDStr := c.Param("courseID")
+	courseIDStr := c.Param("id")
 	courseID, err := uuid.Parse(courseIDStr)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID format", http.StatusBadRequest, nil)
 		return
 	}
 
-	// 3. Check enrollment
 	isEnrolled, err := h.enrollmentService.CheckEnrollment(user.ID, courseID)
 	if err != nil {
 		utils.JSONError(c, "Failed to check enrollment", http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// 4. Transform to DTO response
 	response := enrollmentdto.ToCheckEnrollmentResponse(isEnrolled, courseID)
 	utils.JSONSuccess(c, response, "Enrollment status retrieved")
 }
 
-// GetMyEnrollments - GET /api/enrollments/my-courses
+// GetMyEnrollments godoc
+// @Summary Get student's enrollments
+// @Description Retrieve all enrollments belonging to the authenticated student
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Success 200 {array} enrollmentdto.EnrollmentListResponse "List of student enrollments"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponse "Failed to retrieve enrollments"
+// @Security BearerAuth
+// @Router /enrollments [get]
 func (h *EnrollmentHandler) GetMyEnrollments(c *gin.Context) {
-	// 1. Get user
 	userInterface, exists := c.Get("user")
 	if !exists {
 		utils.JSONUnauthorized(c, "User not authenticated")
@@ -153,21 +180,32 @@ func (h *EnrollmentHandler) GetMyEnrollments(c *gin.Context) {
 		return
 	}
 
-	// 2. Get enrollments
 	enrollments, err := h.enrollmentService.GetMyEnrollments(user.ID)
 	if err != nil {
 		utils.JSONError(c, "Failed to get enrollments", http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// 3. Transform to DTO response
 	response := enrollmentdto.ToEnrollmentListResponses(enrollments)
 	utils.JSONSuccess(c, response, "My enrollments retrieved successfully")
 }
 
-// GetEnrollmentDetail - GET /api/enrollments/:id
+// GetEnrollmentDetail godoc
+// @Summary Get enrollment detail
+// @Description Retrieve specific enrollment detail. Only the owner of the enrollment can access this data.
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Param id path string true "Enrollment ID"
+// @Success 200 {object} enrollmentdto.EnrollmentDetailResponse "Detailed enrollment information"
+// @Failure 400 {object} utils.ErrorResponse "Invalid enrollment ID"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponse "Forbidden - cannot access others' enrollment"
+// @Failure 404 {object} utils.ErrorResponse "Enrollment not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /enrollments/{id} [get]
 func (h *EnrollmentHandler) GetEnrollmentDetail(c *gin.Context) {
-	// 1. Get user
 	userInterface, exists := c.Get("user")
 	if !exists {
 		utils.JSONUnauthorized(c, "User not authenticated")
@@ -180,7 +218,6 @@ func (h *EnrollmentHandler) GetEnrollmentDetail(c *gin.Context) {
 		return
 	}
 
-	// 2. Parse enrollment ID
 	enrollmentIDStr := c.Param("id")
 	enrollmentID, err := uuid.Parse(enrollmentIDStr)
 	if err != nil {
@@ -188,7 +225,6 @@ func (h *EnrollmentHandler) GetEnrollmentDetail(c *gin.Context) {
 		return
 	}
 
-	// 3. Get enrollment detail
 	enrollment, err := h.enrollmentService.GetEnrollmentDetail(user.ID, enrollmentID)
 	if err != nil {
 		if err.Error() == "enrollment not found" {
@@ -201,14 +237,26 @@ func (h *EnrollmentHandler) GetEnrollmentDetail(c *gin.Context) {
 		return
 	}
 
-	// 4. Transform to DTO response (no user info for own enrollment)
 	response := enrollmentdto.ToEnrollmentDetailResponse(enrollment, false)
 	utils.JSONSuccess(c, response, "Enrollment detail retrieved successfully")
 }
 
-// UnenrollCourse - DELETE /api/enrollments/:id
+// UnenrollCourse godoc
+// @Summary Unenroll from a course
+// @Description Student removes themselves from an active enrollment. Cannot unenroll if course is completed.
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Param id path string true "Enrollment ID"
+// @Success 200 {object} utils.StandardResponse "Successfully unenrolled"
+// @Failure 400 {object} utils.ErrorResponse "Invalid enrollment ID or course already completed"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponse "Only students can unenroll or unauthorized to unenroll"
+// @Failure 404 {object} utils.ErrorResponse "Enrollment not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /enrollments/{id} [delete]
 func (h *EnrollmentHandler) UnenrollCourse(c *gin.Context) {
-	// 1. Get user
 	userInterface, exists := c.Get("user")
 	if !exists {
 		utils.JSONUnauthorized(c, "User not authenticated")
@@ -221,7 +269,6 @@ func (h *EnrollmentHandler) UnenrollCourse(c *gin.Context) {
 		return
 	}
 
-	// 2. Validate student role
 	rolesInterface, exists := c.Get("roles")
 	if !exists {
 		utils.JSONUnauthorized(c, "User roles not found")
@@ -247,7 +294,6 @@ func (h *EnrollmentHandler) UnenrollCourse(c *gin.Context) {
 		return
 	}
 
-	// 3. Parse enrollment ID
 	enrollmentIDStr := c.Param("id")
 	enrollmentID, err := uuid.Parse(enrollmentIDStr)
 	if err != nil {
@@ -255,7 +301,6 @@ func (h *EnrollmentHandler) UnenrollCourse(c *gin.Context) {
 		return
 	}
 
-	// 4. Unenroll
 	err = h.enrollmentService.UnenrollCourse(user.ID, enrollmentID)
 	if err != nil {
 		if err.Error() == "enrollment not found" {
@@ -270,13 +315,26 @@ func (h *EnrollmentHandler) UnenrollCourse(c *gin.Context) {
 		return
 	}
 
-	// 5. Success response
 	utils.JSONSuccess(c, nil, "Successfully unenrolled from course")
 }
 
-// UpdateEnrollmentStatus - PUT /api/enrollments/:id/status
+// UpdateEnrollmentStatus godoc
+// @Summary Update enrollment status
+// @Description Update enrollment status to active, dropped, or completed. Only authorized roles (admin, super_admin, instructor) may update.
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Param id path string true "Enrollment ID"
+// @Param body body enrollmentdto.UpdateEnrollmentStatusRequest true "Status Update Request"
+// @Success 200 {object} utils.StandardResponse "Status updated successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request body or invalid status"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponse "Forbidden - insufficient role or unauthorized user"
+// @Failure 404 {object} utils.ErrorResponse "Enrollment not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /enrollments/{id}/status [put]
 func (h *EnrollmentHandler) UpdateEnrollmentStatus(c *gin.Context) {
-	// 1. Get user
 	userInterface, exists := c.Get("user")
 	if !exists {
 		utils.JSONUnauthorized(c, "User not authenticated")
@@ -289,7 +347,6 @@ func (h *EnrollmentHandler) UpdateEnrollmentStatus(c *gin.Context) {
 		return
 	}
 
-	// 2. Parse enrollment ID
 	enrollmentIDStr := c.Param("id")
 	enrollmentID, err := uuid.Parse(enrollmentIDStr)
 	if err != nil {
@@ -297,14 +354,12 @@ func (h *EnrollmentHandler) UpdateEnrollmentStatus(c *gin.Context) {
 		return
 	}
 
-	// 3. Bind request to DTO
 	var req enrollmentdto.UpdateEnrollmentStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.JSONError(c, "Invalid request body", http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// 4. Update status
 	err = h.enrollmentService.UpdateEnrollmentStatus(user.ID, enrollmentID, req.Status)
 	if err != nil {
 		if err.Error() == "enrollment not found" {
@@ -322,6 +377,20 @@ func (h *EnrollmentHandler) UpdateEnrollmentStatus(c *gin.Context) {
 	utils.JSONSuccess(c, nil, "Enrollment status updated successfully")
 }
 
+// GetCourseStudents godoc
+// @Summary Get course students
+// @Description Admin/Instructor gets list of students enrolled in a course
+// @Tags Enrollment
+// @Accept json
+// @Produce json
+// @Param id path string true "Course ID"
+// @Success 200 {array} enrollmentdto.EnrollmentDetailResponse "List of enrolled students (detail responses)"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponse "Forbidden"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /courses/{id}/enrollments [get]
 func (h *EnrollmentHandler) GetCourseStudents(c *gin.Context) {
 	rolesInterface, exists := c.Get("roles")
 	if !exists {
@@ -335,7 +404,7 @@ func (h *EnrollmentHandler) GetCourseStudents(c *gin.Context) {
 		return
 	}
 
-	courseIDStr := c.Param("courseID")
+	courseIDStr := c.Param("id")
 	courseID, err := uuid.Parse(courseIDStr)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID format", http.StatusBadRequest, nil)

@@ -595,10 +595,9 @@ func (h *CourseHandler) GetCourseStatsHandler(c *gin.Context) {
 
 	utils.JSONSuccess(c, stats, "Course statistics retrieved successfully")
 }
-
 // GetMyCoursesHandler godoc
 // @Summary Get my courses
-// @Description Get all courses created by the authenticated instructor
+// @Description Get courses based on user role: Super Admin (all courses), Admin (created courses), Instructor (assigned courses), Student (enrolled courses)
 // @Tags courses-browsing
 // @Accept json
 // @Produce json
@@ -628,13 +627,42 @@ func (h *CourseHandler) GetMyCoursesHandler(c *gin.Context) {
 		return
 	}
 
+	roleValue, exists := c.Get("roles")
+	if !exists {
+		utils.JSONUnauthorized(c, "User role not found")
+		return
+	}
+
+	var userRole string
+	switch roles := roleValue.(type) {
+	case string:
+		userRole = roles
+	case []string:
+		if len(roles) > 0 {
+			for _, r := range []string{"super_admin", "admin", "instructor", "student"} {
+				for _, role := range roles {
+					if role == r {
+						userRole = r
+						break
+					}
+				}
+				if userRole != "" {
+					break
+				}
+			}
+		}
+	default:
+		utils.JSONError(c, "Invalid role format", http.StatusBadRequest, nil)
+		return
+	}
+
 	var params dto.CourseQueryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
 		return
 	}
 
-	courses, err := h.service.GetMyCourses(c.Request.Context(), userID, &params)
+	courses, err := h.service.GetMyCourses(c.Request.Context(), userID, userRole, &params)
 	if err != nil {
 		if err.Error() == "user not found" {
 			utils.JSONNotFound(c, "User not found")

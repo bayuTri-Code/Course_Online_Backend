@@ -6,11 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// ==========================================
-// ENROLLMENT MAPPERS
-// ==========================================
-
-// ToEnrollmentResponse - Convert model to response (for create/enroll)
 func ToEnrollmentResponse(enrollment *models.Enrollment) *EnrollmentResponse {
 	return &EnrollmentResponse{
 		ID:                 enrollment.ID,
@@ -28,7 +23,6 @@ func ToEnrollmentResponse(enrollment *models.Enrollment) *EnrollmentResponse {
 	}
 }
 
-// ToEnrollmentListResponse - Convert to list response (for GetMyEnrollments)
 func ToEnrollmentListResponse(enrollment *models.Enrollment) *EnrollmentListResponse {
 	return &EnrollmentListResponse{
 		ID:                 enrollment.ID,
@@ -42,7 +36,6 @@ func ToEnrollmentListResponse(enrollment *models.Enrollment) *EnrollmentListResp
 	}
 }
 
-// ToEnrollmentDetailResponse - Convert to detail response (for GetEnrollmentDetail)
 func ToEnrollmentDetailResponse(enrollment *models.Enrollment, includeUser bool) *EnrollmentDetailResponse {
 	response := &EnrollmentDetailResponse{
 		ID:                 enrollment.ID,
@@ -57,7 +50,6 @@ func ToEnrollmentDetailResponse(enrollment *models.Enrollment, includeUser bool)
 		Course:             toCourseInfo(&enrollment.Course),
 	}
 
-	// Include user info only if requested (for admin/instructor view)
 	if includeUser {
 		response.User = toUserInfo(&enrollment.User)
 	}
@@ -65,7 +57,6 @@ func ToEnrollmentDetailResponse(enrollment *models.Enrollment, includeUser bool)
 	return response
 }
 
-// ToEnrollmentListResponses - Convert slice of enrollments
 func ToEnrollmentListResponses(enrollments []models.Enrollment) []*EnrollmentListResponse {
 	responses := make([]*EnrollmentListResponse, len(enrollments))
 	for i, enrollment := range enrollments {
@@ -74,7 +65,6 @@ func ToEnrollmentListResponses(enrollments []models.Enrollment) []*EnrollmentLis
 	return responses
 }
 
-// ToEnrollmentDetailResponses - Convert slice with user info
 func ToEnrollmentDetailResponses(enrollments []models.Enrollment, includeUser bool) []*EnrollmentDetailResponse {
 	responses := make([]*EnrollmentDetailResponse, len(enrollments))
 	for i, enrollment := range enrollments {
@@ -83,11 +73,7 @@ func ToEnrollmentDetailResponses(enrollments []models.Enrollment, includeUser bo
 	return responses
 }
 
-// ==========================================
-// HELPER MAPPERS
-// ==========================================
 
-// toCourseInfo - Transform course data
 func toCourseInfo(course *models.Course) CourseInfo {
 	info := CourseInfo{
 		ID:          course.ID,
@@ -98,7 +84,6 @@ func toCourseInfo(course *models.Course) CourseInfo {
 		Status:      course.Status,
 	}
 
-	// Add course type if exists
 	if course.CourseType != nil {
 		info.CourseType = &CourseTypeInfo{
 			ID:          course.CourseType.ID,
@@ -107,7 +92,6 @@ func toCourseInfo(course *models.Course) CourseInfo {
 		}
 	}
 
-	// Add instructor/creator if exists
 	if course.Creator != nil {
 		info.CreatedBy = &CreatorInfo{
 			ID:       course.Creator.ID,
@@ -119,7 +103,6 @@ func toCourseInfo(course *models.Course) CourseInfo {
 	return info
 }
 
-// toUserInfo - Transform user data (NO SENSITIVE DATA)
 func toUserInfo(user *models.User) *UserInfo {
 	info := &UserInfo{
 		ID:       user.ID,
@@ -128,7 +111,6 @@ func toUserInfo(user *models.User) *UserInfo {
 		IsActive: user.IsActive,
 	}
 
-	// Extract role names
 	if len(user.Roles) > 0 {
 		roles := make([]string, len(user.Roles))
 		for i, role := range user.Roles {
@@ -150,7 +132,6 @@ func toUserInfo(user *models.User) *UserInfo {
 	return info
 }
 
-// ToCheckEnrollmentResponse - Simple check response
 func ToCheckEnrollmentResponse(isEnrolled bool, courseID uuid.UUID) *CheckEnrollmentResponse {
 	return &CheckEnrollmentResponse{
 		IsEnrolled: isEnrolled,
