@@ -441,6 +441,176 @@ definitions:
       username:
         type: string
     type: object
+  enrollmentdto.BiodataInfo:
+    properties:
+      age:
+        type: integer
+      name:
+        type: string
+      profile_picture:
+        type: string
+      school:
+        type: string
+    type: object
+  enrollmentdto.CheckEnrollmentResponse:
+    properties:
+      course_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      is_enrolled:
+        example: true
+        type: boolean
+    type: object
+  enrollmentdto.CourseInfo:
+    properties:
+      course_type:
+        $ref: '#/definitions/enrollmentdto.CourseTypeInfo'
+      created_by:
+        allOf:
+        - $ref: '#/definitions/enrollmentdto.CreatorInfo'
+        description: Changed from Instructor to CreatedBy
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      status:
+        type: string
+      thumbnail:
+        type: string
+    type: object
+  enrollmentdto.CourseTypeInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  enrollmentdto.CreatorInfo:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  enrollmentdto.EnrollFreeCourseRequest:
+    properties:
+      course_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    required:
+    - course_id
+    type: object
+  enrollmentdto.EnrollmentDetailResponse:
+    properties:
+      completed_datetime:
+        type: string
+      course:
+        $ref: '#/definitions/enrollmentdto.CourseInfo'
+      created_at:
+        type: string
+      enrollment_datetime:
+        type: string
+      expired_date:
+        type: string
+      id:
+        type: string
+      progress:
+        type: number
+      status:
+        type: string
+      status_payment:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/enrollmentdto.UserInfo'
+    type: object
+  enrollmentdto.EnrollmentListResponse:
+    properties:
+      completed_datetime:
+        type: string
+      course:
+        $ref: '#/definitions/enrollmentdto.CourseInfo'
+      enrollment_datetime:
+        type: string
+      expired_date:
+        type: string
+      id:
+        type: string
+      progress:
+        type: number
+      status:
+        type: string
+      status_payment:
+        type: string
+    type: object
+  enrollmentdto.EnrollmentResponse:
+    properties:
+      completed_datetime:
+        type: string
+      course:
+        $ref: '#/definitions/enrollmentdto.CourseInfo'
+      course_id:
+        type: string
+      created_at:
+        type: string
+      enrollment_datetime:
+        type: string
+      expired_date:
+        type: string
+      id:
+        type: string
+      progress:
+        example: 0
+        type: number
+      status:
+        example: active
+        type: string
+      status_payment:
+        example: free
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  enrollmentdto.UpdateEnrollmentStatusRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - dropped
+        - completed
+        example: completed
+        type: string
+    required:
+    - status
+    type: object
+  enrollmentdto.UserInfo:
+    properties:
+      biodata:
+        $ref: '#/definitions/enrollmentdto.BiodataInfo'
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      roles:
+        items:
+          type: string
+        type: array
+      username:
+        type: string
+    type: object
   handler.AssignRoleRequest:
     properties:
       role_id:
@@ -496,6 +666,10 @@ definitions:
         type: string
       description:
         type: string
+      duration:
+        type: integer
+      enrollment_deadline:
+        type: string
       enrollments:
         items:
           $ref: '#/definitions/models.Enrollment'
@@ -504,6 +678,8 @@ definitions:
         type: string
       is_progress_limited:
         type: boolean
+      max_students:
+        type: integer
       modules:
         items:
           $ref: '#/definitions/models.Module'
@@ -516,6 +692,8 @@ definitions:
         items:
           $ref: '#/definitions/models.Quiz'
         type: array
+      status:
+        type: string
       thumbnail:
         type: string
       updated_at:
@@ -548,9 +726,21 @@ definitions:
         $ref: '#/definitions/models.Course'
       course_id:
         type: string
+      created_at:
+        type: string
       enrollment_datetime:
         type: string
+      expired_date:
+        type: string
       id:
+        type: string
+      progress:
+        type: number
+      status:
+        type: string
+      status_payment:
+        type: string
+      updated_at:
         type: string
       user:
         $ref: '#/definitions/models.User'
@@ -725,13 +915,27 @@ definitions:
     type: object
   models.UserLesson:
     properties:
+      attempt_count:
+        type: integer
       completed_datetime:
+        type: string
+      created_at:
         type: string
       id:
         type: string
+      is_completed:
+        type: boolean
+      last_accessed_at:
+        type: string
+      last_position:
+        type: integer
       lesson:
         $ref: '#/definitions/models.Lesson'
       lesson_id:
+        type: string
+      time_spent:
+        type: integer
+      updated_at:
         type: string
       user:
         $ref: '#/definitions/models.User'
@@ -1600,7 +1804,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all courses created by the authenticated instructor
+      description: 'Get courses based on user role: Super Admin (all courses), Admin
+        (created courses), Instructor (assigned courses), Student (enrolled courses)'
       parameters:
       - default: 1
         description: Page number
@@ -2610,6 +2815,300 @@ paths:
       summary: Soft delete user
       tags:
       - Users
+  /courses/{id}/enrollments:
+    get:
+      consumes:
+      - application/json
+      description: Admin/Instructor gets list of students enrolled in a course
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of enrolled students (detail responses)
+          schema:
+            items:
+              $ref: '#/definitions/enrollmentdto.EnrollmentDetailResponse'
+            type: array
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get course students
+      tags:
+      - Enrollment
+  /courses/{id}/enrollments/check:
+    get:
+      consumes:
+      - application/json
+      description: Check whether the authenticated student is enrolled in the specified
+        course
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enrollment status retrieved
+          schema:
+            $ref: '#/definitions/enrollmentdto.CheckEnrollmentResponse'
+        "400":
+          description: Invalid course ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to check enrollment
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Check enrollment status
+      tags:
+      - Enrollment
+  /enrollments:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all enrollments belonging to the authenticated student
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of student enrollments
+          schema:
+            items:
+              $ref: '#/definitions/enrollmentdto.EnrollmentListResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve enrollments
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get student's enrollments
+      tags:
+      - Enrollment
+    post:
+      consumes:
+      - application/json
+      description: Student enrolls in a free course. Only courses with status "published",
+        free price, not full, and not past enrollment deadline can be enrolled.
+      parameters:
+      - description: Enrollment Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/enrollmentdto.EnrollFreeCourseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully enrolled
+          schema:
+            $ref: '#/definitions/enrollmentdto.EnrollmentResponse'
+        "400":
+          description: Invalid course ID, invalid request body, course not available,
+            deadline passed, or course full
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "402":
+          description: Payment required - course is not free
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Only students can enroll
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "409":
+          description: User already enrolled
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Enroll in a free course
+      tags:
+      - Enrollment
+  /enrollments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Student removes themselves from an active enrollment. Cannot unenroll
+        if course is completed.
+      parameters:
+      - description: Enrollment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully unenrolled
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid enrollment ID or course already completed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Only students can unenroll or unauthorized to unenroll
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Enrollment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unenroll from a course
+      tags:
+      - Enrollment
+    get:
+      consumes:
+      - application/json
+      description: Retrieve specific enrollment detail. Only the owner of the enrollment
+        can access this data.
+      parameters:
+      - description: Enrollment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detailed enrollment information
+          schema:
+            $ref: '#/definitions/enrollmentdto.EnrollmentDetailResponse'
+        "400":
+          description: Invalid enrollment ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Forbidden - cannot access others' enrollment
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Enrollment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get enrollment detail
+      tags:
+      - Enrollment
+  /enrollments/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update enrollment status to active, dropped, or completed. Only
+        authorized roles (admin, super_admin, instructor) may update.
+      parameters:
+      - description: Enrollment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/enrollmentdto.UpdateEnrollmentStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid request body or invalid status
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient role or unauthorized user
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Enrollment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update enrollment status
+      tags:
+      - Enrollment
 schemes:
 - http
 securityDefinitions:

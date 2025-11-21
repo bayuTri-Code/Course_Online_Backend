@@ -2,6 +2,8 @@ package routes
 
 import (
 	"course_online_backend/internal/middleware"
+	courseroutes "course_online_backend/internal/routes/Course_management_routes"
+	enrollroutes "course_online_backend/internal/routes/Enrollment_Management_routes"
 	"log"
 	"os"
 	"strings"
@@ -42,18 +44,20 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	protected := r.Group("/api")
 	protected.Use(middleware.FirebaseAuth(app, db))
 
-	// public routes
 	AuthRoutes(public, db, app)
-	CoursePublicRoutes(public, db, app)
+	courseroutes.CourseBrowsingRoutes(public, db, app)
 
-	//private routes
 	UserRoutes(protected, db, app)
 	RoleRoutes(protected, db, app)
 	BiodataRoutes(protected, db, app)
 	ActivityRoutes(protected, db, app)
 	DashboardRoutes(protected, db, app)
-	CourseProtectedRoutes(protected, db, app)
-	EnrollmentProtectedRoutes(protected, db, app)
+	
+	courseroutes.CourseManagementRoutes(protected, db, app)
+	courseroutes.CourseTypeRoutes(protected, db, app)
+	courseroutes.ModuleManagementRoutes(protected, db, app)
+	
+	enrollroutes.EnrollmentRoutes(protected, db, app)
 
 	return r
 }
