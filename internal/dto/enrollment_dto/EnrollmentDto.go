@@ -21,11 +21,7 @@ type CheckEnrollmentResponse struct {
 	CourseID   uuid.UUID `json:"course_id" example:"123e4567-e89b-12d3-a456-426614174000"`
 }
 
-// ==========================================
-// ENROLLMENT RESPONSES
-// ==========================================
-
-// EnrollmentResponse - Basic enrollment info (for create/update)
+//response
 type EnrollmentResponse struct {
 	ID                 uuid.UUID  `json:"id"`
 	CourseID           uuid.UUID  `json:"course_id"`
@@ -41,7 +37,6 @@ type EnrollmentResponse struct {
 	Course             CourseInfo `json:"course"`
 }
 
-// EnrollmentListResponse - For GetMyEnrollments (with course info)
 type EnrollmentListResponse struct {
 	ID                 uuid.UUID  `json:"id"`
 	EnrollmentDatetime time.Time  `json:"enrollment_datetime"`
@@ -53,7 +48,6 @@ type EnrollmentListResponse struct {
 	Course             CourseInfo `json:"course"`
 }
 
-// EnrollmentDetailResponse - Full detail with user (for admin/instructor)
 type EnrollmentDetailResponse struct {
 	ID                 uuid.UUID  `json:"id"`
 	EnrollmentDatetime time.Time  `json:"enrollment_datetime"`
@@ -65,14 +59,9 @@ type EnrollmentDetailResponse struct {
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time  `json:"updated_at"`
 	Course             CourseInfo `json:"course"`
-	User               *UserInfo  `json:"user,omitempty"` // Only for admin view
+	User               *UserInfo  `json:"user,omitempty"` 
 }
 
-// ==========================================
-// NESTED INFO TYPES
-// ==========================================
-
-// CourseInfo - Clean course data
 type CourseInfo struct {
 	ID          uuid.UUID       `json:"id"`
 	Name        string          `json:"name"`
@@ -81,7 +70,7 @@ type CourseInfo struct {
 	Price       float64         `json:"price"`
 	Status      string          `json:"status"`
 	CourseType  *CourseTypeInfo `json:"course_type,omitempty"`
-	CreatedBy   *CreatorInfo    `json:"created_by,omitempty"` // Changed from Instructor to CreatedBy
+	CreatedBy   *CreatorInfo    `json:"created_by,omitempty"`
 }
 
 type CourseTypeInfo struct {
@@ -96,7 +85,6 @@ type CreatorInfo struct {
 	Email    string    `json:"email,omitempty"`
 }
 
-// UserInfo - Clean user data (NO SENSITIVE DATA)
 type UserInfo struct {
 	ID       uuid.UUID    `json:"id"`
 	Username string       `json:"username"`
