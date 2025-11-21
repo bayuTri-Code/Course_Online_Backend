@@ -1,4 +1,3 @@
-// File: internal/database/minio.go
 package database
 
 import (

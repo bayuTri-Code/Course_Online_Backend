@@ -709,7 +709,7 @@ func (s *CourseService) GetCourseStats(ctx context.Context) (*dto.CourseStatsRes
 	}, nil
 }
 
-func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, params *dto.CourseQueryParams) (*dto.PaginationResponse, error) {
+func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, userRole string, params *dto.CourseQueryParams) (*dto.PaginationResponse, error) {
 	if params.Page < 1 {
 		params.Page = 1
 	}
@@ -731,7 +731,24 @@ func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, pa
 		return nil, err
 	}
 
-	query := s.db.Model(&models.Course{}).Where("created_by = ?", user.ID)
+	query := s.db.Model(&models.Course{})
+
+	switch userRole {
+	case "super_admin":
+		
+	case "admin":
+		query = query.Where("created_by = ?", user.ID)
+		
+	case "instructor":
+		query = query.Where("1 = 0") 
+		
+	case "student":
+		query = query.Joins("INNER JOIN enrollments ON enrollments.course_id = courses.id").
+			Where("enrollments.user_id = ?", user.ID)
+		
+	default:
+		return nil, errors.New("invalid user role")
+	}
 
 	if params.IncludeDeleted {
 		query = query.Unscoped()
@@ -739,11 +756,11 @@ func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, pa
 
 	if params.Search != "" {
 		searchPattern := "%" + params.Search + "%"
-		query = query.Where("name ILIKE ? OR description ILIKE ?", searchPattern, searchPattern)
+		query = query.Where("courses.name ILIKE ? OR courses.description ILIKE ?", searchPattern, searchPattern)
 	}
 
 	if params.CourseTypeID != uuid.Nil {
-		query = query.Where("course_type_id = ?", params.CourseTypeID)
+		query = query.Where("courses.course_type_id = ?", params.CourseTypeID)
 	}
 
 	var total int64
@@ -751,7 +768,12 @@ func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, pa
 		return nil, err
 	}
 
-	orderClause := fmt.Sprintf("%s %s", params.SortBy, params.SortOrder)
+	var orderClause string
+	if userRole == "student" {
+		orderClause = fmt.Sprintf("courses.%s %s", params.SortBy, params.SortOrder)
+	} else {
+		orderClause = fmt.Sprintf("%s %s", params.SortBy, params.SortOrder)
+	}
 	query = query.Order(orderClause)
 
 	offset := (params.Page - 1) * params.Limit
@@ -759,8 +781,14 @@ func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, pa
 
 	query = query.Preload("CourseType").
 		Preload("Creator").
-		Preload("Modules").
+		Preload("Modules", func(db *gorm.DB) *gorm.DB {
+			return db.Order("number ASC")
+		}).
 		Preload("Enrollments")
+
+	if userRole == "student" {
+		query = query.Distinct("courses.id")
+	}
 
 	var courses []models.Course
 	if err := query.Find(&courses).Error; err != nil {
