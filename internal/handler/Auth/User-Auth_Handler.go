@@ -1,8 +1,9 @@
-package handler
+package authHandler
 
 import (
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/services"
+	auth "course_online_backend/internal/services/Auth"
 	"course_online_backend/internal/utils"
 	"net/http"
 	"strings"
@@ -14,11 +15,11 @@ import (
 )
 
 type AuthHandler struct {
-	Service  *services.AuthService
+	Service  *auth.AuthService
 	Activity *services.ActivityService
 }
 
-func NewAuthHandler(service *services.AuthService, activityServices *services.ActivityService ) *AuthHandler {
+func NewAuthHandler(service *auth.AuthService, activityServices *services.ActivityService ) *AuthHandler {
 	return &AuthHandler{Service: service,
 	Activity: activityServices,
 	}

@@ -2,7 +2,6 @@ package config
 
 import (
 	"log"
-	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -23,6 +22,16 @@ type Config struct {
 	ServerHost string
 	ServerPort string
 	ServerEnv  string
+
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFromEmail    string
+	SMTPFromName     string
+
+	OTPExpiryMinutes int
+	OTPLength        int
 }
 
 var DbConfig *Config
@@ -31,12 +40,10 @@ func ConfigDb() {
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("Warning: .env file not found, using system environment variables")
+		log.Fatalf("Error reading .env file: %v", err)
 	}
 
 	setDefaults()
@@ -49,16 +56,32 @@ func ConfigDb() {
 		DBName:     viper.GetString("DB_NAME"),
 		DBSslmode:  viper.GetString("DB_SSLMODE"),
 
-		REDISHost: viper.GetString("REDIS_HOST"),
-		REDISPort: viper.GetString("REDIS_PORT"),
-		REDISPassword: viper.GetString("REDIS_PASSWORd"),
-		REDISDb: viper.GetString("REDIS_DB"),
+		REDISHost:     viper.GetString("REDIS_HOST"),
+		REDISPort:     viper.GetString("REDIS_PORT"),
+		REDISPassword: viper.GetString("REDIS_PASSWORD"),
+		REDISDb:       viper.GetString("REDIS_DB"),
 
 		ServerHost: viper.GetString("SERVER_HOST"),
 		ServerPort: viper.GetString("SERVER_PORT"),
 		ServerEnv:  viper.GetString("SERVER_ENV"),
+
+		SMTPHost:     viper.GetString("SMTP_HOST"),
+		SMTPPort:     viper.GetInt("SMTP_PORT"),
+		SMTPUser:     viper.GetString("SMTP_USER"),
+		SMTPPassword: viper.GetString("SMTP_PASSWORD"),
+		SMTPFromEmail:    viper.GetString("SMTP_FROM_EMAIL"),
+		SMTPFromName:     viper.GetString("SMTP_FROM_NAME"),
+
+		OTPExpiryMinutes: viper.GetInt("OTP_EXPIRY_MINUTES"),
+		OTPLength:        viper.GetInt("OTP_LENGTH"),
 	}
 
+	log.Printf("[CONFIG] SMTP Host: %s", DbConfig.SMTPHost)
+	log.Printf("[CONFIG] SMTP Port: %d", DbConfig.SMTPPort)
+	log.Printf("[CONFIG] SMTP User: %s", DbConfig.SMTPUser)
+	log.Printf("[CONFIG] SMTP Password length: %d chars", len(DbConfig.SMTPPassword))
+	log.Printf("[CONFIG] SMTP From Email: %s", DbConfig.SMTPFromEmail)
+	
 	log.Println("Configuration loaded successfully")
 }
 
@@ -78,6 +101,16 @@ func setDefaults() {
 	viper.SetDefault("SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("SERVER_PORT", "7070")
 	viper.SetDefault("SERVER_ENV", "development")
+
+	viper.SetDefault("SMTP_HOST", "smtp.gmail.com")
+	viper.SetDefault("SMTP_PORT", 587)
+	viper.SetDefault("SMTP_USER", "")
+	viper.SetDefault("SMTP_PASSWORD", "")
+	viper.SetDefault("SMTP_FROM_EMAIL", "")
+	viper.SetDefault("SMTP_FROM_NAME", "Course Online")
+
+	viper.SetDefault("OTP_EXPIRY_MINUTES", 5)
+	viper.SetDefault("OTP_LENGTH", 6)
 }
 
 func GetString(key string) string {
