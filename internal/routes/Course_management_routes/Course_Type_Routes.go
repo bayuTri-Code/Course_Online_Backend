@@ -12,6 +12,18 @@ import (
 	"gorm.io/gorm"
 )
 
+
+func CourseTypePublic(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
+	activityService := services.NewActivityService(db)
+	courseTypeServicesPublic := CourseManagementServices.NewCourseTypeService(db)
+	courseTypeHandlerPublic := CourseManagementhandler.NewCourseTypeHandler(courseTypeServicesPublic, activityService)
+
+	courseTypes := r.Group("/course-types")
+	{
+		courseTypes.GET("", courseTypeHandlerPublic.GetAllCourseTypeHandler)
+	}
+}
+
 func CourseTypeRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	activityService := services.NewActivityService(db)
 	courseTypeServices := CourseManagementServices.NewCourseTypeService(db)
@@ -21,7 +33,5 @@ func CourseTypeRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	courseTypes.Use(middleware.RoleMiddleware("super_admin", "admin"))
 	{
 		courseTypes.POST("", courseTypeHandler.CreateCourseTypeHandler)
-		courseTypes.GET("", courseTypeHandler.GetAllCourseTypeHandler)
 	}
 }
-
