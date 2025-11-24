@@ -31,14 +31,15 @@ func main() {
 	} else {
 		log.Println(".env file loaded successfully")
 	}
+	
 
 	config.ConfigDb()
-	config.InitMinioConfig() 
+	config.InitMinioConfig()
 	firebaseApp := config.InitFirebase()
-	
-	
+	config.LoadSMTPConfig()
+
 	db := database.PostgresConn()
-	minioClient := database.MinioConn() 
+	minioClient := database.MinioConn()
 	rdb := database.RedisConn()
 
 	if minioClient == nil {
@@ -49,7 +50,7 @@ func main() {
 		log.Fatal("Failed to connect to Redis")
 	}
 
-	r := routes.Routes(db, firebaseApp, minioClient, config.MinioConfig.Bucket, config.MinioConfig.Endpoint )
+	r := routes.Routes(db, firebaseApp, minioClient, config.MinioConfig.Bucket, config.MinioConfig.Endpoint, rdb)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
