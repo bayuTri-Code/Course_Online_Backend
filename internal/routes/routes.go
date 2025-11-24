@@ -12,10 +12,18 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBucket, minioURL string) *gin.Engine {
+func Routes(
+	db *gorm.DB,
+	app *firebase.App,
+	minioClient *minio.Client,
+	minioBucket string,
+	minioURL string,
+	redisClient *redis.Client,
+) *gin.Engine {
 
 	corsOrigins := os.Getenv("CORS_ORIGINS")
 	allowedOrigins := strings.Split(corsOrigins, ",")
@@ -23,6 +31,9 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(gin.Logger())
+
+	
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
@@ -44,19 +55,20 @@ func Routes(db *gorm.DB, app *firebase.App, minioClient *minio.Client, minioBuck
 	protected := r.Group("/api")
 	protected.Use(middleware.FirebaseAuth(app, db))
 
-	AuthRoutes(public, db, app)
+	AuthRoutes(public, db, app, redisClient )
 	courseroutes.CourseBrowsingRoutes(public, db, app)
+	courseroutes.CourseTypePublic(public, db, app)
 
 	UserRoutes(protected, db, app)
 	RoleRoutes(protected, db, app)
 	BiodataRoutes(protected, db, app)
 	ActivityRoutes(protected, db, app)
 	DashboardRoutes(protected, db, app)
-	
+
 	courseroutes.CourseManagementRoutes(protected, db, app)
 	courseroutes.CourseTypeRoutes(protected, db, app)
 	courseroutes.ModuleManagementRoutes(protected, db, app)
-	
+
 	enrollroutes.EnrollmentRoutes(protected, db, app)
 
 	return r
