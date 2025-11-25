@@ -95,19 +95,112 @@ func (s *OTPService) SendOTPEmail(ctx context.Context, toEmail, otp string) erro
 	if s.SMTPConfig == nil {
 		return fmt.Errorf("smtp config not loaded")
 	}
+
 	m := gomail.NewMessage()
 	m.SetHeader("From", fmt.Sprintf("%s <%s>", s.SMTPConfig.FromName, s.SMTPConfig.FromEmail))
 	m.SetHeader("To", toEmail)
-	m.SetHeader("Subject", "Your OTP Code")
+	m.SetHeader("Subject", "Your Verification Code")
+
 	html := fmt.Sprintf(`
-		<html>
-		<body>
-		<p>Your OTP code: <strong>%s</strong></p>
-		<p>This code will expire in %d minutes.</p>
-		</body>
-		</html>
-	`, otp, s.OTPExpiryMin)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" style="width: 100%%; border-collapse: collapse; background-color: #f5f5f5;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; width: 100%%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    
+					<!-- Header -->
+					<tr>
+						<td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); border-radius: 12px 12px 0 0;">
+							<h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
+								🔐 Verification Code
+							</h1>
+						</td>
+					</tr>
+                    
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 24px; color: #333333; font-size: 16px; line-height: 1.6;">
+                                Hello,
+                            </p>
+                            <p style="margin: 0 0 32px; color: #666666; font-size: 16px; line-height: 1.6;">
+                                We received a request to verify your email address. Use the verification code below to complete your login:
+                            </p>
+                            
+                            <!-- OTP Code Box -->
+                            <table role="presentation" style="width: 100%%; border-collapse: collapse; margin: 0 0 32px;">
+                                <tr>
+                                    <td align="center" style="padding: 30px; background-color: #f8f9fa; border: 2px dashed #e0e0e0; border-radius: 8px;">
+                                        <div style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #667eea; font-family: 'Courier New', monospace;">
+                                            %s
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Info Box -->
+                            <table role="presentation" style="width: 100%%; border-collapse: collapse; margin: 0 0 24px;">
+                                <tr>
+                                    <td style="padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                                        <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.5;">
+                                            ⏱️ <strong>This code will expire in %d minutes.</strong><br>
+                                            Please enter it promptly to complete your verification.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 0 0 16px; color: #666666; font-size: 14px; line-height: 1.6;">
+                                If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.
+                            </p>
+                            
+                            <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                                For security reasons, never share this code with anyone.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e0e0e0;">
+                            <p style="margin: 0 0 8px; color: #999999; font-size: 13px; line-height: 1.5;">
+                                This is an automated message, please do not reply.
+                            </p>
+                            <p style="margin: 0; color: #999999; font-size: 13px; line-height: 1.5;">
+                                © 2025 %s. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                
+                <!-- Spacer -->
+                <table role="presentation" style="max-width: 600px; width: 100%%; margin-top: 20px;">
+                    <tr>
+                        <td style="text-align: center; padding: 0 20px;">
+                            <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.5;">
+                                Need help? Contact our support team
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+	`, otp, s.OTPExpiryMin, s.SMTPConfig.FromName)
+
 	m.SetBody("text/html", html)
+
 	d := gomail.NewDialer(
 		s.SMTPConfig.Host,
 		s.SMTPConfig.Port,
@@ -115,10 +208,12 @@ func (s *OTPService) SendOTPEmail(ctx context.Context, toEmail, otp string) erro
 		s.SMTPConfig.Password,
 	)
 	d.TLSConfig = nil
+
 	if err := d.DialAndSend(m); err != nil {
 		log.Printf("[EMAIL] send error: %v", err)
 		return err
 	}
+
 	return nil
 }
 
