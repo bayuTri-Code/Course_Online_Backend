@@ -41,7 +41,7 @@ type VerifyOTPRequest struct {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
 // @Failure 429 {object} map[string]interface{}
-// @Router /auth/otp/send [post]
+// @Router /api/auth/otp/send [post]
 func (h *OTPHandler) SendOTP(c *gin.Context) {
 	var req SendOTPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -73,7 +73,7 @@ func (h *OTPHandler) SendOTP(c *gin.Context) {
 // @Param body body VerifyOTPRequest true "Verify OTP"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
-// @Router /auth/otp/verify [post]
+// @Router /api/auth/otp/verify [post]
 func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 	var req VerifyOTPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -109,7 +109,7 @@ func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 // @Produce json
 // @Param body body SendOTPRequest true "Email"
 // @Success 200 {object} map[string]interface{}
-// @Router /auth/otp/resend [post]
+// @Router /api/auth/otp/resend [post]
 func (h *OTPHandler) ResendOTP(c *gin.Context) {
 	h.SendOTP(c)
 }
