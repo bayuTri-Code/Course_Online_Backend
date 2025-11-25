@@ -34,7 +34,7 @@ type VerifyOTPRequest struct {
 }
 
 // @Summary Send OTP to email
-// @Tags Auth OTP
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param body body SendOTPRequest true "Email"
@@ -67,7 +67,7 @@ func (h *OTPHandler) SendOTP(c *gin.Context) {
 }
 
 // @Summary Verify OTP and login
-// @Tags Auth OTP
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param body body VerifyOTPRequest true "Verify OTP"
@@ -104,7 +104,7 @@ func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 }
 
 // @Summary Resend OTP
-// @Tags Auth OTP
+// @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param body body SendOTPRequest true "Email"

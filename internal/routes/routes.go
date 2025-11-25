@@ -55,10 +55,11 @@ func Routes(
 	protected := r.Group("/api")
 	protected.Use(middleware.FirebaseAuth(app, db))
 
-	AuthRoutes(public, db, app, redisClient )
+	AuthRoutesPublic(public, db, app, redisClient )
 	courseroutes.CourseBrowsingRoutes(public, db, app)
 	courseroutes.CourseTypePublic(public, db, app)
 
+	AuthRoutesPrivate(protected, db, app, redisClient )
 	UserRoutes(protected, db, app)
 	RoleRoutes(protected, db, app)
 	BiodataRoutes(protected, db, app)

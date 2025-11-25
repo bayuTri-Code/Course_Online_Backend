@@ -1,5 +1,24 @@
 basePath: /
 definitions:
+  authHandler.SendOTPRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  authHandler.VerifyOTPRequest:
+    properties:
+      email:
+        type: string
+      otp:
+        maxLength: 8
+        minLength: 4
+        type: string
+    required:
+    - email
+    - otp
+    type: object
   dto.ActivityResponse:
     properties:
       activity_name:
@@ -466,9 +485,7 @@ definitions:
       course_type:
         $ref: '#/definitions/enrollmentdto.CourseTypeInfo'
       created_by:
-        allOf:
-        - $ref: '#/definitions/enrollmentdto.CreatorInfo'
-        description: Changed from Instructor to CreatedBy
+        $ref: '#/definitions/enrollmentdto.CreatorInfo'
       description:
         type: string
       id:
@@ -2815,6 +2832,87 @@ paths:
       summary: Soft delete user
       tags:
       - Users
+  /auth/otp/resend:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authHandler.SendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Resend OTP
+      tags:
+      - Authentication
+  /auth/otp/send:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authHandler.SendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Send OTP to email
+      tags:
+      - Authentication
+  /auth/otp/verify:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Verify OTP
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authHandler.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Verify OTP and login
+      tags:
+      - Authentication
   /courses/{id}/enrollments:
     get:
       consumes:
