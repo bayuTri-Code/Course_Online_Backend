@@ -3,6 +3,7 @@ package routes
 import (
 	"course_online_backend/internal/config"
 	authHandler "course_online_backend/internal/handler/Auth"
+	"course_online_backend/internal/middleware"
 	"course_online_backend/internal/services"
 	auth "course_online_backend/internal/services/Auth"
 	otpemail "course_online_backend/internal/services/Auth/otp_email"
@@ -13,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AuthRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App, redisClient *redis.Client) {
+func AuthRoutesPublic(r *gin.RouterGroup, db *gorm.DB, app *firebase.App, redisClient *redis.Client) {
 
 	activityService := services.NewActivityService(db)
 
@@ -31,5 +32,17 @@ func AuthRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App, redisClient 
 		authGroup.POST("/otp/send", otpHandler.SendOTP)
 		authGroup.POST("/otp/verify", otpHandler.VerifyOTP)
 		authGroup.POST("/otp/resend", otpHandler.ResendOTP)
+
+	}
+}
+
+func AuthRoutesPrivate(r *gin.RouterGroup, db *gorm.DB, app *firebase.App, redisClient *redis.Client) {
+	redisService := auth.NewRedisService(redisClient)
+	logoutHandlerInstance := authHandler.NewLogoutHandler(redisService)
+
+	authGroup := r.Group("/auth")
+	authGroup.Use(middleware.FirebaseAuth(app, db))
+	{
+		authGroup.POST("/logout", logoutHandlerInstance.Logout)
 	}
 }

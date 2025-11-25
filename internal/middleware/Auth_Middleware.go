@@ -30,6 +30,14 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 		}
 
 		idToken := parts[1]
+
+		isBlacklisted, err := database.RedisConn().Exists(context.Background(), "blacklist:"+idToken).Result()
+		if err == nil && isBlacklisted > 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
+			c.Abort()
+			return
+		}
+
 		client, err := app.Auth(context.Background())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error initializing Firebase auth"})
@@ -54,6 +62,7 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 			c.Set("user_id", user.FirebaseUID)
 			c.Set("roles", roleNames)
 			c.Set("user", user)
+			c.Set("token", idToken) 
 			c.Next()
 			return
 		}
@@ -72,6 +81,7 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		
 		_ = database.RedisConn().Set(context.Background(), "token:"+idToken, token.UID, time.Hour).Err()
 
 		roleNames := make([]string, len(user.Roles))
@@ -82,6 +92,7 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 		c.Set("user_id", user.FirebaseUID)
 		c.Set("roles", roleNames)
 		c.Set("user", user)
+		c.Set("token", idToken) 
 
 		c.Next()
 	}
