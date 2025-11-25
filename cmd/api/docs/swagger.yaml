@@ -1164,6 +1164,34 @@ paths:
       summary: Login user using Firebase ID Token
       tags:
       - Authentication
+  /api/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user dan blacklist token saat ini
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: User logout
+      tags:
+      - Authentication
   /api/course-types:
     get:
       consumes:

@@ -29,7 +29,7 @@ func NewLogoutHandler(logoutService *auth.RedisService) *LogoutHandler {
 // @Success 200 {object} map[string]interface{}
 // @Failure 401 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
-// @Router /api/v1/auth/logout [post]
+// @Router /api/auth/logout [post]
 func (h *LogoutHandler) Logout(c *gin.Context) {
 	tokenInterface, exists := c.Get("token")
 	if !exists {
