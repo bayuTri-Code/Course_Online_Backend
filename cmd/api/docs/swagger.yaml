@@ -376,6 +376,21 @@ definitions:
       total_pages:
         type: integer
     type: object
+  dto.SendOTPResponse:
+    properties:
+      data:
+        properties:
+          email:
+            example: user@example.com
+            type: string
+        type: object
+      message:
+        example: OTP sent successfully
+        type: string
+      status:
+        example: true
+        type: boolean
+    type: object
   dto.StudentDashboardResponse:
     properties:
       enrolled_courses:
@@ -1190,6 +1205,89 @@ paths:
       security:
       - BearerAuth: []
       summary: User logout
+      tags:
+      - Authentication
+  /api/auth/otp/resend:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authHandler.SendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Resend OTP
+      tags:
+      - Authentication
+  /api/auth/otp/send:
+    post:
+      consumes:
+      - application/json
+      description: Mengirimkan OTP ke email untuk proses login.
+      parameters:
+      - description: Email untuk dikirimkan OTP
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authHandler.SendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP berhasil dikirim
+          schema:
+            $ref: '#/definitions/dto.SendOTPResponse'
+        "400":
+          description: Format email tidak valid
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "429":
+          description: Rate limit tercapai
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Gagal mengirim OTP
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Send OTP to email
+      tags:
+      - Authentication
+  /api/auth/otp/verify:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Verify OTP
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authHandler.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Verify OTP and login
       tags:
       - Authentication
   /api/course-types:
@@ -2860,87 +2958,6 @@ paths:
       summary: Soft delete user
       tags:
       - Users
-  /auth/otp/resend:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Email
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/authHandler.SendOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Resend OTP
-      tags:
-      - Authentication
-  /auth/otp/send:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Email
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/authHandler.SendOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "429":
-          description: Too Many Requests
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Send OTP to email
-      tags:
-      - Authentication
-  /auth/otp/verify:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Verify OTP
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/authHandler.VerifyOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Verify OTP and login
-      tags:
-      - Authentication
   /courses/{id}/enrollments:
     get:
       consumes:

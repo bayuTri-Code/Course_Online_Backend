@@ -27,6 +27,41 @@ type UserLoginResponse struct {
 	Data    UserResponseDTO `json:"data"`
 }
 
+//otp dto
+type SendOTPResponse struct {
+	Status  bool   `json:"status" example:"true"`
+	Message string `json:"message" example:"OTP sent successfully"`
+	Data    struct {
+		Email string `json:"email" example:"user@example.com"`
+	} `json:"data"`
+}
+
+type ErrorResponse struct {
+	Status  bool   `json:"status" example:"false"`
+	Message string `json:"message" example:"Invalid email format"`
+}
+
+type VerifyOTPResponse struct {
+	Status  bool   `json:"status" example:"true"`
+	Message string `json:"message" example:"Login success"`
+	Data    struct {
+		CustomToken string      `json:"customToken" example:"xxxxx.yyyyy.zzzzz"`
+		User        UserProfile `json:"user"`
+	} `json:"data"`
+}
+
+type UserProfile struct {
+	ID          string      `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`
+	FirebaseUID string      `json:"firebaseId" example:"firebase-uid-123"`
+	Email       string      `json:"email" example:"user@example.com"`
+	Username    string      `json:"username" example:"bayutri"`
+	Roles       interface{} `json:"roles"`
+	IsActive    bool        `json:"isActive" example:"true"`
+	CreatedAt   string      `json:"createdAt" example:"2025-01-01T12:00:00Z"`
+	LastLogin   string      `json:"lastLogin" example:"2025-01-20T11:00:00Z"`
+}
+
+
 // biodata dto
 type CreateBiodataRequest struct {
 	Name   string `form:"name" binding:"required"`
@@ -82,3 +117,5 @@ type BaseResponseDelete struct {
 	Status  bool        `json:"status"`
 	Message string      `json:"message"`
 }
+
+

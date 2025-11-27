@@ -34,13 +34,15 @@ type VerifyOTPRequest struct {
 }
 
 // @Summary Send OTP to email
+// @Description Mengirimkan OTP ke email untuk proses login.
 // @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param body body SendOTPRequest true "Email"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 429 {object} map[string]interface{}
+// @Param body body SendOTPRequest true "Email untuk dikirimkan OTP"
+// @Success 200 {object} dto.SendOTPResponse "OTP berhasil dikirim"
+// @Failure 400 {object} utils.ErrorResponse "Format email tidak valid"
+// @Failure 429 {object} utils.ErrorResponse "Rate limit tercapai"
+// @Failure 500 {object} utils.ErrorResponse "Gagal mengirim OTP"
 // @Router /api/auth/otp/send [post]
 func (h *OTPHandler) SendOTP(c *gin.Context) {
 	var req SendOTPRequest
@@ -76,8 +78,10 @@ func (h *OTPHandler) SendOTP(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body VerifyOTPRequest true "Verify OTP"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
+// @Success 200 {object} dto.VerifyOTPResponse "Login Berhasil"
+// @Failure 400 {object} utils.ErrorResponse "OTP tidak valid atau telah kedaluwarsa"
+// @Failure 429 {object} utils.ErrorResponse "Rate limit tercapai"
+// @Failure 500 {object} utils.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /api/auth/otp/verify [post]
 func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 	var req VerifyOTPRequest
