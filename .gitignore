@@ -1,4 +1,4 @@
 .env
 *.json
 
-
+internal/config/serviceAccountKey.json

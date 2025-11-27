@@ -69,10 +69,12 @@ func (s *OTPService) CheckRateLimit(ctx context.Context, email string) error {
 	key := fmt.Sprintf("otp_rate:%s", email)
 	maxAttempts := 5
 	window := time.Hour
+
 	if s.Config.ServerEnv == "development" {
 		maxAttempts = 100
 		window = time.Minute
 	}
+
 	val, err := s.Redis.Get(ctx, key).Result()
 	if err == redis.Nil {
 		_ = s.Redis.Set(ctx, key, "1", window).Err()
@@ -81,11 +83,13 @@ func (s *OTPService) CheckRateLimit(ctx context.Context, email string) error {
 	if err != nil {
 		return err
 	}
+
 	var count int
 	fmt.Sscanf(val, "%d", &count)
 	if count >= maxAttempts {
 		return fmt.Errorf("too many OTP requests, please try again later")
 	}
+
 	_, _ = s.Redis.Incr(ctx, key).Result()
 	_, _ = s.Redis.Expire(ctx, key, window).Result()
 	return nil
@@ -114,27 +118,23 @@ func (s *OTPService) SendOTPEmail(ctx context.Context, toEmail, otp string) erro
         <tr>
             <td align="center" style="padding: 40px 20px;">
                 <table role="presentation" style="max-width: 600px; width: 100%%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    
-					<!-- Header -->
-					<tr>
-						<td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); border-radius: 12px 12px 0 0;">
-							<h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-								🔐 Verification Code
-							</h1>
-						</td>
-					</tr>
-                    
-                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); border-radius: 12px 12px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
+                                🔐 Verification Code
+                            </h1>
+                        </td>
+                    </tr>
+
                     <tr>
                         <td style="padding: 40px;">
                             <p style="margin: 0 0 24px; color: #333333; font-size: 16px; line-height: 1.6;">
                                 Hello,
                             </p>
                             <p style="margin: 0 0 32px; color: #666666; font-size: 16px; line-height: 1.6;">
-                                We received a request to verify your email address. Use the verification code below to complete your login:
+                                Use the verification code below to complete your login:
                             </p>
-                            
-                            <!-- OTP Code Box -->
+
                             <table role="presentation" style="width: 100%%; border-collapse: collapse; margin: 0 0 32px;">
                                 <tr>
                                     <td align="center" style="padding: 30px; background-color: #f8f9fa; border: 2px dashed #e0e0e0; border-radius: 8px;">
@@ -144,54 +144,31 @@ func (s *OTPService) SendOTPEmail(ctx context.Context, toEmail, otp string) erro
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <!-- Info Box -->
+
                             <table role="presentation" style="width: 100%%; border-collapse: collapse; margin: 0 0 24px;">
                                 <tr>
                                     <td style="padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
                                         <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.5;">
-                                            ⏱️ <strong>This code will expire in %d minutes.</strong><br>
-                                            Please enter it promptly to complete your verification.
+                                            ⏱️ <strong>This code will expire in %d minutes.</strong>
                                         </p>
                                     </td>
                                 </tr>
                             </table>
-                            
+
                             <p style="margin: 0 0 16px; color: #666666; font-size: 14px; line-height: 1.6;">
-                                If you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.
-                            </p>
-                            
-                            <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
-                                For security reasons, never share this code with anyone.
+                                If you didn't request this code, ignore this email.
                             </p>
                         </td>
                     </tr>
-                    
-                    <!-- Footer -->
+
                     <tr>
                         <td style="padding: 30px 40px; background-color: #f8f9fa; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e0e0e0;">
-                            <p style="margin: 0 0 8px; color: #999999; font-size: 13px; line-height: 1.5;">
-                                This is an automated message, please do not reply.
-                            </p>
-                            <p style="margin: 0; color: #999999; font-size: 13px; line-height: 1.5;">
+                            <p style="margin: 0 0 8px; color: #999999; font-size: 13px;">
                                 © 2025 %s. All rights reserved.
                             </p>
                         </td>
                     </tr>
-                    
                 </table>
-                
-                <!-- Spacer -->
-                <table role="presentation" style="max-width: 600px; width: 100%%; margin-top: 20px;">
-                    <tr>
-                        <td style="text-align: center; padding: 0 20px;">
-                            <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.5;">
-                                Need help? Contact our support team
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                
             </td>
         </tr>
     </table>
@@ -207,7 +184,6 @@ func (s *OTPService) SendOTPEmail(ctx context.Context, toEmail, otp string) erro
 		s.SMTPConfig.User,
 		s.SMTPConfig.Password,
 	)
-	d.TLSConfig = nil
 
 	if err := d.DialAndSend(m); err != nil {
 		log.Printf("[EMAIL] send error: %v", err)
