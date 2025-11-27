@@ -2,4 +2,3 @@
 *.json
 
 internal/config/serviceAccountKey.json
-``
