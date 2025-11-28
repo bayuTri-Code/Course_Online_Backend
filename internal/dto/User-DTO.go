@@ -27,23 +27,34 @@ type UserLoginResponse struct {
 	Data    UserResponseDTO `json:"data"`
 }
 
-// biodata dto
 type CreateBiodataRequest struct {
-	Name   string `form:"name" binding:"required"`
-	Age    int    `form:"age" binding:"required"`
-	School string `form:"school" binding:"required"`
+	Name        string `form:"name" json:"name" binding:"required"`
+	FirstName   string `form:"firstName" json:"firstName"`
+	LastName    string `form:"lastName" json:"lastName"`
+	Description string `form:"description" json:"description"`
+	Contact     string `form:"contact" json:"contact"`
+	Age         int    `form:"age" json:"age" binding:"required"`
+	School      string `form:"school" json:"school" binding:"required"`
 }
 
 type UpdateBiodataRequest struct {
-	Name   string `form:"name"`
-	Age    int    `form:"age"`
-	School string `form:"school"`
+	Name        string `form:"name" json:"name" binding:"required"`
+	FirstName   string `form:"firstName" json:"firstName"`
+	LastName    string `form:"lastName" json:"lastName"`
+	Description string `form:"description" json:"description"`
+	Contact     string `form:"contact" json:"contact"`
+	Age         int    `form:"age" json:"age" binding:"required"`
+	School      string `form:"school" json:"school" binding:"required"`
 }
 
 type BiodataResponse struct {
 	ID             string `json:"id"`
 	UserID         string `json:"user_id"`
 	Name           string `json:"name"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Description    string `json:"description"`
+	Contact        string `json:"contact"`
 	Age            int    `json:"age"`
 	School         string `json:"school"`
 	ProfilePicture string `json:"profile_picture"`
@@ -62,13 +73,10 @@ type BaseResponseBiodata struct {
 	Data    BiodataResponse `json:"data"`
 }
 
-
-
-//user Management
 type UpdateUserRequest struct {
-	Username     string `json:"name"`
-	EmailAddress string `json:"email"`
-	IsActive     *bool   `json:"is_active"`
+	Username     string   `json:"name"`
+	EmailAddress string   `json:"email"`
+	IsActive     *bool    `json:"is_active"`
 	RoleIDs      []string `json:"role_ids" example:"role_id"`
 }
 
@@ -79,6 +87,52 @@ type BaseResponse struct {
 }
 
 type BaseResponseDelete struct {
-	Status  bool        `json:"status"`
-	Message string      `json:"message"`
+	Status  bool   `json:"status"`
+	Message string `json:"message"`
+}
+
+type SendOTPRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type VerifyOTPRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	OTP   string `json:"otp" binding:"required,min=4,max=8"`
+}
+
+type SendOTPData struct {
+	Email string `json:"email"`
+}
+
+type SendOTPResponse struct {
+	Status  bool        `json:"status" example:"true"`
+	Message string      `json:"message" example:"OTP sent successfully"`
+	Data    SendOTPData `json:"data"`
+}
+
+type UserRoleResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type OTPUserResponse struct {
+	ID         string             `json:"id"`
+	FirebaseID string             `json:"firebaseId"`
+	Email      string             `json:"email"`
+	Username   string             `json:"username"`
+	IsActive   bool               `json:"isActive"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	LastLogin  time.Time          `json:"lastLogin"`
+	Roles      []UserRoleResponse `json:"roles"`
+}
+
+type VerifyOTPData struct {
+	CustomToken string          `json:"customToken"`
+	User        OTPUserResponse `json:"user"`
+}
+
+type VerifyOTPResponse struct {
+	Status  bool          `json:"status" example:"true"`
+	Message string        `json:"message" example:"Login success"`
+	Data    VerifyOTPData `json:"data"`
 }
