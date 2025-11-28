@@ -1,6 +1,7 @@
 package authHandler
 
 import (
+	"course_online_backend/internal/dto"
 	"course_online_backend/internal/services"
 	otpemail "course_online_backend/internal/services/Auth/otp_email"
 	"log"
@@ -24,15 +25,6 @@ func NewOTPHandler(otpService *otpemail.OTPService, otpAuthService *otpemail.OTP
 	}
 }
 
-type SendOTPRequest struct {
-	Email string `json:"email" binding:"required,email"`
-}
-
-type VerifyOTPRequest struct {
-	Email string `json:"email" binding:"required,email"`
-	OTP   string `json:"otp" binding:"required,min=4,max=8"`
-}
-
 // @Summary Send OTP to email
 // @Description Mengirimkan OTP ke email untuk proses login.
 // @Tags Authentication
@@ -45,7 +37,7 @@ type VerifyOTPRequest struct {
 // @Failure 500 {object} utils.ErrorResponse "Gagal mengirim OTP"
 // @Router /api/auth/otp/send [post]
 func (h *OTPHandler) SendOTP(c *gin.Context) {
-	var req SendOTPRequest
+	var req dto.SendOTPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid email format"})
 		return
@@ -64,13 +56,14 @@ func (h *OTPHandler) SendOTP(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "OTP sent successfully",
-		"data": gin.H{
-			"email": email,
+	c.JSON(http.StatusOK, dto.SendOTPResponse{
+		Status:  true,
+		Message: "OTP sent successfully",
+		Data: dto.SendOTPData{
+			Email: email,
 		},
 	})
+
 }
 
 // @Summary Verify OTP and login
@@ -84,7 +77,7 @@ func (h *OTPHandler) SendOTP(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /api/auth/otp/verify [post]
 func (h *OTPHandler) VerifyOTP(c *gin.Context) {
-	var req VerifyOTPRequest
+	var req dto.VerifyOTPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid request"})
 		return
@@ -99,20 +92,29 @@ func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "Login success",
-		"data": gin.H{
-			"customToken": customToken,
-			"user": gin.H{             
-				"id":         user.ID,
-				"firebaseId": user.FirebaseUID,
-				"email":      user.EmailAddress,
-				"username":   user.Username,
-				"roles":      user.Roles,
-				"isActive":   user.IsActive,
-				"createdAt":  user.CreatedAt,
-				"lastLogin":  user.LastLogin,
+	c.JSON(http.StatusOK, dto.VerifyOTPResponse{
+		Status:  true,
+		Message: "Login success",
+		Data: dto.VerifyOTPData{
+			CustomToken: customToken,
+			User: dto.OTPUserResponse{
+				ID:         user.ID.String(),
+				FirebaseID: user.FirebaseUID,
+				Email:      user.EmailAddress,
+				Username:   user.Username,
+				IsActive:   user.IsActive,
+				CreatedAt:  user.CreatedAt,
+				LastLogin:  user.LastLogin,
+				Roles: func() []dto.UserRoleResponse {
+					roles := make([]dto.UserRoleResponse, 0)
+					for _, r := range user.Roles {
+						roles = append(roles, dto.UserRoleResponse{
+							ID:   r.ID.String(),
+							Name: r.Name,
+						})
+					}
+					return roles
+				}(),
 			},
 		},
 	})
@@ -128,8 +130,8 @@ func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 // @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param body body SendOTPRequest true "Email"
-// @Success 200 {object} map[string]interface{}
+// @Param body body dto.SendOTPRequest true "Email"
+// @Success 200 {object} dto.SendOTPResponse
 // @Router /api/auth/otp/resend [post]
 func (h *OTPHandler) ResendOTP(c *gin.Context) {
 	h.SendOTP(c)

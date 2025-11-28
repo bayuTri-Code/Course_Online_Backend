@@ -42,9 +42,14 @@ func (s *BiodataService) CreateBiodata(firebaseUID string, req dto.CreateBiodata
 		ID:             uuid.New(),
 		UserID:         user.ID,
 		Name:           req.Name,
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		Description:    req.Description,
+		Contact:        req.Contact,
 		Age:            req.Age,
 		School:         req.School,
 		ProfilePicture: profileURL,
+
 	}
 
 	if err := s.DB.Create(&biodata).Error; err != nil {
@@ -84,6 +89,18 @@ func (s *BiodataService) UpdateBiodata(firebaseUID string, req dto.UpdateBiodata
 
 	if req.Name != "" {
 		biodata.Name = req.Name
+	}
+	if req.FirstName != "" {
+		biodata.FirstName = req.FirstName
+	}
+	if req.LastName != "" {
+		biodata.LastName = req.LastName
+	}
+	if req.Description != "" {
+		biodata.Description = req.Description
+	}
+	if req.Contact != "" {
+		biodata.Contact = req.Contact
 	}
 	if req.Age != 0 {
 		biodata.Age = req.Age

@@ -293,6 +293,7 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/authHandler.SendOTPRequest"
+                            "$ref": "#/definitions/dto.SendOTPRequest"
                         }
                     }
                 ],
@@ -302,6 +303,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                            "$ref": "#/definitions/dto.SendOTPResponse"
                         }
                     }
                 }
@@ -323,17 +325,20 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Email untuk dikirimkan OTP",
+                        "description": "Email",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/authHandler.SendOTPRequest"
+                            "$ref": "#/definitions/dto.SendOTPRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OTP berhasil dikirim",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.SendOTPResponse"
                         }
@@ -354,6 +359,15 @@ const docTemplate = `{
                         "description": "Gagal mengirim OTP",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponse"
                         }
                     }
                 }
@@ -379,6 +393,7 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/authHandler.VerifyOTPRequest"
+                            "$ref": "#/definitions/dto.VerifyOTPRequest"
                         }
                     }
                 ],
@@ -388,6 +403,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                            "$ref": "#/definitions/dto.VerifyOTPResponse"
                         }
                     },
                     "400": {
@@ -395,6 +411,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                            "$ref": "#/definitions/dto.BaseResponse"
                         }
                     }
                 }
@@ -3549,34 +3566,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "authHandler.SendOTPRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "authHandler.VerifyOTPRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "otp"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "otp": {
-                    "type": "string",
-                    "maxLength": 8,
-                    "minLength": 4
-                }
-            }
-        },
         "dto.ActivityResponse": {
             "type": "object",
             "properties": {
@@ -3649,7 +3638,19 @@ const docTemplate = `{
                 "age": {
                     "type": "integer"
                 },
+                "contact": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "name": {
@@ -4097,6 +4098,38 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.OTPUserResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firebaseId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "lastLogin": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.UserRoleResponse"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PaginationResponse": {
             "type": "object",
             "properties": {
@@ -4121,6 +4154,25 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SendOTPData": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SendOTPRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.SendOTPResponse": {
             "type": "object",
             "properties": {
@@ -4132,6 +4184,7 @@ const docTemplate = `{
                             "example": "user@example.com"
                         }
                     }
+                    "$ref": "#/definitions/dto.SendOTPData"
                 },
                 "message": {
                     "type": "string",
@@ -4248,6 +4301,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UserRoleResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserSimpleDTO": {
             "type": "object",
             "properties": {
@@ -4268,6 +4332,50 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.VerifyOTPData": {
+            "type": "object",
+            "properties": {
+                "customToken": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.OTPUserResponse"
+                }
+            }
+        },
+        "dto.VerifyOTPRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "otp"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "otp": {
+                    "type": "string",
+                    "maxLength": 8,
+                    "minLength": 4
+                }
+            }
+        },
+        "dto.VerifyOTPResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.VerifyOTPData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Login success"
+                },
+                "status": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -4561,11 +4669,26 @@ const docTemplate = `{
                 "age": {
                     "type": "integer"
                 },
+                "contact": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
                 "deleted_at": {
                     "type": "string",
                     "format": "date-time"
                 },
+                "description": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "name": {
@@ -4575,6 +4698,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "school": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {

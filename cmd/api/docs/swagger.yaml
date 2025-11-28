@@ -1,24 +1,5 @@
 basePath: /
 definitions:
-  authHandler.SendOTPRequest:
-    properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  authHandler.VerifyOTPRequest:
-    properties:
-      email:
-        type: string
-      otp:
-        maxLength: 8
-        minLength: 4
-        type: string
-    required:
-    - email
-    - otp
-    type: object
   dto.ActivityResponse:
     properties:
       activity_name:
@@ -66,7 +47,15 @@ definitions:
     properties:
       age:
         type: integer
+      contact:
+        type: string
+      description:
+        type: string
+      first_name:
+        type: string
       id:
+        type: string
+      last_name:
         type: string
       name:
         type: string
@@ -360,6 +349,27 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.OTPUserResponse:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      firebaseId:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      lastLogin:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/dto.UserRoleResponse'
+        type: array
+      username:
+        type: string
+    type: object
   dto.PaginationResponse:
     properties:
       data: {}
@@ -376,6 +386,7 @@ definitions:
       total_pages:
         type: integer
     type: object
+<<<<<<< HEAD
   dto.SendOTPResponse:
     properties:
       data:
@@ -384,6 +395,24 @@ definitions:
             example: user@example.com
             type: string
         type: object
+=======
+  dto.SendOTPData:
+    properties:
+      email:
+        type: string
+    type: object
+  dto.SendOTPRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  dto.SendOTPResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.SendOTPData'
+>>>>>>> feature/profile
       message:
         example: OTP sent successfully
         type: string
@@ -460,6 +489,13 @@ definitions:
       username:
         type: string
     type: object
+  dto.UserRoleResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   dto.UserSimpleDTO:
     properties:
       biodata:
@@ -474,6 +510,36 @@ definitions:
         type: array
       username:
         type: string
+    type: object
+  dto.VerifyOTPData:
+    properties:
+      customToken:
+        type: string
+      user:
+        $ref: '#/definitions/dto.OTPUserResponse'
+    type: object
+  dto.VerifyOTPRequest:
+    properties:
+      email:
+        type: string
+      otp:
+        maxLength: 8
+        minLength: 4
+        type: string
+    required:
+    - email
+    - otp
+    type: object
+  dto.VerifyOTPResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.VerifyOTPData'
+      message:
+        example: Login success
+        type: string
+      status:
+        example: true
+        type: boolean
     type: object
   enrollmentdto.BiodataInfo:
     properties:
@@ -667,16 +733,28 @@ definitions:
     properties:
       age:
         type: integer
+      contact:
+        type: string
+      created_at:
+        type: string
       deleted_at:
         format: date-time
         type: string
+      description:
+        type: string
+      first_name:
+        type: string
       id:
+        type: string
+      last_name:
         type: string
       name:
         type: string
       profile_picture:
         type: string
       school:
+        type: string
+      updated_at:
         type: string
       user_id:
         type: string
@@ -1218,6 +1296,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/authHandler.SendOTPRequest'
+          $ref: '#/definitions/dto.SendOTPRequest'
       produces:
       - application/json
       responses:
@@ -1226,6 +1305,7 @@ paths:
           schema:
             additionalProperties: true
             type: object
+            $ref: '#/definitions/dto.SendOTPResponse'
       summary: Resend OTP
       tags:
       - Authentication
@@ -1236,6 +1316,8 @@ paths:
       description: Mengirimkan OTP ke email untuk proses login.
       parameters:
       - description: Email untuk dikirimkan OTP
+      parameters:
+      - description: Email
         in: body
         name: body
         required: true
