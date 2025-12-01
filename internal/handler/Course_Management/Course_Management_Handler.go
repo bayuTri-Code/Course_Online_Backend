@@ -394,7 +394,7 @@ func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/courses/category/{categoryId} [get]
+// @Router /api/courses/categories/{categoryId} [get]
 func (h *CourseHandler) GetCoursesByCategoryHandler(c *gin.Context) {
 	categoryIDParam := c.Param("categoryId")
 	categoryID, err := uuid.Parse(categoryIDParam)

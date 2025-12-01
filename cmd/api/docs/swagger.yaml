@@ -260,6 +260,30 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.CreateZoomRequest:
+    properties:
+      course_id:
+        type: string
+      description:
+        example: Pengenalan materi dasar
+        type: string
+      duration:
+        example: 90
+        type: integer
+      link:
+        example: https://zoom.us/j/123456789
+        type: string
+      scheduled_at:
+        example: "2024-01-15T10:00:00Z"
+        type: string
+      title:
+        example: Pertemuan 1 - Introduction
+        type: string
+    required:
+    - course_id
+    - link
+    - title
+    type: object
   dto.CreatorResponse:
     properties:
       email:
@@ -461,6 +485,22 @@ definitions:
           type: string
         type: array
     type: object
+  dto.UpdateZoomRequest:
+    properties:
+      description:
+        type: string
+      duration:
+        type: integer
+      link:
+        type: string
+      scheduled_at:
+        type: string
+      title:
+        type: string
+    required:
+    - link
+    - title
+    type: object
   dto.UserLoginResponse:
     properties:
       data:
@@ -540,6 +580,49 @@ definitions:
       status:
         example: true
         type: boolean
+    type: object
+  dto.ZoomCourseResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      thumbnail:
+        type: string
+    type: object
+  dto.ZoomListResponse:
+    properties:
+      total:
+        type: integer
+      zooms:
+        items:
+          $ref: '#/definitions/dto.ZoomResponse'
+        type: array
+    type: object
+  dto.ZoomResponse:
+    properties:
+      course:
+        $ref: '#/definitions/dto.ZoomCourseResponse'
+      course_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      link:
+        type: string
+      scheduled_at:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
     type: object
   enrollmentdto.BiodataInfo:
     properties:
@@ -1075,9 +1158,21 @@ definitions:
         $ref: '#/definitions/models.Course'
       course_id:
         type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
       id:
         type: string
       link:
+        type: string
+      scheduled_at:
+        type: string
+      title:
+        type: string
+      updated_at:
         type: string
     type: object
   utils.BaseResponse:
@@ -1868,7 +1963,7 @@ paths:
       summary: Restore a soft deleted course
       tags:
       - courses
-  /api/courses/category/{categoryId}:
+  /api/courses/categories/{categoryId}:
     get:
       consumes:
       - application/json
@@ -3096,6 +3191,269 @@ paths:
       summary: Soft delete user
       tags:
       - Users
+  /api/zoom:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all Zoom meetings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ZoomResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all Zoom meetings
+      tags:
+      - zoom
+    post:
+      consumes:
+      - application/json
+      description: Create a new Zoom meeting for a course
+      parameters:
+      - description: Zoom data
+        in: body
+        name: zoom
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateZoomRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ZoomResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new Zoom meeting
+      tags:
+      - zoom
+  /api/zoom/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Zoom meeting by ID
+      parameters:
+      - description: Zoom ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Zoom meeting
+      tags:
+      - zoom
+    get:
+      consumes:
+      - application/json
+      description: Retrieve Zoom meeting details by ID
+      parameters:
+      - description: Zoom ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ZoomResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Zoom by ID
+      tags:
+      - zoom
+    put:
+      consumes:
+      - application/json
+      description: Update Zoom meeting by ID
+      parameters:
+      - description: Zoom ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated zoom data
+        in: body
+        name: zoom
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateZoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ZoomResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Zoom meeting
+      tags:
+      - zoom
+  /api/zoom/course/{courseId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all Zoom meetings for a specific course
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ZoomListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all Zoom meetings by Course ID
+      tags:
+      - zoom
+  /api/zoom/course/{courseId}/upcoming:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve upcoming Zoom meetings for a specific course
+      parameters:
+      - description: Course ID (UUID)
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ZoomListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get upcoming Zoom meetings by Course ID
+      tags:
+      - zoom
   /courses/{id}/enrollments:
     get:
       consumes:
