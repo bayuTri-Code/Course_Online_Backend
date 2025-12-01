@@ -69,6 +69,7 @@ func Routes(
 	courseroutes.CourseManagementRoutes(protected, db, app)
 	courseroutes.CourseTypeRoutes(protected, db, app)
 	courseroutes.ModuleManagementRoutes(protected, db, app)
+	courseroutes.ZoomRoutes(protected, db, app)
 
 	enrollroutes.EnrollmentRoutes(protected, db, app)
 
