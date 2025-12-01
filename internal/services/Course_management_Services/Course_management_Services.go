@@ -460,6 +460,80 @@ func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uui
 	}, nil
 }
 
+func (s *CourseService) GetMyCoursesByCategory(ctx context.Context, firebaseUID string, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.MyCourseByCategoryResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+
+	var user models.User
+	if err := s.db.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	var category models.CourseType
+	if err := s.db.First(&category, categoryID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("category not found")
+		}
+		return nil, err
+	}
+
+	subQuery := s.db.Model(&models.Enrollment{}).
+		Select("course_id").
+		Where("user_id = ?", user.ID)
+
+	query := s.db.Model(&models.Course{}).
+		Where("id IN (?)", subQuery).
+		Where("course_type_id = ?", categoryID).
+		Where("deleted_at IS NULL")
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	offset := (params.Page - 1) * params.Limit
+	query = query.Order("created_at DESC").
+		Offset(offset).
+		Limit(params.Limit)
+
+	query = query.Preload("CourseType").
+		Preload("Creator").
+		Preload("Modules", func(db *gorm.DB) *gorm.DB {
+			return db.Order("number ASC")
+		}).
+		Preload("Enrollments", "user_id = ?", user.ID)
+
+	var courses []models.Course
+	if err := query.Find(&courses).Error; err != nil {
+		return nil, err
+	}
+
+	courseResponses := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		courseResponses[i] = s.mapToCourseResponse(&course)
+	}
+
+	return &dto.MyCourseByCategoryResponse{
+		Category: dto.CourseTypeWithCountResponse{
+			ID:           category.ID,
+			Name:         category.Name,
+			Description:  category.Description,
+			CoursesCount: total,
+			CreatedAt:    category.CreatedAt,
+			UpdatedAt:    category.UpdatedAt,
+		},
+		Courses: courseResponses,
+		Total:   total,
+	}, nil
+}
+
 func (s *CourseService) GetPopularCourses(ctx context.Context, limit int) ([]dto.CourseResponse, error) {
 	if limit < 1 {
 		limit = 10

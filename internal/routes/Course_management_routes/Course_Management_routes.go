@@ -26,6 +26,12 @@ func CourseManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) 
 		courses.DELETE("/:id/permanent", courseHandler.PermanentDeleteCourseHandler)
 	}
 
+	categories := r.Group("/mycourses")
+	categories.Use(middleware.RoleMiddleware("student"))
+	{
+		categories.GET("/categories/:categoryId/courses", courseHandler.GetMyCoursesByCategoryHandler)
+	}
+
 	myCourses := r.Group("/my")
 	myCourses.Use(middleware.RoleMiddleware("student", "super_admin", "admin", "instructor"))
 	{
