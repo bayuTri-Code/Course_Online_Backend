@@ -26,7 +26,7 @@ func CourseBrowsingRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		courses.GET("/:id/related", courseHandler.GetRelatedCoursesHandler)
 	}
 
-	categories := r.Group("/categories/:categoryId/courses")
+	categories := r.Group("/courses/categories/:categoryId")
 	{
 		categories.GET("", courseHandler.GetCoursesByCategoryHandler)
 	}

@@ -422,6 +422,65 @@ func (h *CourseHandler) GetCoursesByCategoryHandler(c *gin.Context) {
 	utils.JSONSuccess(c, result, "Courses retrieved successfully")
 }
 
+// GetMyCoursesByCategoryHandler godoc
+// @Summary Get my enrolled courses by category
+// @Description Get courses that the user has enrolled in, filtered by category
+// @Tags courses-browsing
+// @Accept json
+// @Produce json
+// @Param categoryId path string true "Category ID (UUID)"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.StandardResponse{data=dto.MyCourseByCategoryResponse}
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 401 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/mycourses/categories/:categoryId/courses [get]
+// @Security BearerAuth
+func (h *CourseHandler) GetMyCoursesByCategoryHandler(c *gin.Context) {
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.JSONUnauthorized(c, "User not authenticated")
+		return
+	}
+
+	userID, ok := userIDInterface.(string)
+	if !ok {
+		utils.JSONError(c, "Invalid user ID format from Firebase token", http.StatusBadRequest, nil)
+		return
+	}
+
+	categoryIDParam := c.Param("categoryId")
+	categoryID, err := uuid.Parse(categoryIDParam)
+	if err != nil {
+		utils.JSONError(c, "Invalid category ID", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.service.GetMyCoursesByCategory(c.Request.Context(), userID, categoryID, &params)
+	if err != nil {
+		if err.Error() == "user not found" {
+			utils.JSONNotFound(c, "User not found")
+			return
+		}
+		if err.Error() == "category not found" {
+			utils.JSONNotFound(c, "Category not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, result, "My enrolled courses by category retrieved successfully")
+}
+
 // GetPopularCoursesHandler godoc
 // @Summary Get popular courses
 // @Description Get most popular courses sorted by enrollment count

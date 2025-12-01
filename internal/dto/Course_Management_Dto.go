@@ -153,3 +153,10 @@ type SimplePaginationParams struct {
 	Page  int `form:"page" binding:"omitempty,min=1"`
 	Limit int `form:"limit" binding:"omitempty,min=1,max=100"`
 }
+
+
+type MyCourseByCategoryResponse struct {
+	Category CourseTypeWithCountResponse `json:"category"`
+	Courses  []CourseResponse            `json:"courses"`
+	Total    int64                       `json:"total"`
+}
