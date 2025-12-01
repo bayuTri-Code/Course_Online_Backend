@@ -51,11 +51,11 @@ definitions:
         type: string
       description:
         type: string
-      first_name:
+      firstName:
         type: string
       id:
         type: string
-      last_name:
+      lastName:
         type: string
       name:
         type: string
@@ -386,16 +386,6 @@ definitions:
       total_pages:
         type: integer
     type: object
-<<<<<<< HEAD
-  dto.SendOTPResponse:
-    properties:
-      data:
-        properties:
-          email:
-            example: user@example.com
-            type: string
-        type: object
-=======
   dto.SendOTPData:
     properties:
       email:
@@ -412,7 +402,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/dto.SendOTPData'
->>>>>>> feature/profile
       message:
         example: OTP sent successfully
         type: string
@@ -742,11 +731,11 @@ definitions:
         type: string
       description:
         type: string
-      first_name:
+      firstName:
         type: string
       id:
         type: string
-      last_name:
+      lastName:
         type: string
       name:
         type: string
@@ -1295,7 +1284,6 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/authHandler.SendOTPRequest'
           $ref: '#/definitions/dto.SendOTPRequest'
       produces:
       - application/json
@@ -1303,8 +1291,6 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
             $ref: '#/definitions/dto.SendOTPResponse'
       summary: Resend OTP
       tags:
@@ -1316,13 +1302,11 @@ paths:
       description: Mengirimkan OTP ke email untuk proses login.
       parameters:
       - description: Email untuk dikirimkan OTP
-      parameters:
-      - description: Email
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/authHandler.SendOTPRequest'
+          $ref: '#/definitions/dto.SendOTPRequest'
       produces:
       - application/json
       responses:
@@ -1355,20 +1339,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/authHandler.VerifyOTPRequest'
+          $ref: '#/definitions/dto.VerifyOTPRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Login Berhasil
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.VerifyOTPResponse'
         "400":
-          description: Bad Request
+          description: OTP tidak valid atau telah kedaluwarsa
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/utils.ErrorResponse'
+        "429":
+          description: Rate limit tercapai
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
       summary: Verify OTP and login
       tags:
       - Authentication
@@ -2720,34 +2710,6 @@ paths:
       summary: Delete Biodata
       tags:
       - Profile
-    get:
-      consumes:
-      - application/json
-      description: Get biodata of the currently authenticated user (token required)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Get Biodata successfully
-          schema:
-            $ref: '#/definitions/dto.BaseResponseBiodata'
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Biodata not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get My Biodata
-      tags:
-      - Profile
     post:
       consumes:
       - multipart/form-data
@@ -2869,6 +2831,35 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Soft Delete Biodata
+      tags:
+      - Profile
+  /api/profile/mybiodata:
+    get:
+      consumes:
+      - application/json
+      description: Get biodata of the currently authenticated user (token required)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get Biodata successfully
+          schema:
+            $ref: '#/definitions/dto.BaseResponseBiodata'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Biodata not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get My Biodata
       tags:
       - Profile
   /api/user:

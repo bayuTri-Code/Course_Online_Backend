@@ -95,7 +95,7 @@ func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse "Invalid request"
 // @Failure 401 {object} utils.ErrorResponse "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponse "Biodata not found"
-// @Router /api/profile/biodata [get]
+// @Router /api/profile/mybiodata [get]
 func (c *BiodataHandler) GetBiodata(ctx *gin.Context) {
 	firebaseUID, exists := ctx.Get("user_id")
 	if !exists {

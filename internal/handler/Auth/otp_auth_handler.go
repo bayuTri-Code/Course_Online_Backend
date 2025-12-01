@@ -30,7 +30,7 @@ func NewOTPHandler(otpService *otpemail.OTPService, otpAuthService *otpemail.OTP
 // @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param body body SendOTPRequest true "Email untuk dikirimkan OTP"
+// @Param body body dto.SendOTPRequest true "Email untuk dikirimkan OTP"
 // @Success 200 {object} dto.SendOTPResponse "OTP berhasil dikirim"
 // @Failure 400 {object} utils.ErrorResponse "Format email tidak valid"
 // @Failure 429 {object} utils.ErrorResponse "Rate limit tercapai"
@@ -70,7 +70,7 @@ func (h *OTPHandler) SendOTP(c *gin.Context) {
 // @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param body body VerifyOTPRequest true "Verify OTP"
+// @Param body body dto.VerifyOTPRequest true "Verify OTP"
 // @Success 200 {object} dto.VerifyOTPResponse "Login Berhasil"
 // @Failure 400 {object} utils.ErrorResponse "OTP tidak valid atau telah kedaluwarsa"
 // @Failure 429 {object} utils.ErrorResponse "Rate limit tercapai"

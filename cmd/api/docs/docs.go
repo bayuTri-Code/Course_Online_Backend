@@ -292,7 +292,6 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authHandler.SendOTPRequest"
                             "$ref": "#/definitions/dto.SendOTPRequest"
                         }
                     }
@@ -301,8 +300,6 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                             "$ref": "#/definitions/dto.SendOTPResponse"
                         }
                     }
@@ -325,12 +322,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Email untuk dikirimkan OTP",
-                        "description": "Email",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authHandler.SendOTPRequest"
                             "$ref": "#/definitions/dto.SendOTPRequest"
                         }
                     }
@@ -338,7 +333,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OTP berhasil dikirim",
-                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.SendOTPResponse"
                         }
@@ -359,15 +353,6 @@ const docTemplate = `{
                         "description": "Gagal mengirim OTP",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponse"
-                        }
-                    },
-                    "429": {
-                        "description": "Too Many Requests",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponse"
                         }
                     }
                 }
@@ -392,26 +377,33 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authHandler.VerifyOTPRequest"
                             "$ref": "#/definitions/dto.VerifyOTPRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Login Berhasil",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                             "$ref": "#/definitions/dto.VerifyOTPResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "OTP tidak valid atau telah kedaluwarsa",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                            "$ref": "#/definitions/dto.BaseResponse"
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit tercapai",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan pada server",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     }
                 }
@@ -2579,50 +2571,6 @@ const docTemplate = `{
             }
         },
         "/api/profile/biodata": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get biodata of the currently authenticated user (token required)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Get My Biodata",
-                "responses": {
-                    "200": {
-                        "description": "Get Biodata successfully",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BaseResponseBiodata"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Biodata not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "put": {
                 "consumes": [
                     "multipart/form-data"
@@ -2842,6 +2790,52 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "User or Biodata not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/profile/mybiodata": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get biodata of the currently authenticated user (token required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get My Biodata",
+                "responses": {
+                    "200": {
+                        "description": "Get Biodata successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BaseResponseBiodata"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Biodata not found",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -3644,13 +3638,13 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "first_name": {
+                "firstName": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "last_name": {
+                "lastName": {
                     "type": "string"
                 },
                 "name": {
@@ -4177,13 +4171,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "type": "object",
-                    "properties": {
-                        "email": {
-                            "type": "string",
-                            "example": "user@example.com"
-                        }
-                    }
                     "$ref": "#/definitions/dto.SendOTPData"
                 },
                 "message": {
@@ -4682,13 +4669,13 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "first_name": {
+                "firstName": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "last_name": {
+                "lastName": {
                     "type": "string"
                 },
                 "name": {
