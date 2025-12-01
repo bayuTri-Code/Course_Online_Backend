@@ -32,7 +32,6 @@ func AuthRoutesPublic(r *gin.RouterGroup, db *gorm.DB, app *firebase.App, redisC
 		authGroup.POST("/otp/send", otpHandler.SendOTP)
 		authGroup.POST("/otp/verify", otpHandler.VerifyOTP)
 		authGroup.POST("/otp/resend", otpHandler.ResendOTP)
-
 	}
 }
 
