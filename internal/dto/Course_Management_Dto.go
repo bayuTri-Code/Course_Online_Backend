@@ -5,20 +5,39 @@ import (
 	"time"
 )
 
+type InstructorSearchRequest struct {
+	Query string `form:"query" binding:"required,min=2"`
+	Limit int    `form:"limit" binding:"omitempty,min=1,max=50"`
+}
+
+type InstructorResponse struct {
+	ID       uuid.UUID `json:"id"`
+	FullName string    `json:"full_name"`
+	Email    string    `json:"email"`
+	Avatar   string    `json:"avatar,omitempty"`
+}
+
+type InstructorSearchResponse struct {
+	Total       int64                `json:"total"`
+	Instructors []InstructorResponse `json:"instructors"`
+}
+
 type CreateCourseRequest struct {
-	Name              string  `json:"name" binding:"required,min=3,max=200"`
-	Description       string  `json:"description" binding:"required"`
-	Price             float64 `json:"price" binding:"min=0"`
-	IsProgressLimited bool    `json:"is_progress_limited"`
-	CourseTypeID      string  `form:"course_type_id" json:"course_type_id" binding:"required"`
+	Name              string  `form:"name" binding:"required,min=3,max=200"`
+	Description       string  `form:"description" binding:"required"`
+	Price             float64 `form:"price" binding:"min=0"`
+	IsProgressLimited bool    `form:"is_progress_limited"`
+	CourseTypeID      string  `form:"course_type_id" binding:"required"`
+	InstructorID      string  `form:"instructor_id"` 
 }
 
 type UpdateCourseRequest struct {
-	Name              string    `json:"name" binding:"omitempty,min=3,max=200"`
-	Description       string    `json:"description"`
-	Price             float64   `json:"price" binding:"omitempty,min=0"`
-	IsProgressLimited *bool     `json:"is_progress_limited"`
-	CourseTypeID      uuid.UUID `json:"course_type_id"`
+	Name              string     `form:"name" binding:"omitempty,min=3,max=200"`
+	Description       string     `form:"description"`
+	Price             float64    `form:"price" binding:"omitempty,min=0"`
+	IsProgressLimited *bool      `form:"is_progress_limited"`
+	CourseTypeID      uuid.UUID  `form:"course_type_id"`
+	InstructorID      *string    `form:"instructor_id"` 
 }
 
 type CourseQueryParams struct {
@@ -27,6 +46,7 @@ type CourseQueryParams struct {
 	Search         string    `form:"search"`
 	CourseTypeID   uuid.UUID `form:"course_type_id"`
 	CreatedBy      uuid.UUID `form:"created_by"`
+	InstructorID   uuid.UUID `form:"instructor_id"` 
 	MinPrice       float64   `form:"min_price" binding:"omitempty,min=0"`
 	MaxPrice       float64   `form:"max_price" binding:"omitempty,min=0"`
 	SortBy         string    `form:"sort_by" binding:"omitempty,oneof=name price created_at"`
@@ -43,11 +63,13 @@ type CourseResponse struct {
 	IsProgressLimited bool                `json:"is_progress_limited"`
 	CourseTypeID      uuid.UUID           `json:"course_type_id"`
 	CreatedBy         *uuid.UUID          `json:"created_by"`
+	InstructorID      *uuid.UUID          `json:"instructor_id,omitempty"`
 	CreatedAt         time.Time           `json:"created_at"`
 	UpdatedAt         time.Time           `json:"updated_at"`
 	DeletedAt         *time.Time          `json:"deleted_at,omitempty"`
 	CourseType        *CourseTypeResponse `json:"course_type,omitempty"`
 	Creator           *CreatorResponse    `json:"creator,omitempty"`
+	Instructor        *InstructorResponse `json:"instructor,omitempty"`
 	ModulesCount      int                 `json:"modules_count,omitempty"`
 	LessonsCount      int                 `json:"lessons_count,omitempty"`
 	EnrollmentsCount  int                 `json:"enrollments_count,omitempty"`
@@ -62,14 +84,17 @@ type CourseDetailResponse struct {
 	IsProgressLimited bool                `json:"is_progress_limited"`
 	CourseTypeID      uuid.UUID           `json:"course_type_id"`
 	CreatedBy         *uuid.UUID          `json:"created_by"`
+	InstructorID      *uuid.UUID          `json:"instructor_id,omitempty"`
 	CreatedAt         time.Time           `json:"created_at"`
 	UpdatedAt         time.Time           `json:"updated_at"`
 	DeletedAt         *time.Time          `json:"deleted_at,omitempty"`
 	CourseType        *CourseTypeResponse `json:"course_type,omitempty"`
 	Creator           *CreatorResponse    `json:"creator,omitempty"`
+	Instructor        *InstructorResponse `json:"instructor,omitempty"`
 	Modules           []ModuleResponse    `json:"modules,omitempty"`
 	EnrollmentsCount  int                 `json:"enrollments_count"`
 }
+
 
 type CreateCourseTypeRequest struct {
 	Name        string    `json:"name" binding:"required,min=3,max=100"`
@@ -107,8 +132,6 @@ type PaginationResponse struct {
 	Data        interface{} `json:"data"`
 }
 
-//course browsing response
-
 type CourseTypeWithCountResponse struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
@@ -130,12 +153,6 @@ type CoursesByInstructorResponse struct {
 	Total      int64              `json:"total"`
 }
 
-type InstructorResponse struct {
-	ID       uuid.UUID `json:"id"`
-	FullName string    `json:"full_name"`
-	Email    string    `json:"email"`
-}
-
 type CourseStatsResponse struct {
 	TotalCourses      int64                           `json:"total_courses"`
 	TotalEnrollments  int64                           `json:"total_enrollments"`
@@ -153,7 +170,6 @@ type SimplePaginationParams struct {
 	Page  int `form:"page" binding:"omitempty,min=1"`
 	Limit int `form:"limit" binding:"omitempty,min=1,max=100"`
 }
-
 
 type MyCourseByCategoryResponse struct {
 	Category CourseTypeWithCountResponse `json:"category"`

@@ -25,12 +25,14 @@ type Course struct {
 	IsProgressLimited bool           `gorm:"default:false" json:"is_progress_limited"`
 	CourseTypeID      uuid.UUID      `gorm:"type:uuid;not null;index" json:"course_type_id"`
 	CreatedBy         *uuid.UUID     `gorm:"type:uuid;index" json:"created_by"`
+	InstructorID      *uuid.UUID     `gorm:"type:uuid;index" json:"instructor_id"`
 	CreatedAt         time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"string" format:"date-time"`
 
 	CourseType  *CourseType  `gorm:"foreignKey:CourseTypeID;constraint:OnDelete:RESTRICT" json:"course_type,omitempty"`
 	Creator     *User        `gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL" json:"creator,omitempty"`
+	Instructor  *User        `gorm:"foreignKey:InstructorID;constraint:OnDelete:SET NULL" json:"instructor,omitempty"`
 	Modules     []Module     `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"modules,omitempty"`
 	Quizzes     []Quiz       `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"quizzes,omitempty"`
 	Enrollments []Enrollment `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE" json:"enrollments,omitempty"`
@@ -45,7 +47,6 @@ type Course struct {
 func (c *Course) IsFree() bool {
 	return c.Price == 0
 }
-
 
 func (c *Course) IsPublished() bool {
 	return c.Status == "published"
