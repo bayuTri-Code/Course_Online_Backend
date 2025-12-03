@@ -233,13 +233,13 @@ func (s *CourseService) CreateCourse(
 
 func (s *CourseService) Update(
 	ctx context.Context,
-	id uuid.UUID,
+	course_id uuid.UUID,
 	req *dto.UpdateCourseRequest,
 	thumbnail *multipart.FileHeader,
 ) (*dto.CourseDetailResponse, error) {
 
 	var course models.Course
-	if err := s.db.First(&course, id).Error; err != nil {
+	if err := s.db.First(&course, course_id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("course not found")
 		}
@@ -313,7 +313,7 @@ func (s *CourseService) Update(
 	return s.GetByIDCourse(ctx, course.ID, false)
 }
 
-func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
+func (s *CourseService) GetByIDCourse(ctx context.Context, course_id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
 	query := s.db.
 		Preload("CourseType").
 		Preload("Creator").
@@ -326,7 +326,7 @@ func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, include
 	}
 
 	var course models.Course
-	if err := query.First(&course, id).Error; err != nil {
+	if err := query.First(&course, course_id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("course not found")
 		}
@@ -336,9 +336,9 @@ func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, include
 	return s.mapToCourseDetailResponse(&course), nil
 }
 
-func (s *CourseService) SoftDeleteCourse(ctx context.Context, id uuid.UUID) error {
+func (s *CourseService) SoftDeleteCourse(ctx context.Context, course_id uuid.UUID) error {
 	var course models.Course
-	if err := s.db.First(&course, id).Error; err != nil {
+	if err := s.db.First(&course, course_id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("course not found")
 		}
@@ -348,9 +348,9 @@ func (s *CourseService) SoftDeleteCourse(ctx context.Context, id uuid.UUID) erro
 	return s.db.Delete(&course).Error
 }
 
-func (s *CourseService) RestoreCourse(ctx context.Context, id uuid.UUID) (*dto.CourseDetailResponse, error) {
+func (s *CourseService) RestoreCourse(ctx context.Context, course_id uuid.UUID) (*dto.CourseDetailResponse, error) {
 	var course models.Course
-	if err := s.db.Unscoped().First(&course, id).Error; err != nil {
+	if err := s.db.Unscoped().First(&course, course_id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("course not found")
 		}
@@ -368,9 +368,9 @@ func (s *CourseService) RestoreCourse(ctx context.Context, id uuid.UUID) (*dto.C
 	return s.GetByIDCourse(ctx, course.ID, false)
 }
 
-func (s *CourseService) PermanentDeleteCourse(ctx context.Context, id uuid.UUID) error {
+func (s *CourseService) PermanentDeleteCourse(ctx context.Context, course_id uuid.UUID) error {
 	var course models.Course
-	if err := s.db.Unscoped().First(&course, id).Error; err != nil {
+	if err := s.db.Unscoped().First(&course, course_id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("course not found")
 		}

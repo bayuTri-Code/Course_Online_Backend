@@ -126,7 +126,7 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 // @Router /api/courses/{id} [put]
 // @Security BearerAuth
 func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("course_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -205,7 +205,7 @@ func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
 // @Router /api/courses/{id} [delete]
 // @Security BearerAuth
 func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("course_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -260,7 +260,7 @@ func (h *CourseHandler) SoftDeleteCourseHandler(c *gin.Context) {
 // @Router /api/courses/{id}/restore [patch]
 // @Security BearerAuth
 func (h *CourseHandler) RestoreCourseHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("course_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -310,7 +310,7 @@ func (h *CourseHandler) RestoreCourseHandler(c *gin.Context) {
 // @Router /api/courses/{id}/permanent [delete]
 // @Security BearerAuth
 func (h *CourseHandler) PermanentDeleteCourseHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("course_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -391,7 +391,7 @@ func (h *CourseHandler) GetAllCourseHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /api/courses/{id} [get]
 func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("course_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -641,7 +641,7 @@ func (h *CourseHandler) GetCoursesByInstructorHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /api/courses/{id}/related [get]
 func (h *CourseHandler) GetRelatedCoursesHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("course_id")
 	courseID, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())

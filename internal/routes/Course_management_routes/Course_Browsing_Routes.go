@@ -1,6 +1,5 @@
 package Course_management_routes
 
-
 import (
 	CourseManagementhandler "course_online_backend/internal/handler/Course_Management"
 	"course_online_backend/internal/services"
@@ -22,8 +21,8 @@ func CourseBrowsingRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		courses.GET("/popular", courseHandler.GetPopularCoursesHandler)
 		courses.GET("/latest", courseHandler.GetLatestCoursesHandler)
 		courses.GET("/stats", courseHandler.GetCourseStatsHandler)
-		courses.GET("/:id", courseHandler.GetByIDCourseHandler)
-		courses.GET("/:id/related", courseHandler.GetRelatedCoursesHandler)
+		courses.GET("/:course_id", courseHandler.GetByIDCourseHandler)
+		courses.GET("/:course_id/related", courseHandler.GetRelatedCoursesHandler)
 	}
 
 	categories := r.Group("/courses/categories/:categoryId")
