@@ -77,6 +77,15 @@ definitions:
       school:
         type: string
     type: object
+  dto.BulkCreateLessonRequest:
+    properties:
+      lessons:
+        items:
+          $ref: '#/definitions/dto.CreateLessonItem'
+        type: array
+    required:
+    - lessons
+    type: object
   dto.CourseByCategoryResponse:
     properties:
       category:
@@ -238,6 +247,46 @@ definitions:
     required:
     - name
     type: object
+  dto.CreateLessonItem:
+    properties:
+      course_order:
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 200
+        minLength: 3
+        type: string
+      video_details:
+        type: string
+      video_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - course_order
+    - name
+    - video_id
+    type: object
+  dto.CreateLessonRequest:
+    properties:
+      course_order:
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 200
+        minLength: 3
+        type: string
+      video_details:
+        type: string
+      video_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - course_order
+    - name
+    - video_id
+    type: object
   dto.CreateModuleRequest:
     properties:
       name:
@@ -333,11 +382,24 @@ definitions:
       total:
         type: integer
     type: object
+  dto.LessonOrderItem:
+    properties:
+      course_order:
+        minimum: 1
+        type: integer
+      lesson_id:
+        type: string
+    required:
+    - course_order
+    - lesson_id
+    type: object
   dto.LessonResponse:
     properties:
       course_order:
         type: integer
       created_at:
+        type: string
+      deleted_at:
         type: string
       id:
         type: string
@@ -440,6 +502,15 @@ definitions:
       total_pages:
         type: integer
     type: object
+  dto.ReorderLessonsRequest:
+    properties:
+      lesson_orders:
+        items:
+          $ref: '#/definitions/dto.LessonOrderItem'
+        type: array
+    required:
+    - lesson_orders
+    type: object
   dto.SendOTPData:
     properties:
       email:
@@ -478,6 +549,22 @@ definitions:
         type: integer
       total_students:
         type: integer
+    type: object
+  dto.UpdateLessonRequest:
+    properties:
+      course_order:
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 200
+        minLength: 3
+        type: string
+      video_details:
+        type: string
+      video_id:
+        maxLength: 100
+        minLength: 1
+        type: string
     type: object
   dto.UpdateModuleRequest:
     properties:
@@ -3861,6 +3948,364 @@ paths:
       summary: Update enrollment status
       tags:
       - Enrollment
+  /lessons/{id}:
+    delete:
+      description: Soft delete a lesson by ID
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Soft delete a lesson
+      tags:
+      - Lessons
+    get:
+      description: Get detailed information about a lesson
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success response with lesson data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get lesson by ID
+      tags:
+      - Lessons
+    put:
+      consumes:
+      - application/json
+      description: Update lesson details
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update lesson request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success response with updated lesson
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a lesson
+      tags:
+      - Lessons
+  /lessons/{id}/permanent:
+    delete:
+      description: Hard delete a lesson by ID (cannot be restored)
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Permanently delete a lesson
+      tags:
+      - Lessons
+  /lessons/{id}/restore:
+    patch:
+      description: Restore a soft deleted lesson by ID
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success response with restored lesson
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Restore a soft deleted lesson
+      tags:
+      - Lessons
+  /modules/{module_id}/lessons:
+    get:
+      description: Get all lessons in a specific module
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success response with lessons list
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: module not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get lessons by module ID
+      tags:
+      - Lessons
+    post:
+      consumes:
+      - application/json
+      description: Create a new lesson in a module
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      - description: Create lesson request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: success response with lesson data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: module not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new lesson
+      tags:
+      - Lessons
+  /modules/{module_id}/lessons/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Create multiple lessons at once
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      - description: Bulk create lessons request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkCreateLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: success response with created lessons
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: module not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Bulk create lessons
+      tags:
+      - Lessons
+  /modules/{module_id}/lessons/reorder:
+    patch:
+      consumes:
+      - application/json
+      description: Update course order for multiple lessons
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      - description: Reorder lessons request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReorderLessonsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: module not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reorder lessons
+      tags:
+      - Lessons
 schemes:
 - http
 securityDefinitions:
