@@ -20,7 +20,7 @@ func NewInstructorHandler(service *CourseManagementServices.InstructorService) *
 }
 
 // SearchInstructors godoc
-// @Summary Search instructors (like TikTok search)
+// @Summary Search instructors 
 // @Description Search active instructors by username or email for course assignment
 // @Tags instructors
 // @Accept json

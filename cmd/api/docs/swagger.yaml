@@ -117,6 +117,10 @@ definitions:
         type: integer
       id:
         type: string
+      instructor:
+        $ref: '#/definitions/dto.InstructorResponse'
+      instructor_id:
+        type: string
       is_progress_limited:
         type: boolean
       modules:
@@ -151,6 +155,10 @@ definitions:
       enrollments_count:
         type: integer
       id:
+        type: string
+      instructor:
+        $ref: '#/definitions/dto.InstructorResponse'
+      instructor_id:
         type: string
       is_progress_limited:
         type: boolean
@@ -307,12 +315,23 @@ definitions:
     type: object
   dto.InstructorResponse:
     properties:
+      avatar:
+        type: string
       email:
         type: string
       full_name:
         type: string
       id:
         type: string
+    type: object
+  dto.InstructorSearchResponse:
+    properties:
+      instructors:
+        items:
+          $ref: '#/definitions/dto.InstructorResponse'
+        type: array
+      total:
+        type: integer
     type: object
   dto.LessonResponse:
     properties:
@@ -868,6 +887,10 @@ definitions:
           $ref: '#/definitions/models.Enrollment'
         type: array
       id:
+        type: string
+      instructor:
+        $ref: '#/definitions/models.User'
+      instructor_id:
         type: string
       is_progress_limited:
         type: boolean
@@ -1568,7 +1591,8 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: Create a new course with optional thumbnail upload
+      description: Create a new course with optional thumbnail upload and instructor
+        assignment
       parameters:
       - description: Course name
         in: formData
@@ -1593,6 +1617,10 @@ paths:
         in: formData
         name: course_type_id
         required: true
+        type: string
+      - description: Instructor ID (UUID) - optional, assign instructor to course
+        in: formData
+        name: instructor_id
         type: string
       - description: Course thumbnail (optional)
         in: formData
@@ -1784,6 +1812,7 @@ paths:
       consumes:
       - multipart/form-data
       description: Update course information, optionally including thumbnail upload
+        and instructor assignment/removal
       parameters:
       - description: Course ID (UUID)
         in: path
@@ -1809,6 +1838,10 @@ paths:
       - description: Course type ID (UUID)
         in: formData
         name: course_type_id
+        type: string
+      - description: Instructor ID (UUID) - empty string to remove instructor
+        in: formData
+        name: instructor_id
         type: string
       - description: Course thumbnail (optional)
         in: formData
@@ -2598,6 +2631,86 @@ paths:
       summary: Get Activity Summary
       tags:
       - Activity
+  /api/instructors/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific instructor
+      parameters:
+      - description: Instructor ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.InstructorResponse'
+              type: object
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Instructor not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get instructor details
+      tags:
+      - instructors
+  /api/instructors/search:
+    get:
+      consumes:
+      - application/json
+      description: Search active instructors by username or email for course assignment
+      parameters:
+      - description: Search query (min 2 characters)
+        in: query
+        name: query
+        required: true
+        type: string
+      - description: Result limit (1-50, default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.InstructorSearchResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search instructors
+      tags:
+      - instructors
   /api/modules/{id}:
     delete:
       consumes:
