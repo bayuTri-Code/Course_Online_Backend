@@ -27,7 +27,7 @@ func NewCourseHandler(service *CourseManagementServices.CourseService, act *serv
 
 // CreateCourseHandler godoc
 // @Summary Create a new course
-// @Description Create a new course with optional thumbnail upload
+// @Description Create a new course with optional thumbnail upload and instructor assignment
 // @Tags courses
 // @Accept multipart/form-data
 // @Produce json
@@ -36,6 +36,7 @@ func NewCourseHandler(service *CourseManagementServices.CourseService, act *serv
 // @Param price formData number true "Course price"
 // @Param is_progress_limited formData boolean false "Limit user progress (optional)"
 // @Param course_type_id formData string true "Course type ID (UUID)"
+// @Param instructor_id formData string false "Instructor ID (UUID) - optional, assign instructor to course"
 // @Param thumbnail formData file false "Course thumbnail (optional)"
 // @Success 201 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
 // @Failure 400 {object} utils.ErrorResponse "Invalid input or bad request"
@@ -72,6 +73,14 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 
 	course, err := h.service.CreateCourse(c.Request.Context(), &req, courseTypeID, userID, thumbnail)
 	if err != nil {
+		if err.Error() == "instructor validation failed: instructor not found or inactive" {
+			utils.JSONError(c, "Invalid instructor: instructor not found or inactive", http.StatusBadRequest, nil)
+			return
+		}
+		if err.Error() == "instructor validation failed: user is not an instructor" {
+			utils.JSONError(c, "Invalid instructor: user does not have instructor role", http.StatusBadRequest, nil)
+			return
+		}
 		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
 		return
 	}
@@ -85,7 +94,12 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 				fmt.Printf("User not found for activity logging")
 				return
 			}
+			
 			activityMsg := fmt.Sprintf("Created course: %s (ID: %s)", req.Name, course.ID.String())
+			if req.InstructorID != "" {
+				activityMsg += "with instructor assigned"
+			}
+			
 			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
 		}()
 	}
@@ -93,7 +107,7 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 
 // UpdateCourseHandler godoc
 // @Summary Update a course
-// @Description Update course information, optionally including thumbnail upload
+// @Description Update course information, optionally including thumbnail upload and instructor assignment/removal
 // @Tags courses
 // @Accept multipart/form-data
 // @Produce json
@@ -103,6 +117,7 @@ func (h *CourseHandler) CreateCourseHandler(c *gin.Context) {
 // @Param price formData number false "Course price"
 // @Param is_progress_limited formData boolean false "Limit user progress (optional)"
 // @Param course_type_id formData string false "Course type ID (UUID)"
+// @Param instructor_id formData string false "Instructor ID (UUID) - empty string to remove instructor"
 // @Param thumbnail formData file false "Course thumbnail (optional)"
 // @Success 200 {object} utils.StandardResponse{data=dto.CourseDetailResponse}
 // @Failure 400 {object} utils.ErrorResponse "Invalid request data"
@@ -136,6 +151,14 @@ func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
 			utils.JSONError(c, "Course type not found", http.StatusBadRequest, nil)
 			return
 		}
+		if err.Error() == "instructor validation failed: instructor not found or inactive" {
+			utils.JSONError(c, "Invalid instructor: instructor not found or inactive", http.StatusBadRequest, nil)
+			return
+		}
+		if err.Error() == "instructor validation failed: user is not an instructor" {
+			utils.JSONError(c, "Invalid instructor: user does not have instructor role", http.StatusBadRequest, nil)
+			return
+		}
 		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
 		return
 	}
@@ -149,16 +172,25 @@ func (h *CourseHandler) UpdateCourseHandler(c *gin.Context) {
 				fmt.Printf("User not found for activity logging")
 				return
 			}
+			
 			courseName := course.Name
 			if req.Name != "" {
 				courseName = req.Name
 			}
+			
 			activityMsg := fmt.Sprintf("Updated course: %s (ID: %s)", courseName, id.String())
+			if req.InstructorID != nil {
+				if *req.InstructorID == "" {
+					activityMsg += " - removed instructor"
+				} else {
+					activityMsg += " - changed instructor"
+				}
+			}
+			
 			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
 		}()
 	}
 }
-
 // SoftDeleteCourseHandler godoc
 // @Summary Soft delete a course
 // @Description Soft delete a course (it can be restored later)

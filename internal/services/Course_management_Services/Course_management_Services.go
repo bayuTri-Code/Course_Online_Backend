@@ -15,14 +15,16 @@ import (
 )
 
 type CourseService struct {
-	db          *gorm.DB
-	minioHelper *services.MinioHelper
+	db                *gorm.DB
+	minioHelper       *services.MinioHelper
+	instructorService *InstructorService
 }
 
 func NewCourseService(db *gorm.DB) *CourseService {
 	return &CourseService{
-		db:          db,
-		minioHelper: &services.MinioHelper{},
+		db:                db,
+		minioHelper:       &services.MinioHelper{},
+		instructorService: NewInstructorService(db),
 	}
 }
 
@@ -36,6 +38,7 @@ func (s *CourseService) mapToCourseResponse(course *models.Course) dto.CourseRes
 		IsProgressLimited: course.IsProgressLimited,
 		CourseTypeID:      course.CourseTypeID,
 		CreatedBy:         course.CreatedBy,
+		InstructorID:      course.InstructorID,
 		CreatedAt:         course.CreatedAt,
 		UpdatedAt:         course.UpdatedAt,
 		ModulesCount:      len(course.Modules),
@@ -63,6 +66,17 @@ func (s *CourseService) mapToCourseResponse(course *models.Course) dto.CourseRes
 		}
 	}
 
+	if course.Instructor != nil {
+		avatar := ""
+		avatar = course.Instructor.Biodata.ProfilePicture
+		resp.Instructor = &dto.InstructorResponse{
+			ID:       course.Instructor.ID,
+			FullName: course.Instructor.Username,
+			Email:    course.Instructor.EmailAddress,
+			Avatar:   avatar,
+		}
+	}
+
 	lessonsCount := 0
 	for _, module := range course.Modules {
 		lessonsCount += len(module.Lessons)
@@ -82,6 +96,7 @@ func (s *CourseService) mapToCourseDetailResponse(course *models.Course) *dto.Co
 		IsProgressLimited: course.IsProgressLimited,
 		CourseTypeID:      course.CourseTypeID,
 		CreatedBy:         course.CreatedBy,
+		InstructorID:      course.InstructorID,
 		CreatedAt:         course.CreatedAt,
 		UpdatedAt:         course.UpdatedAt,
 		EnrollmentsCount:  len(course.Enrollments),
@@ -105,6 +120,17 @@ func (s *CourseService) mapToCourseDetailResponse(course *models.Course) *dto.Co
 			ID:       course.Creator.ID,
 			FullName: course.Creator.Username,
 			Email:    course.Creator.EmailAddress,
+		}
+	}
+
+	if course.Instructor != nil {
+		avatar := ""
+		avatar = course.Instructor.Biodata.ProfilePicture
+		resp.Instructor = &dto.InstructorResponse{
+			ID:       course.Instructor.ID,
+			FullName: course.Instructor.Username,
+			Email:    course.Instructor.EmailAddress,
+			Avatar:   avatar,
 		}
 	}
 
@@ -138,7 +164,7 @@ func (s *CourseService) CreateCourse(
 	ctx context.Context,
 	req *dto.CreateCourseRequest,
 	courseTypeID uuid.UUID,
-	firebaseUID string, 
+	firebaseUID string,
 	thumbnail *multipart.FileHeader,
 ) (*dto.CourseDetailResponse, error) {
 
@@ -167,6 +193,20 @@ func (s *CourseService) CreateCourse(
 		CreatedBy:         &user.ID,
 	}
 
+	if req.InstructorID != "" {
+		instructorUUID, err := uuid.Parse(req.InstructorID)
+		if err != nil {
+			return nil, errors.New("invalid instructor_id format")
+		}
+
+		instructor, err := s.instructorService.ValidateInstructor(ctx, instructorUUID)
+		if err != nil {
+			return nil, fmt.Errorf("instructor validation failed: %w", err)
+		}
+
+		course.InstructorID = &instructor.ID
+	}
+
 	if thumbnail != nil {
 		file, err := thumbnail.Open()
 		if err != nil {
@@ -191,8 +231,13 @@ func (s *CourseService) CreateCourse(
 	return s.GetByIDCourse(ctx, course.ID, false)
 }
 
+func (s *CourseService) Update(
+	ctx context.Context,
+	id uuid.UUID,
+	req *dto.UpdateCourseRequest,
+	thumbnail *multipart.FileHeader,
+) (*dto.CourseDetailResponse, error) {
 
-func (s *CourseService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCourseRequest, thumbnail *multipart.FileHeader) (*dto.CourseDetailResponse, error) {
 	var course models.Course
 	if err := s.db.First(&course, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -225,6 +270,24 @@ func (s *CourseService) Update(ctx context.Context, id uuid.UUID, req *dto.Updat
 		course.IsProgressLimited = *req.IsProgressLimited
 	}
 
+	if req.InstructorID != nil {
+		if *req.InstructorID == "" {
+			course.InstructorID = nil
+		} else {
+			instructorUUID, err := uuid.Parse(*req.InstructorID)
+			if err != nil {
+				return nil, errors.New("invalid instructor_id format")
+			}
+
+			instructor, err := s.instructorService.ValidateInstructor(ctx, instructorUUID)
+			if err != nil {
+				return nil, fmt.Errorf("instructor validation failed: %w", err)
+			}
+
+			course.InstructorID = &instructor.ID
+		}
+	}
+
 	if thumbnail != nil {
 		file, err := thumbnail.Open()
 		if err != nil {
@@ -248,6 +311,29 @@ func (s *CourseService) Update(ctx context.Context, id uuid.UUID, req *dto.Updat
 	}
 
 	return s.GetByIDCourse(ctx, course.ID, false)
+}
+
+func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
+	query := s.db.
+		Preload("CourseType").
+		Preload("Creator").
+		Preload("Instructor.Biodata").
+		Preload("Modules.Lessons").
+		Preload("Enrollments")
+
+	if !includeDeleted {
+		query = query.Where("deleted_at IS NULL")
+	}
+
+	var course models.Course
+	if err := query.First(&course, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("course not found")
+		}
+		return nil, err
+	}
+
+	return s.mapToCourseDetailResponse(&course), nil
 }
 
 func (s *CourseService) SoftDeleteCourse(ctx context.Context, id uuid.UUID) error {
@@ -382,27 +468,26 @@ func (s *CourseService) GetAllCourse(ctx context.Context, params *dto.CourseQuer
 	}, nil
 }
 
-func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
-	query := s.db.Preload("CourseType").
-		Preload("Creator").
-		Preload("Modules.Lessons").
-		Preload("Enrollments")
+// func (s *CourseService) GetByIDCourse(ctx context.Context, id uuid.UUID, includeDeleted bool) (*dto.CourseDetailResponse, error) {
+// 	query := s.db.Preload("CourseType").
+// 		Preload("Creator").
+// 		Preload("Modules.Lessons").
+// 		Preload("Enrollments")
 
-	if includeDeleted {
-		query = query.Unscoped()
-	}
+// 	if includeDeleted {
+// 		query = query.Unscoped()
+// 	}
 
-	var course models.Course
-	if err := query.First(&course, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("course not found")
-		}
-		return nil, err
-	}
+// 	var course models.Course
+// 	if err := query.First(&course, id).Error; err != nil {
+// 		if errors.Is(err, gorm.ErrRecordNotFound) {
+// 			return nil, errors.New("course not found")
+// 		}
+// 		return nil, err
+// 	}
 
-	return s.mapToCourseDetailResponse(&course), nil
-}
-
+// 	return s.mapToCourseDetailResponse(&course), nil
+// }
 
 func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.CourseByCategoryResponse, error) {
 	if params.Page < 1 {
@@ -727,8 +812,6 @@ func (s *CourseService) GetRelatedCourses(ctx context.Context, courseID uuid.UUI
 	return courseResponses, nil
 }
 
-
-
 func (s *CourseService) GetCourseStats(ctx context.Context) (*dto.CourseStatsResponse, error) {
 	var totalCourses int64
 	if err := s.db.Model(&models.Course{}).Count(&totalCourses).Error; err != nil {
@@ -809,17 +892,17 @@ func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, us
 
 	switch userRole {
 	case "super_admin":
-		
+
 	case "admin":
 		query = query.Where("created_by = ?", user.ID)
-		
+
 	case "instructor":
-		query = query.Where("1 = 0") 
-		
+		query = query.Where("1 = 0")
+
 	case "student":
 		query = query.Joins("INNER JOIN enrollments ON enrollments.course_id = courses.id").
 			Where("enrollments.user_id = ?", user.ID)
-		
+
 	default:
 		return nil, errors.New("invalid user role")
 	}
@@ -861,7 +944,7 @@ func (s *CourseService) GetMyCourses(ctx context.Context, firebaseUID string, us
 		Preload("Enrollments")
 
 	if userRole == "student" {
-		query = query.Distinct("courses.id")
+		query = query.Group("courses.id")
 	}
 
 	var courses []models.Course

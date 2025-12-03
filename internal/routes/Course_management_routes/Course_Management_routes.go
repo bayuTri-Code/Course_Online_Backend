@@ -16,6 +16,10 @@ func CourseManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) 
 	courseServices := CourseManagementServices.NewCourseService(db)
 	courseHandler := CourseManagementhandler.NewCourseHandler(courseServices, activityService)
 
+	instructorService := CourseManagementServices.NewInstructorService(db)
+	
+	instructorHandler := CourseManagementhandler.NewInstructorHandler(instructorService)
+
 	courses := r.Group("/courses")
 	courses.Use(middleware.RoleMiddleware("super_admin", "admin"))
 	{
@@ -24,6 +28,10 @@ func CourseManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) 
 		courses.DELETE("/:id", middleware.CheckCourseOwnership(db), courseHandler.SoftDeleteCourseHandler)
 		courses.PATCH("/:id/restore", courseHandler.RestoreCourseHandler)
 		courses.DELETE("/:id/permanent", courseHandler.PermanentDeleteCourseHandler)
+
+		//assign instructor to course
+		courses.GET("/instructors/search", instructorHandler.SearchInstructors)
+		courses.GET("/instructors/:id", instructorHandler.GetInstructorByID)
 	}
 
 	categories := r.Group("/mycourses")
