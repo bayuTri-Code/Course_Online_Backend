@@ -39,7 +39,7 @@ func NewModuleHandler(service *modulemanagementServices.ModuleService, act *serv
 // @Router /api/courses/{courseId}/modules [post]
 // @Security BearerAuth
 func (h *ModuleHandler) CreateModuleHandler(c *gin.Context) {
-	courseIDParam := c.Param("id")
+	courseIDParam := c.Param("course_id")
 	courseID, err := uuid.Parse(courseIDParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -94,7 +94,7 @@ func (h *ModuleHandler) CreateModuleHandler(c *gin.Context) {
 // @Router /api/modules/{id} [put]
 // @Security BearerAuth
 func (h *ModuleHandler) UpdateModuleHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("module_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid module ID", http.StatusBadRequest, err.Error())
@@ -145,7 +145,7 @@ func (h *ModuleHandler) UpdateModuleHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /api/modules/{id} [get]
 func (h *ModuleHandler) GetModuleByIDHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("module_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid module ID", http.StatusBadRequest, err.Error())
@@ -178,7 +178,7 @@ func (h *ModuleHandler) GetModuleByIDHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /api/courses/{courseId}/modules [get]
 func (h *ModuleHandler) GetModulesByCourseHandler(c *gin.Context) {
-	courseIDParam := c.Param("id")
+	courseIDParam := c.Param("course_id")
 	courseID, err := uuid.Parse(courseIDParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid course ID", http.StatusBadRequest, err.Error())
@@ -212,7 +212,7 @@ func (h *ModuleHandler) GetModulesByCourseHandler(c *gin.Context) {
 // @Router /api/modules/{id} [delete]
 // @Security BearerAuth
 func (h *ModuleHandler) SoftDeleteModuleHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("module_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid module ID", http.StatusBadRequest, err.Error())
@@ -257,7 +257,7 @@ func (h *ModuleHandler) SoftDeleteModuleHandler(c *gin.Context) {
 // @Router /api/modules/{id}/restore [patch]
 // @Security BearerAuth
 func (h *ModuleHandler) RestoreModuleHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("module_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid module ID", http.StatusBadRequest, err.Error())
@@ -307,7 +307,7 @@ func (h *ModuleHandler) RestoreModuleHandler(c *gin.Context) {
 // @Router /api/modules/{id}/permanent [delete]
 // @Security BearerAuth
 func (h *ModuleHandler) PermanentDeleteModuleHandler(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("module_id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid module ID", http.StatusBadRequest, err.Error())

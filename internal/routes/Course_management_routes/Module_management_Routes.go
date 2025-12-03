@@ -16,20 +16,35 @@ func ModuleManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) 
 	moduleServices := modulemanagementServices.NewModuleService(db)
 	moduleHandler := ModuleMgmthandler.NewModuleHandler(moduleServices, activityService)
 
-	courseModules := r.Group("/courses/:id/modules")
-	courseModules.Use(middleware.RoleMiddleware("super_admin", "admin", "instructor"))
+	publicCourseModules := r.Group("/courses/:course_id/modules")
+	publicCourseModules.Use(middleware.FirebaseAuth(app, db))
+	publicCourseModules.Use(middleware.RoleMiddleware("student", "admin", "super_admin", "instructor"))
+	publicCourseModules.Use(middleware.CheckEnrollmentAccess(db))
 	{
-		courseModules.GET("", moduleHandler.GetModulesByCourseHandler)
-		courseModules.POST("", moduleHandler.CreateModuleHandler)
+		publicCourseModules.GET("", moduleHandler.GetModulesByCourseHandler)
 	}
 
-	modules := r.Group("/modules")
-	modules.Use(middleware.RoleMiddleware("super_admin", "admin", "instructor"))
+	publicModules := r.Group("/modules")
 	{
-		modules.GET("/:id", moduleHandler.GetModuleByIDHandler)
-		modules.PUT("/:id", moduleHandler.UpdateModuleHandler)
-		modules.DELETE("/:id", moduleHandler.SoftDeleteModuleHandler)
-		modules.PATCH("/:id/restore", moduleHandler.RestoreModuleHandler)
-		modules.DELETE("/:id/permanent", moduleHandler.PermanentDeleteModuleHandler)
+		publicModules.GET("/:module_id", moduleHandler.GetModuleByIDHandler)
+	}
+
+	securedCourseModules := r.Group("/courses/:course_id/modules")
+	securedCourseModules.Use(middleware.FirebaseAuth(app, db))
+	securedCourseModules.Use(middleware.RoleMiddleware("admin", "super_admin"))
+	securedCourseModules.Use(middleware.CheckCourseOwnershipDynamic(db))
+	{
+		securedCourseModules.POST("", moduleHandler.CreateModuleHandler)
+	}
+
+	securedModules := r.Group("/modules")
+	securedModules.Use(middleware.FirebaseAuth(app, db))
+	securedModules.Use(middleware.RoleMiddleware("admin", "super_admin"))
+	securedModules.Use(middleware.CheckCourseOwnershipDynamic(db))
+	{
+		securedModules.PUT("/:module_id", moduleHandler.UpdateModuleHandler)
+		securedModules.DELETE("/:module_id", moduleHandler.SoftDeleteModuleHandler)
+		securedModules.PATCH("/:module_id/restore", moduleHandler.RestoreModuleHandler)
+		securedModules.DELETE("/:module_id/permanent", moduleHandler.PermanentDeleteModuleHandler)
 	}
 }

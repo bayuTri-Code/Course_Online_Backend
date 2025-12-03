@@ -24,13 +24,13 @@ func EnrollmentRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		student.DELETE("/:id", handler.UnenrollCourse)
 	}
 
-	courseEnrollmentsStudent := r.Group("/courses/:id/enrollments")
+	courseEnrollmentsStudent := r.Group("/courses/:course_id/enrollments")
 	courseEnrollmentsStudent.Use(middleware.RoleMiddleware("student"))
 	{
 		courseEnrollmentsStudent.GET("/check", handler.CheckEnrollment)
 	}
 
-	courseEnrollmentsAdmin := r.Group("/courses/:id/enrollments")
+	courseEnrollmentsAdmin := r.Group("/courses/:course_id/enrollments")
 	courseEnrollmentsAdmin.Use(middleware.RoleMiddleware("admin", "super_admin"))
 	{
 		courseEnrollmentsAdmin.GET("", handler.GetCourseStudents)

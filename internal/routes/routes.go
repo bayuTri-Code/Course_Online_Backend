@@ -58,6 +58,7 @@ func Routes(
 	AuthRoutesPublic(public, db, app, redisClient )
 	courseroutes.CourseBrowsingRoutes(public, db, app)
 	courseroutes.CourseTypePublic(public, db, app)
+	courseroutes.LessonPublicRoutes(public, db, app)
 
 	AuthRoutesPrivate(protected, db, app, redisClient )
 	UserRoutes(protected, db, app)
@@ -70,6 +71,8 @@ func Routes(
 	courseroutes.CourseTypeRoutes(protected, db, app)
 	courseroutes.ModuleManagementRoutes(protected, db, app)
 	courseroutes.ZoomRoutes(protected, db, app)
+	courseroutes.LessonRoutes(protected, db, app)
+
 
 	enrollroutes.EnrollmentRoutes(protected, db, app)
 

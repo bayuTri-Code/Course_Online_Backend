@@ -25,7 +25,7 @@ func ZoomRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 		zoom.PUT("/:id", zoomHandler.UpdateZoomHandler)
 		zoom.DELETE("/:id", zoomHandler.DeleteZoomHandler)
 		
-		zoom.GET("/course/:courseId", zoomHandler.GetZoomsByCourseIDHandler)
-		zoom.GET("/course/:courseId/upcoming", zoomHandler.GetUpcomingZoomsByCourseIDHandler)
+		zoom.GET("/course/:course_id", zoomHandler.GetZoomsByCourseIDHandler)
+		zoom.GET("/course/:course_id/upcoming", zoomHandler.GetUpcomingZoomsByCourseIDHandler)
 	}
 }
