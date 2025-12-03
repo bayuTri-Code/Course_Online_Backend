@@ -581,7 +581,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new course with optional thumbnail upload",
+                "description": "Create a new course with optional thumbnail upload and instructor assignment",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -626,6 +626,12 @@ const docTemplate = `{
                         "name": "course_type_id",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Instructor ID (UUID) - optional, assign instructor to course",
+                        "name": "instructor_id",
+                        "in": "formData"
                     },
                     {
                         "type": "file",
@@ -1362,7 +1368,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update course information, optionally including thumbnail upload",
+                "description": "Update course information, optionally including thumbnail upload and instructor assignment/removal",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1409,6 +1415,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Course type ID (UUID)",
                         "name": "course_type_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Instructor ID (UUID) - empty string to remove instructor",
+                        "name": "instructor_id",
                         "in": "formData"
                     },
                     {
@@ -2246,6 +2258,140 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/instructors/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Search active instructors by username or email for course assignment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instructors"
+                ],
+                "summary": "Search instructors",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query (min 2 characters)",
+                        "name": "query",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Result limit (1-50, default 10)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.InstructorSearchResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/instructors/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific instructor",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instructors"
+                ],
+                "summary": "Get instructor details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instructor ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.InstructorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Instructor not found",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -4264,6 +4410,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "instructor": {
+                    "$ref": "#/definitions/dto.InstructorResponse"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
                 "is_progress_limited": {
                     "type": "boolean"
                 },
@@ -4315,6 +4467,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "instructor": {
+                    "$ref": "#/definitions/dto.InstructorResponse"
+                },
+                "instructor_id": {
                     "type": "string"
                 },
                 "is_progress_limited": {
@@ -4549,6 +4707,9 @@ const docTemplate = `{
         "dto.InstructorResponse": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -4557,6 +4718,20 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.InstructorSearchResponse": {
+            "type": "object",
+            "properties": {
+                "instructors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.InstructorResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -5398,6 +5573,12 @@ const docTemplate = `{
                     }
                 },
                 "id": {
+                    "type": "string"
+                },
+                "instructor": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "instructor_id": {
                     "type": "string"
                 },
                 "is_progress_limited": {
