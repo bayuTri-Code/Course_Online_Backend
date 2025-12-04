@@ -14,14 +14,12 @@ type UpdateEnrollmentStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=active dropped completed" example:"completed"`
 }
 
-
-
 type CheckEnrollmentResponse struct {
 	IsEnrolled bool      `json:"is_enrolled" example:"true"`
 	CourseID   uuid.UUID `json:"course_id" example:"123e4567-e89b-12d3-a456-426614174000"`
 }
 
-//response
+// response
 type EnrollmentResponse struct {
 	ID                 uuid.UUID  `json:"id"`
 	CourseID           uuid.UUID  `json:"course_id"`
@@ -59,7 +57,7 @@ type EnrollmentDetailResponse struct {
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time  `json:"updated_at"`
 	Course             CourseInfo `json:"course"`
-	User               *UserInfo  `json:"user,omitempty"` 
+	User               *UserInfo  `json:"user,omitempty"`
 }
 
 type CourseInfo struct {

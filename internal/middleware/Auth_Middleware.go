@@ -62,7 +62,7 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 			c.Set("user_id", user.FirebaseUID)
 			c.Set("roles", roleNames)
 			c.Set("user", user)
-			c.Set("token", idToken) 
+			c.Set("token", idToken)
 			c.Next()
 			return
 		}
@@ -81,7 +81,6 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		
 		_ = database.RedisConn().Set(context.Background(), "token:"+idToken, token.UID, time.Hour).Err()
 
 		roleNames := make([]string, len(user.Roles))
@@ -92,7 +91,7 @@ func FirebaseAuth(app *firebase.App, db *gorm.DB) gin.HandlerFunc {
 		c.Set("user_id", user.FirebaseUID)
 		c.Set("roles", roleNames)
 		c.Set("user", user)
-		c.Set("token", idToken) 
+		c.Set("token", idToken)
 
 		c.Next()
 	}

@@ -1,7 +1,6 @@
 package enrollmentmanagementroutes
 
 import (
-	"course_online_backend/database/Repository"
 	Enrollment_Handler "course_online_backend/internal/handler/Enrollment_Handler"
 	"course_online_backend/internal/middleware"
 	enrollmentService "course_online_backend/internal/services/Enrollment_Services"
@@ -12,39 +11,40 @@ import (
 )
 
 func EnrollmentRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
-	enrollmentRepo := repository.NewEnrollmentRepository(db)
-	service := enrollmentService.NewEnrollmentService(enrollmentRepo, db)
+	service := enrollmentService.NewEnrollmentService(db)
 	handler := Enrollment_Handler.NewEnrollmentHandler(service)
 
 	student := r.Group("/enrollments")
 	student.Use(middleware.RoleMiddleware("student"))
 	{
-		student.POST("", handler.EnrollCourse)
-		student.GET("", handler.GetMyEnrollments)
-		student.DELETE("/:id", handler.UnenrollCourse)
+		student.POST("", handler.EnrollCourseHandler)                     
+		student.GET("", handler.GetMyEnrollmentsHandler)                  
+		student.DELETE("/:enrollment_id", handler.UnenrollCourseHandler)  
 	}
 
 	courseEnrollmentsStudent := r.Group("/courses/:course_id/enrollments")
 	courseEnrollmentsStudent.Use(middleware.RoleMiddleware("student"))
 	{
-		courseEnrollmentsStudent.GET("/check", handler.CheckEnrollment)
+		courseEnrollmentsStudent.GET("/check", handler.CheckEnrollmentHandler) 
+	}
+
+	
+	admin := r.Group("/enrollments")
+	admin.Use(middleware.RoleMiddleware("admin", "super_admin"))
+	{
+		admin.PUT("/:enrollment_id/status", handler.UpdateEnrollmentStatusHandler)
 	}
 
 	courseEnrollmentsAdmin := r.Group("/courses/:course_id/enrollments")
 	courseEnrollmentsAdmin.Use(middleware.RoleMiddleware("admin", "super_admin"))
 	{
-		courseEnrollmentsAdmin.GET("", handler.GetCourseStudents)
+		courseEnrollmentsAdmin.GET("", handler.GetCourseStudentsHandler)
 	}
 
-	admin := r.Group("/enrollments")
-	admin.Use(middleware.RoleMiddleware("admin", "super_admin"))
-	{
-		admin.PUT("/:id/status", handler.UpdateEnrollmentStatus)
-	}
 
 	shared := r.Group("/enrollments")
 	shared.Use(middleware.RoleMiddleware("student", "instructor", "admin", "super_admin"))
 	{
-		shared.GET("/:id", handler.GetEnrollmentDetail)
+		shared.GET("/:enrollment_id", handler.GetEnrollmentDetailHandler) 
 	}
 }

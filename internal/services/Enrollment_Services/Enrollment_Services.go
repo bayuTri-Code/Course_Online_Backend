@@ -1,9 +1,7 @@
 package enrollmentservices
 
 import (
-	repository "course_online_backend/database/Repository"
 	"course_online_backend/internal/models"
-	constants "course_online_backend/internal/models/Constants"
 	"errors"
 	"time"
 
@@ -11,29 +9,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type EnrollmentService interface {
-	EnrollCourse(userID, courseID uuid.UUID) (*models.Enrollment, error)
-	CheckEnrollment(userID, courseID uuid.UUID) (bool, error)
-	GetMyEnrollments(userID uuid.UUID) ([]models.Enrollment, error)
-	GetEnrollmentDetail(userID, enrollmentID uuid.UUID) (*models.Enrollment, error)
-	UnenrollCourse(userID, enrollmentID uuid.UUID) error
-	UpdateEnrollmentStatus(userID, enrollmentID uuid.UUID, status string) error
-	GetCourseStudents(courseID uuid.UUID, userRoles []string) ([]models.Enrollment, error)
+type EnrollmentService struct {
+	db *gorm.DB
 }
 
-type enrollmentService struct {
-	enrollmentRepo repository.EnrollmentRepository
-	db             *gorm.DB
+func NewEnrollmentService(db *gorm.DB) *EnrollmentService {
+	return &EnrollmentService{db: db}
 }
 
-func NewEnrollmentService(enrollmentRepo repository.EnrollmentRepository, db *gorm.DB) EnrollmentService {
-	return &enrollmentService{
-		enrollmentRepo: enrollmentRepo,
-		db:             db,
-	}
-}
-
-func (s *enrollmentService) EnrollCourse(userID, courseID uuid.UUID) (*models.Enrollment, error) {
+func (s *EnrollmentService) EnrollCourse(userID uuid.UUID, courseID uuid.UUID) (*models.Enrollment, error) {
 	if userID == uuid.Nil || courseID == uuid.Nil {
 		return nil, errors.New("invalid user ID or course ID")
 	}
@@ -46,11 +30,11 @@ func (s *enrollmentService) EnrollCourse(userID, courseID uuid.UUID) (*models.En
 		return nil, err
 	}
 
-	if course.Status != constants.CourseStatusPublished {
+	if !course.IsPublished() {
 		return nil, errors.New("course is not available for enrollment")
 	}
 
-	if course.Price > 0 {
+	if !course.IsFree() {
 		return nil, errors.New("this course is not free, please use payment endpoint")
 	}
 
@@ -59,8 +43,10 @@ func (s *enrollmentService) EnrollCourse(userID, courseID uuid.UUID) (*models.En
 	}
 
 	if course.MaxStudents > 0 {
-		count, err := s.enrollmentRepo.CountByCourse(courseID)
-		if err != nil {
+		var count int64
+		if err := s.db.Model(&models.Enrollment{}).
+			Where("course_id = ? AND status = ?", courseID, "active").
+			Count(&count).Error; err != nil {
 			return nil, err
 		}
 		if count >= int64(course.MaxStudents) {
@@ -68,16 +54,18 @@ func (s *enrollmentService) EnrollCourse(userID, courseID uuid.UUID) (*models.En
 		}
 	}
 
-	exists, err := s.enrollmentRepo.CheckExists(userID, courseID)
-	if err != nil {
+	var existCount int64
+	if err := s.db.Model(&models.Enrollment{}).
+		Where("user_id = ? AND course_id = ?", userID, courseID).
+		Count(&existCount).Error; err != nil {
 		return nil, err
 	}
-	if exists {
+	if existCount > 0 {
 		return nil, errors.New("you are already enrolled in this course")
 	}
 
 	now := time.Now()
-	enrollment := &models.Enrollment{
+	enroll := &models.Enrollment{
 		ID:                 uuid.New(),
 		UserID:             userID,
 		CourseID:           courseID,
@@ -90,121 +78,187 @@ func (s *enrollmentService) EnrollCourse(userID, courseID uuid.UUID) (*models.En
 	}
 
 	if course.Duration > 0 {
-		expiredDate := now.AddDate(0, 0, course.Duration)
-		enrollment.ExpiredDate = &expiredDate
+		exp := now.AddDate(0, 0, course.Duration)
+		enroll.ExpiredDate = &exp
 	}
 
-	if err := s.enrollmentRepo.Create(enrollment); err != nil {
+	if err := s.db.Create(enroll).Error; err != nil {
 		return nil, err
 	}
 
-	result, err := s.enrollmentRepo.GetByID(enrollment.ID)
-	if err != nil {
-		return enrollment, nil
-	}
-
-	return result, nil
-}
-
-func (s *enrollmentService) CheckEnrollment(userID, courseID uuid.UUID) (bool, error) {
-	if userID == uuid.Nil || courseID == uuid.Nil {
-		return false, errors.New("invalid user ID or course ID")
-	}
-	return s.enrollmentRepo.CheckExists(userID, courseID)
-}
-
-func (s *enrollmentService) GetMyEnrollments(userID uuid.UUID) ([]models.Enrollment, error) {
-	if userID == uuid.Nil {
-		return nil, errors.New("invalid user ID")
-	}
-	return s.enrollmentRepo.GetUserEnrollments(userID)
-}
-
-func (s *enrollmentService) GetEnrollmentDetail(userID, enrollmentID uuid.UUID) (*models.Enrollment, error) {
-	if userID == uuid.Nil || enrollmentID == uuid.Nil {
-		return nil, errors.New("invalid user ID or enrollment ID")
-	}
-
-	enrollment, err := s.enrollmentRepo.GetByID(enrollmentID)
-	if err != nil {
+	var result models.Enrollment
+	if err := s.db.
+		Preload("Course").
+		Preload("Course.CourseType").
+		Preload("Course.Creator").
+		Preload("Course.Instructor").
+		Preload("User").
+		Preload("User.Biodata").
+		Preload("User.Roles").
+		First(&result, "id = ?", enroll.ID).Error; err != nil {
 		return nil, err
 	}
 
-	if enrollment.UserID != userID {
-		return nil, errors.New("unauthorized to access this enrollment")
-	}
-
-	return enrollment, nil
+	return &result, nil
 }
 
-func (s *enrollmentService) UnenrollCourse(userID, enrollmentID uuid.UUID) error {
-	if userID == uuid.Nil || enrollmentID == uuid.Nil {
-		return errors.New("invalid user ID or enrollment ID")
+func (s *EnrollmentService) CheckEnrollment(userID uuid.UUID, courseID uuid.UUID) (bool, error) {
+	var count int64
+	if err := s.db.Model(&models.Enrollment{}).
+		Where("user_id = ? AND course_id = ?", userID, courseID).
+		Count(&count).Error; err != nil {
+		return false, err
 	}
-
-	enrollment, err := s.enrollmentRepo.GetByID(enrollmentID)
-	if err != nil {
-		return err
-	}
-
-	if enrollment.UserID != userID {
-		return errors.New("unauthorized to unenroll this course")
-	}
-
-	if enrollment.Status == "completed" {
-		return errors.New("cannot unenroll from completed course")
-	}
-
-	return s.enrollmentRepo.Delete(enrollmentID)
+	return count > 0, nil
 }
 
-func (s *enrollmentService) UpdateEnrollmentStatus(userID, enrollmentID uuid.UUID, status string) error {
-	if userID == uuid.Nil || enrollmentID == uuid.Nil {
-		return errors.New("invalid user ID or enrollment ID")
+func (s *EnrollmentService) GetMyEnrollments(userID uuid.UUID) ([]models.Enrollment, error) {
+	var enrollments []models.Enrollment
+	if err := s.db.
+		Preload("Course").
+		Preload("Course.CourseType").
+		Preload("Course.Instructor").
+		Where("user_id = ?", userID).
+		Order("enrollment_datetime DESC").
+		Find(&enrollments).Error; err != nil {
+		return nil, err
 	}
 
-	validStatuses := map[string]bool{
-		"active":    true,
-		"dropped":   true,
-		"completed": true,
-	}
-	if !validStatuses[status] {
-		return errors.New("invalid status, must be: active, dropped, or completed")
-	}
-
-	enrollment, err := s.enrollmentRepo.GetByID(enrollmentID)
-	if err != nil {
-		return err
-	}
-
-	if enrollment.UserID != userID {
-		return errors.New("unauthorized to update this enrollment")
-	}
-
-	return s.enrollmentRepo.UpdateStatus(enrollmentID, status)
+	return enrollments, nil
 }
 
-func (s *enrollmentService) GetCourseStudents(courseID uuid.UUID, userRoles []string) ([]models.Enrollment, error) {
-	if courseID == uuid.Nil {
-		return nil, errors.New("invalid course ID")
+func (s *EnrollmentService) GetEnrollmentDetail(
+	userID uuid.UUID,
+	enrollmentID uuid.UUID,
+	roles []string,
+) (*models.Enrollment, error) {
+
+	var e models.Enrollment
+	if err := s.db.
+		Preload("Course").
+		Preload("Course.CourseType").
+		Preload("Course.Creator").
+		Preload("Course.Instructor").
+		Preload("User").
+		Preload("User.Biodata").
+		Preload("User.Roles").
+		First(&e, "id = ?", enrollmentID).Error; err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("enrollment not found")
+		}
+		return nil, err
 	}
 
-	hasAccess := false
-	allowedRoles := []string{"instructor", "admin", "super_admin"}
-	for _, role := range userRoles {
-		for _, allowed := range allowedRoles {
-			if role == allowed {
-				hasAccess = true
-				break
-			}
+	isAdmin := false
+	for _, r := range roles {
+		if r == "admin" || r == "super_admin" {
+			isAdmin = true
+			break
 		}
 	}
 
-	if !hasAccess {
+	if !isAdmin && e.UserID != userID {
+		return nil, errors.New("unauthorized to access this enrollment")
+	}
+
+	return &e, nil
+}
+
+func (s *EnrollmentService) UnenrollCourse(userID uuid.UUID, enrollmentID uuid.UUID) error {
+	var e models.Enrollment
+	if err := s.db.First(&e, "id = ?", enrollmentID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("enrollment not found")
+		}
+		return err
+	}
+
+	if e.UserID != userID {
+		return errors.New("unauthorized to unenroll this course")
+	}
+
+	if e.Status == "completed" {
+		return errors.New("cannot unenroll from completed course")
+	}
+
+	return s.db.Delete(&models.Enrollment{}, "id = ?", enrollmentID).Error
+}
+
+func (s *EnrollmentService) UpdateEnrollmentStatus(
+	userID uuid.UUID,
+	enrollmentID uuid.UUID,
+	status string,
+	roles []string,
+) error {
+
+	valid := map[string]bool{"active": true, "dropped": true, "completed": true}
+	if !valid[status] {
+		return errors.New("invalid status, must be: active, dropped, or completed")
+	}
+
+	isAdmin := false
+	for _, r := range roles {
+		if r == "admin" || r == "super_admin" {
+			isAdmin = true
+			break
+		}
+	}
+
+	if !isAdmin {
+		return errors.New("only admin or super_admin can update enrollment status")
+	}
+
+	var e models.Enrollment
+	if err := s.db.First(&e, "id = ?", enrollmentID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("enrollment not found")
+		}
+		return err
+	}
+
+	updates := map[string]interface{}{
+		"status":     status,
+		"updated_at": time.Now(),
+	}
+
+	if status == "completed" {
+		now := time.Now()
+		updates["completed_datetime"] = &now
+		updates["progress"] = 100.0
+	}
+
+	return s.db.Model(&models.Enrollment{}).
+		Where("id = ?", enrollmentID).
+		Updates(updates).Error
+}
+
+func (s *EnrollmentService) GetCourseStudents(courseID uuid.UUID, userRoles []string) ([]models.Enrollment, error) {
+	allowed := map[string]bool{"admin": true, "super_admin": true, "instructor": true}
+	has := false
+	for _, r := range userRoles {
+		if allowed[r] {
+			has = true
+			break
+		}
+	}
+	if !has {
 		return nil, errors.New("only instructors and admins can view course students")
 	}
 
-	return s.enrollmentRepo.GetCourseEnrollments(courseID)
+	var enrollments []models.Enrollment
+	if err := s.db.
+		Preload("User").
+		Preload("User.Biodata").
+		Preload("User.Roles").
+		Preload("Course").
+		Preload("Course.CourseType").
+		Preload("Course.Creator").
+		Where("course_id = ?", courseID).
+		Order("enrollment_datetime DESC").
+		Find(&enrollments).Error; err != nil {
+		return nil, err
+	}
+
+	return enrollments, nil
 }
-
-
