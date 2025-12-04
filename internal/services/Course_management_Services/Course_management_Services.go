@@ -443,7 +443,8 @@ func (s *CourseService) GetAllCourse(ctx context.Context, params *dto.CourseQuer
 	query = query.Preload("CourseType").
 		Preload("Creator").
 		Preload("Modules").
-		Preload("Enrollments")
+		Preload("Enrollments").
+		Preload("Instructor")
 
 	var courses []models.Course
 	if err := query.Find(&courses).Error; err != nil {
