@@ -2818,25 +2818,55 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User name (optional)",
+                        "description": "User name ",
                         "name": "name",
                         "in": "formData"
                     },
                     {
                         "type": "integer",
-                        "description": "User age (optional)",
+                        "description": "User age ",
                         "name": "age",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "description": "User school (optional)",
+                        "description": "User school ",
                         "name": "school",
                         "in": "formData"
                     },
                     {
+                        "type": "string",
+                        "description": "User first name ",
+                        "name": "firstName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User last name ",
+                        "name": "lastName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User description ",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User contact",
+                        "name": "contact",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
-                        "description": "Profile picture upload (optional)",
+                        "description": "Profile picture upload",
+                        "name": "profile_picture",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Profile picture upload ",
                         "name": "profile_picture",
                         "in": "formData"
                     }
@@ -2900,6 +2930,30 @@ const docTemplate = `{
                         "name": "school",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User first name ",
+                        "name": "firstName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User last name ",
+                        "name": "lastName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User description ",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User contact",
+                        "name": "contact",
+                        "in": "formData"
                     },
                     {
                         "type": "file",

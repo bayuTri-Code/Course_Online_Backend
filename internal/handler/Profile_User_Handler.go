@@ -30,6 +30,10 @@ func NewBiodataHandler(svc *services.BiodataService, Act *services.ActivityServi
 // @Param name formData string true "User name"
 // @Param age formData int true "User age"
 // @Param school formData string true "User school"
+// @Param firstName formData string false "User first name "
+// @Param lastName formData string false "User last name "
+// @Param description formData string false "User description "
+// @Param contact formData string false "User contact"
 // @Param profile_picture formData file false "Profile picture upload"
 // @Success 200 {object} dto.BaseResponseBiodata "Biodata successfully created"
 // @Failure 400 {object} utils.ErrorResponse "Invalid request body"
@@ -65,6 +69,8 @@ func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 		ID:             biodata.ID.String(),
 		UserID:         biodata.UserID.String(),
 		Name:           biodata.Name,
+		Email:          biodata.Email,
+		CreatedAt:      biodata.CreatedAt,
 		FirstName:      biodata.FirstName,
 		LastName:       biodata.LastName,
 		Description:    biodata.Description,
@@ -76,14 +82,13 @@ func (c *BiodataHandler) CreateBiodata(ctx *gin.Context) {
 
 	utils.JSONCreated(ctx, createBiodata, "succses")
 	go func() {
-	user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
-	if err != nil {
-		fmt.Printf("User not found")
-	}
-	_ = c.Activity.LogActivity(user.ID, "biodata created")
-}()
+		user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+		if err != nil {
+			fmt.Printf("User not found")
+		}
+		_ = c.Activity.LogActivity(user.ID, "biodata created")
+	}()
 }
-
 
 // @Summary Get My Biodata
 // @Tags Profile
@@ -113,6 +118,8 @@ func (c *BiodataHandler) GetBiodata(ctx *gin.Context) {
 		ID:             biodata.ID.String(),
 		UserID:         biodata.UserID.String(),
 		Name:           biodata.Name,
+		Email:          biodata.Email,
+		CreatedAt:      biodata.CreatedAt,
 		FirstName:      biodata.FirstName,
 		LastName:       biodata.LastName,
 		Description:    biodata.Description,
@@ -129,10 +136,15 @@ func (c *BiodataHandler) GetBiodata(ctx *gin.Context) {
 // @Tags Profile
 // @Accept multipart/form-data
 // @Produce json
-// @Param name formData string false "User name (optional)"
-// @Param age formData int false "User age (optional)"
-// @Param school formData string false "User school (optional)"
-// @Param profile_picture formData file false "Profile picture upload (optional)"
+// @Param name formData string false "User name "
+// @Param age formData int false "User age "
+// @Param school formData string false "User school "
+// @Param firstName formData string false "User first name "
+// @Param lastName formData string false "User last name "
+// @Param description formData string false "User description "
+// @Param contact formData string false "User contact"
+// @Param profile_picture formData file false "Profile picture upload"
+// @Param profile_picture formData file false "Profile picture upload "
 // @Success 200 {object} dto.BaseResponseBiodata "Biodata successfully updated"
 // @Failure 400 {object} utils.ErrorResponse "Invalid request body"
 // @Failure 401 {object} utils.ErrorResponse "Unauthorized"
@@ -168,6 +180,8 @@ func (c *BiodataHandler) UpdateBiodata(ctx *gin.Context) {
 		ID:             biodata.ID.String(),
 		UserID:         biodata.UserID.String(),
 		Name:           biodata.Name,
+		Email:          biodata.Email,
+		CreatedAt:      biodata.CreatedAt,
 		FirstName:      biodata.FirstName,
 		LastName:       biodata.LastName,
 		Description:    biodata.Description,
@@ -178,13 +192,13 @@ func (c *BiodataHandler) UpdateBiodata(ctx *gin.Context) {
 	}
 
 	utils.JSONSuccess(ctx, updateBiodata, "Succes Update biodata")
-		go func() {
-	user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
-	if err != nil {
-		fmt.Printf("User not found")
-	}
-	_ = c.Activity.LogActivity(user.ID, "biodata updated")
-}()
+	go func() {
+		user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+		if err != nil {
+			fmt.Printf("User not found")
+		}
+		_ = c.Activity.LogActivity(user.ID, "biodata updated")
+	}()
 }
 
 // @Summary Delete Biodata
@@ -213,16 +227,15 @@ func (c *BiodataHandler) DeleteBiodata(ctx *gin.Context) {
 		Message: "Biodata successfully deleted",
 	})
 
-		go func() {
-	user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
-	if err != nil {
-		fmt.Printf("User not found")
-	}
-	_ = c.Activity.LogActivity(user.ID, "Biodata deleted")
-}()
+	go func() {
+		user, err := c.Activity.GetUserByFirebaseUID(firebaseUID.(string))
+		if err != nil {
+			fmt.Printf("User not found")
+		}
+		_ = c.Activity.LogActivity(user.ID, "Biodata deleted")
+	}()
 
 }
-
 
 // @Summary Soft Delete Biodata
 // @Tags Profile

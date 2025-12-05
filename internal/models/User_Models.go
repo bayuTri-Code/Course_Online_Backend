@@ -43,24 +43,24 @@ type UserRole struct {
 }
 
 type Biodata struct {
-	ID             uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	UserID         uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;unique"`
+	ID     uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	UserID uuid.UUID `json:"user_id" gorm:"type:uuid;not null;unique"`
 
-	Name           string         `json:"name"`
-	FirstName      string         `json:"firstName"`
-	LastName       string         `json:"lastName"`
-	Description    string         `json:"description"`
-	Age            int            `json:"age"`
-	School         string         `json:"school"`
-	Contact        string         `json:"contact"`
-	ProfilePicture string         `json:"profile_picture"`
+	Name           string `json:"name"`
+	Email          string `json:"email" gorm:"size:100;"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Description    string `json:"description"`
+	Age            int    `json:"age"`
+	School         string `json:"school"`
+	Contact        string `json:"contact"`
+	ProfilePicture string `json:"profile_picture"`
 
-	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
 
-	DeletedAt      gorm.DeletedAt `json:"deleted_at,omitempty" swaggertype:"string" format:"date-time"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" swaggertype:"string" format:"date-time"`
 }
-
 
 func (u *User) HasRole(roleName string) bool {
 	for _, role := range u.Roles {
