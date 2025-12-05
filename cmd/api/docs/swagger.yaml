@@ -3089,6 +3089,22 @@ paths:
         name: school
         required: true
         type: string
+      - description: 'User first name '
+        in: formData
+        name: firstName
+        type: string
+      - description: 'User last name '
+        in: formData
+        name: lastName
+        type: string
+      - description: 'User description '
+        in: formData
+        name: description
+        type: string
+      - description: User contact
+        in: formData
+        name: contact
+        type: string
       - description: Profile picture upload
         in: formData
         name: profile_picture
@@ -3115,19 +3131,39 @@ paths:
       consumes:
       - multipart/form-data
       parameters:
-      - description: User name (optional)
+      - description: 'User name '
         in: formData
         name: name
         type: string
-      - description: User age (optional)
+      - description: 'User age '
         in: formData
         name: age
         type: integer
-      - description: User school (optional)
+      - description: 'User school '
         in: formData
         name: school
         type: string
-      - description: Profile picture upload (optional)
+      - description: 'User first name '
+        in: formData
+        name: firstName
+        type: string
+      - description: 'User last name '
+        in: formData
+        name: lastName
+        type: string
+      - description: 'User description '
+        in: formData
+        name: description
+        type: string
+      - description: User contact
+        in: formData
+        name: contact
+        type: string
+      - description: Profile picture upload
+        in: formData
+        name: profile_picture
+        type: file
+      - description: 'Profile picture upload '
         in: formData
         name: profile_picture
         type: file

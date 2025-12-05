@@ -42,6 +42,8 @@ func (s *BiodataService) CreateBiodata(firebaseUID string, req dto.CreateBiodata
 		ID:             uuid.New(),
 		UserID:         user.ID,
 		Name:           req.Name,
+		Email:          user.EmailAddress,
+		CreatedAt:      user.CreatedAt,
 		FirstName:      req.FirstName,
 		LastName:       req.LastName,
 		Description:    req.Description,
@@ -49,7 +51,6 @@ func (s *BiodataService) CreateBiodata(firebaseUID string, req dto.CreateBiodata
 		Age:            req.Age,
 		School:         req.School,
 		ProfilePicture: profileURL,
-
 	}
 
 	if err := s.DB.Create(&biodata).Error; err != nil {
@@ -109,6 +110,9 @@ func (s *BiodataService) UpdateBiodata(firebaseUID string, req dto.UpdateBiodata
 		biodata.School = req.School
 	}
 
+	biodata.Email = user.EmailAddress
+	biodata.CreatedAt = user.CreatedAt
+
 	if file != nil && fileHeader != nil {
 		uploadedURL, err := s.MinioHelper.UploadProfilePicture(file, fileHeader)
 		if err != nil {
@@ -157,7 +161,6 @@ func (s *BiodataService) DeleteBiodata(firebaseUID string) error {
 	return nil
 }
 
-
 func (s *BiodataService) SoftDeleteBiodata(firebaseUID string) error {
 	var user models.User
 	if err := s.DB.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
@@ -184,7 +187,7 @@ func (s *BiodataService) RestoreBiodata(firebaseUID string) (*models.Biodata, er
 	}
 
 	if biodata.DeletedAt.Valid {
-		biodata.DeletedAt = gorm.DeletedAt{} 
+		biodata.DeletedAt = gorm.DeletedAt{}
 		if err := s.DB.Unscoped().Save(&biodata).Error; err != nil {
 			return nil, err
 		}
@@ -192,5 +195,3 @@ func (s *BiodataService) RestoreBiodata(firebaseUID string) (*models.Biodata, er
 
 	return &biodata, nil
 }
-
-

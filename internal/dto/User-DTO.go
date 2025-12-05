@@ -48,16 +48,18 @@ type UpdateBiodataRequest struct {
 }
 
 type BiodataResponse struct {
-	ID             string `json:"id"`
-	UserID         string `json:"user_id"`
-	Name           string `json:"name"`
-	FirstName      string `json:"firstName"`
-	LastName       string `json:"lastName"`
-	Description    string `json:"description"`
-	Contact        string `json:"contact"`
-	Age            int    `json:"age"`
-	School         string `json:"school"`
-	ProfilePicture string `json:"profile_picture"`
+	ID             string    `json:"id"`
+	UserID         string    `json:"user_id"`
+	Name           string    `json:"name"`
+	Email          string    `json:"email"`
+	CreatedAt      time.Time `json:"created_at"`
+	FirstName      string    `json:"firstName"`
+	LastName       string    `json:"lastName"`
+	Description    string    `json:"description"`
+	Contact        string    `json:"contact"`
+	Age            int       `json:"age"`
+	School         string    `json:"school"`
+	ProfilePicture string    `json:"profile_picture"`
 }
 
 type BiodataResponseForAct struct {
