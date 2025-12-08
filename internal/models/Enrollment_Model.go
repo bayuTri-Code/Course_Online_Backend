@@ -15,7 +15,6 @@ type Enrollment struct {
 	Status             string         `gorm:"type:varchar(20);not null;default:'active';index" json:"status"`
 	StatusPayment      string         `gorm:"type:varchar(20);not null;default:'free';index" json:"status_payment"`
 	ExpiredDate        *time.Time     `json:"expired_date,omitempty"`
-	Progress           float64        `gorm:"type:decimal(5,2);default:0;check:progress >= 0 AND progress <= 100" json:"progress"`
 	CreatedAt          time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt          time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt          gorm.DeletedAt `gorm:"index" json:"-"`

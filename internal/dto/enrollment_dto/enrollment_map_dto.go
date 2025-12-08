@@ -15,7 +15,6 @@ func ToEnrollmentResponse(enrollment *models.Enrollment) *EnrollmentResponse {
 		CompletedDatetime:  enrollment.CompletedDatetime,
 		Status:             enrollment.Status,
 		StatusPayment:      enrollment.StatusPayment,
-		Progress:           enrollment.Progress,
 		ExpiredDate:        enrollment.ExpiredDate,
 		CreatedAt:          enrollment.CreatedAt,
 		UpdatedAt:          enrollment.UpdatedAt,
@@ -30,7 +29,6 @@ func ToEnrollmentListResponse(enrollment *models.Enrollment) *EnrollmentListResp
 		CompletedDatetime:  enrollment.CompletedDatetime,
 		Status:             enrollment.Status,
 		StatusPayment:      enrollment.StatusPayment,
-		Progress:           enrollment.Progress,
 		ExpiredDate:        enrollment.ExpiredDate,
 		Course:             toCourseInfo(&enrollment.Course),
 	}
@@ -43,7 +41,6 @@ func ToEnrollmentDetailResponse(enrollment *models.Enrollment, includeUser bool)
 		CompletedDatetime:  enrollment.CompletedDatetime,
 		Status:             enrollment.Status,
 		StatusPayment:      enrollment.StatusPayment,
-		Progress:           enrollment.Progress,
 		ExpiredDate:        enrollment.ExpiredDate,
 		CreatedAt:          enrollment.CreatedAt,
 		UpdatedAt:          enrollment.UpdatedAt,

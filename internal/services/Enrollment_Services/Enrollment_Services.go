@@ -72,7 +72,6 @@ func (s *EnrollmentService) EnrollCourse(userID uuid.UUID, courseID uuid.UUID) (
 		EnrollmentDatetime: now,
 		Status:             "active",
 		StatusPayment:      "free",
-		Progress:           0,
 		CreatedAt:          now,
 		UpdatedAt:          now,
 	}
