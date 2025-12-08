@@ -21,8 +21,17 @@ func (m *MinioHelper) UploadProfilePicture(file multipart.File, fileHeader *mult
 		return "", fmt.Errorf("minio client not initialized")
 	}
 
-	ctx := context.Background()
 	cfg := config.MinioConfig
+
+	if fileHeader.Size > cfg.MaxSize {
+		return "", fmt.Errorf("file too large, maximum allowed size is %d bytes", cfg.MaxSize)
+	}
+
+	if fileHeader.Size < cfg.MinSize {
+		return "", fmt.Errorf("file too small, minimum allowed size is %d bytes", cfg.MinSize)
+	}
+
+	ctx := context.Background()
 
 	ext := filepath.Ext(fileHeader.Filename)
 	filename := fmt.Sprintf("profiles/%s%s", uuid.New().String(), ext)
@@ -50,8 +59,8 @@ func (m *MinioHelper) UploadProfilePicture(file multipart.File, fileHeader *mult
 	if cfg.UseSSL {
 		protocol = "https"
 	}
-	fullURL := fmt.Sprintf("%s://%s/%s/%s", protocol, cfg.ImageENDPOINT, cfg.Bucket, filename)
 
+	fullURL := fmt.Sprintf("%s://%s/%s/%s", protocol, cfg.ImageENDPOINT, cfg.Bucket, filename)
 	return fullURL, nil
 }
 
