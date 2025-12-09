@@ -15,7 +15,7 @@ import (
 
 type MinioHelper struct{}
 
-//Biodata
+// Biodata
 func (m *MinioHelper) UploadProfilePicture(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	if database.MinioClient == nil {
 		return "", fmt.Errorf("minio client not initialized")
@@ -23,12 +23,15 @@ func (m *MinioHelper) UploadProfilePicture(file multipart.File, fileHeader *mult
 
 	cfg := config.MinioConfig
 
+	maxMB := cfg.MaxSize / (1024 * 1024)
+	minKB := cfg.MinSize / 1024
+
 	if fileHeader.Size > cfg.MaxSize {
-		return "", fmt.Errorf("file too large, maximum allowed size is %d bytes", cfg.MaxSize)
+		return "", fmt.Errorf("file too large, maximum allowed size is %d MB", maxMB)
 	}
 
 	if fileHeader.Size < cfg.MinSize {
-		return "", fmt.Errorf("file too small, minimum allowed size is %d bytes", cfg.MinSize)
+		return "", fmt.Errorf("file too small, minimum allowed size is %d KB", minKB)
 	}
 
 	ctx := context.Background()
@@ -71,7 +74,7 @@ func (m *MinioHelper) DeleteProfilePicture(profileURL string) error {
 
 	objectName := m.extractObjectName(profileURL)
 	if objectName == "" {
-		return nil 
+		return nil
 	}
 
 	ctx := context.Background()
@@ -87,22 +90,21 @@ func (m *MinioHelper) DeleteProfilePicture(profileURL string) error {
 
 func (m *MinioHelper) extractObjectName(url string) string {
 	cfg := config.MinioConfig
-	
+
 	prefix := fmt.Sprintf("https://%s/%s/", cfg.Endpoint, cfg.Bucket)
 	if strings.HasPrefix(url, prefix) {
 		return strings.TrimPrefix(url, prefix)
 	}
-	
+
 	prefix = fmt.Sprintf("http://%s/%s/", cfg.Endpoint, cfg.Bucket)
 	if strings.HasPrefix(url, prefix) {
 		return strings.TrimPrefix(url, prefix)
 	}
-	
+
 	return ""
 }
 
-
-//course
+// course
 func (m *MinioHelper) UploadCourseThumbnail(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	if database.MinioClient == nil {
 		return "", fmt.Errorf("minio client not initialized")
@@ -111,14 +113,16 @@ func (m *MinioHelper) UploadCourseThumbnail(file multipart.File, fileHeader *mul
 	ctx := context.Background()
 
 	cfg := config.MinioConfig
-	if fileHeader.Size > cfg.MaxSize {
-		return "", fmt.Errorf("file too large, maximum allowed size is %d bytes", cfg.MaxSize)
+	maxBytes := cfg.MaxSize * 1024 * 1024
+	minBytes := cfg.MinSize * 1024 * 1024
+
+	if fileHeader.Size > maxBytes {
+		return "", fmt.Errorf("file too large, maximum allowed size is %d MB", cfg.MaxSize)
 	}
 
-	if fileHeader.Size < cfg.MinSize {
-		return "", fmt.Errorf("file too small, minimum allowed size is %d bytes", cfg.MinSize)
+	if fileHeader.Size < minBytes {
+		return "", fmt.Errorf("file too small, minimum allowed size is %d MB", cfg.MinSize)
 	}
-
 
 	contentType := fileHeader.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "image/") {

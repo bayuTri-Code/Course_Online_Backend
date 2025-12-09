@@ -3,6 +3,7 @@ package routes
 import (
 	"course_online_backend/internal/middleware"
 	courseroutes "course_online_backend/internal/routes/Course_management_routes"
+	quizroutes "course_online_backend/internal/routes/Course_management_routes/Quiz"
 	enrollroutes "course_online_backend/internal/routes/Enrollment_Management_routes"
 	"log"
 	"os"
@@ -72,6 +73,7 @@ func Routes(
 	courseroutes.ModuleManagementRoutes(protected, db, app)
 	courseroutes.ZoomRoutes(protected, db, app)
 	courseroutes.LessonRoutes(protected, db, app)
+	quizroutes.QuizManagementRoutes(protected, db, app)
 
 
 	enrollroutes.EnrollmentRoutes(protected, db, app)
