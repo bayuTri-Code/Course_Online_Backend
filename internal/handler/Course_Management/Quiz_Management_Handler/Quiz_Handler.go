@@ -1,10 +1,12 @@
 package quizmanagementhandler
 
 import (
+	"fmt"
 	"net/http"
 
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/models"
+	"course_online_backend/internal/services"
 	quizservicesgo "course_online_backend/internal/services/Course_management_Services/Quiz_Services.go"
 	"course_online_backend/internal/utils"
 
@@ -14,13 +16,15 @@ import (
 )
 
 type QuizHandler struct {
-	quizService *quizservicesgo.QuizService
-	db          *gorm.DB
+	quizService     *quizservicesgo.QuizService
+	ActivityService *services.ActivityService
+	db *gorm.DB
 }
 
-func NewQuizHandler(quizService *quizservicesgo.QuizService, db *gorm.DB) *QuizHandler {
+func NewQuizHandler(quizService *quizservicesgo.QuizService,act *services.ActivityService  , db *gorm.DB) *QuizHandler {
 	return &QuizHandler{
 		quizService: quizService,
+		ActivityService: act,
 		db:          db,
 	}
 }
@@ -60,7 +64,18 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 		return
 	}
 
+
+
 	utils.JSONCreated(c, quiz, "Quiz created successfully")
+
+	 go func() {
+        firebaseUID, _ := c.Get("user_id")
+        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+        if err == nil {
+            msg := fmt.Sprintf("Created a quiz: %s (ID: %s)", quiz.Name, quiz.ID)
+            _ = h.ActivityService.LogActivity(user.ID, msg)
+        }	
+    }()
 }
 
 func (h *QuizHandler) GetQuizzesByCourse(c *gin.Context) {
@@ -123,6 +138,15 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, quiz, "Quiz updated successfully")
+
+	go func() {
+        firebaseUID, _ := c.Get("user_id")
+        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+        if err == nil {
+            msg := fmt.Sprintf("Updated quiz: %s (ID: %s)", quiz.Name, quiz.ID)
+            _ = h.ActivityService.LogActivity(user.ID, msg)
+        }
+    }()
 }
 func (h *QuizHandler) SoftDeleteQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
@@ -141,6 +165,15 @@ func (h *QuizHandler) SoftDeleteQuiz(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Quiz soft deleted successfully")
+
+	 go func() {
+        firebaseUID, _ := c.Get("user_id")
+        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+        if err == nil {	
+            msg := fmt.Sprintf("Soft deleted quiz ID: %s", quizID.String())
+            _ = h.ActivityService.LogActivity(user.ID, msg)
+        }
+    }()
 }
 
 func (h *QuizHandler) PermanentDeleteQuiz(c *gin.Context) {
@@ -160,6 +193,15 @@ func (h *QuizHandler) PermanentDeleteQuiz(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Quiz permanently deleted")
+
+	go func() {
+        firebaseUID, _ := c.Get("user_id")
+        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+        if err == nil {
+            msg := fmt.Sprintf("Permanently deleted quiz ID: %s", quizID.String())
+            _ = h.ActivityService.LogActivity(user.ID, msg)
+        }
+    }()
 }
 
 func (h *QuizHandler) GetDeletedQuizzes(c *gin.Context) {
@@ -199,4 +241,13 @@ func (h *QuizHandler) RestoreQuiz(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Quiz restored successfully")
+
+	 go func() {
+        firebaseUID, _ := c.Get("user_id")
+        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+        if err == nil {
+            msg := fmt.Sprintf("Restored quiz ID: %s", quizID.String())
+            _ = h.ActivityService.LogActivity(user.ID, msg)
+        }
+    }()
 }
