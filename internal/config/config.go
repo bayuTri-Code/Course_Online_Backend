@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 
+
 	"github.com/spf13/viper"
 )
 
@@ -124,3 +125,6 @@ func GetInt(key string) int {
 func GetBool(key string) bool {
 	return viper.GetBool(key)
 }
+
+
+

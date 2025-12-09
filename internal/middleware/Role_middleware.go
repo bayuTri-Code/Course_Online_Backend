@@ -97,6 +97,13 @@ func CheckCourseOwnershipDynamic(db *gorm.DB) gin.HandlerFunc {
 			courseID = cid
 		}
 
+		//quiz
+		if qid := c.Param("quizId"); qid != "" {
+			_ = db.Raw(`
+        SELECT course_id FROM quizzes WHERE id = ?
+    `, qid).Scan(&courseID)
+		}
+
 		if mid := c.Param("module_id"); mid != "" {
 			_ = db.Raw(`
                 SELECT course_id FROM modules WHERE id = ?
