@@ -109,7 +109,16 @@ func (m *MinioHelper) UploadCourseThumbnail(file multipart.File, fileHeader *mul
 	}
 
 	ctx := context.Background()
+
 	cfg := config.MinioConfig
+	if fileHeader.Size > cfg.MaxSize {
+		return "", fmt.Errorf("file too large, maximum allowed size is %d bytes", cfg.MaxSize)
+	}
+
+	if fileHeader.Size < cfg.MinSize {
+		return "", fmt.Errorf("file too small, minimum allowed size is %d bytes", cfg.MinSize)
+	}
+
 
 	contentType := fileHeader.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "image/") {
