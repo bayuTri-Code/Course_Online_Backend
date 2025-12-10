@@ -1,9 +1,11 @@
 package quizmanagementhandler
 
 import (
+	"fmt"
 	"net/http"
 
 	"course_online_backend/internal/dto"
+	"course_online_backend/internal/services"
 	quizservicesgo "course_online_backend/internal/services/Course_management_Services/Quiz_Services.go"
 	"course_online_backend/internal/utils"
 
@@ -13,10 +15,11 @@ import (
 
 type QuestionHandler struct {
 	questionService *quizservicesgo.QuestionService
+	ActivityService *services.ActivityService
 }
 
-func NewQuestionHandler(questionService *quizservicesgo.QuestionService) *QuestionHandler {
-	return &QuestionHandler{questionService: questionService}
+func NewQuestionHandler(questionService *quizservicesgo.QuestionService, act *services.ActivityService) *QuestionHandler {
+	return &QuestionHandler{questionService: questionService, ActivityService: act}
 }
 
 func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
@@ -47,6 +50,25 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	}
 
 	utils.JSONCreated(c, question, "Question created successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf(
+				"Created question: %s (QuizID: %s, QuestionID: %s)",
+				req.QuestionTitle,
+				quizID.String(),
+				question.ID.String(),
+			)
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 func (h *QuestionHandler) BulkCreateQuestions(c *gin.Context) {
@@ -77,6 +99,24 @@ func (h *QuestionHandler) BulkCreateQuestions(c *gin.Context) {
 	}
 
 	utils.JSONCreated(c, questions, "Questions created successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf(
+				"Bulk created %d questions for QuizID: %s",
+				len(req.Questions),
+				quizID.String(),
+			)
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 func (h *QuestionHandler) GetQuestionsByQuiz(c *gin.Context) {
@@ -143,6 +183,24 @@ func (h *QuestionHandler) UpdateQuestion(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, question, "Question updated successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf(
+				"Updated question: %s (QuestionID: %s)",
+				req.QuestionTitle,
+				questionID.String(),
+			)
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 func (h *QuestionHandler) SoftDeleteQuestion(c *gin.Context) {
@@ -162,6 +220,20 @@ func (h *QuestionHandler) SoftDeleteQuestion(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Question soft deleted successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf("Soft deleted question (QuestionID: %s)", questionID.String())
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 func (h *QuestionHandler) PermanentDeleteQuestion(c *gin.Context) {
@@ -181,6 +253,20 @@ func (h *QuestionHandler) PermanentDeleteQuestion(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Question permanently deleted")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf("Permanently deleted question (QuestionID: %s)", questionID.String())
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 func (h *QuestionHandler) GetDeletedQuestions(c *gin.Context) {
@@ -220,4 +306,18 @@ func (h *QuestionHandler) RestoreQuestion(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, nil, "Question restored successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf("Restored question (QuestionID: %s)", questionID.String())
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
