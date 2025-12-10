@@ -17,7 +17,6 @@ type QuestionService struct {
 func NewQuestionService(db *gorm.DB) *QuestionService {
 	return &QuestionService{db: db}
 }
-
 func (s *QuestionService) CreateQuestion(quizID uuid.UUID, req dto.CreateQuestionRequest) (*dto.QuestionResponse, error) {
 	var quiz models.Quiz
 	if err := s.db.First(&quiz, quizID).Error; err != nil {
@@ -49,7 +48,6 @@ func (s *QuestionService) CreateQuestion(quizID uuid.UUID, req dto.CreateQuestio
 		return nil, err
 	}
 
-	answers := []models.QuizAnswer{}
 	for _, ans := range req.Answers {
 		answer := models.QuizAnswer{
 			QuestionID: question.ID,
@@ -61,8 +59,6 @@ func (s *QuestionService) CreateQuestion(quizID uuid.UUID, req dto.CreateQuestio
 			tx.Rollback()
 			return nil, err
 		}
-
-		answers = append(answers, answer)
 	}
 
 	tx.Commit()
@@ -71,6 +67,7 @@ func (s *QuestionService) CreateQuestion(quizID uuid.UUID, req dto.CreateQuestio
 
 	return s.mapToQuestionResponse(question), nil
 }
+
 
 func (s *QuestionService) BulkCreateQuestions(quizID uuid.UUID, req dto.BulkCreateQuestionsRequest) ([]dto.QuestionResponse, error) {
 	var quiz models.Quiz
@@ -198,7 +195,6 @@ func (s *QuestionService) UpdateQuestion(questionID uuid.UUID, req dto.UpdateQue
 		return nil, err
 	}
 
-	answers := []models.QuizAnswer{}
 	for _, ans := range req.Answers {
 		answer := models.QuizAnswer{
 			QuestionID: questionID,
@@ -211,7 +207,6 @@ func (s *QuestionService) UpdateQuestion(questionID uuid.UUID, req dto.UpdateQue
 			return nil, err
 		}
 
-		answers = append(answers, answer)
 	}
 
 	tx.Commit()
@@ -292,8 +287,6 @@ func (s *QuestionService) RestoreQuestion(questionID uuid.UUID) error {
 
 	return nil
 }
-
-
 
 func (s *QuestionService) mapToQuestionResponse(question *models.QuizQuestion) *dto.QuestionResponse {
 	answers := make([]dto.AnswerResponse, len(question.Answers))
