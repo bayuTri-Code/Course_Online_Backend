@@ -18,6 +18,23 @@ definitions:
       total_users:
         type: integer
     type: object
+  dto.AnswerResponse:
+    properties:
+      answer_text:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      is_correct:
+        type: boolean
+      question_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.BaseResponse:
     properties:
       data: {}
@@ -89,6 +106,16 @@ definitions:
         type: array
     required:
     - lessons
+    type: object
+  dto.BulkCreateQuestionsRequest:
+    properties:
+      questions:
+        items:
+          $ref: '#/definitions/dto.CreateQuestionRequest'
+        minItems: 1
+        type: array
+    required:
+    - questions
     type: object
   dto.CourseByCategoryResponse:
     properties:
@@ -240,6 +267,15 @@ definitions:
       total:
         type: integer
     type: object
+  dto.CreateAnswerRequest:
+    properties:
+      answer_text:
+        type: string
+      is_correct:
+        type: boolean
+    required:
+    - answer_text
+    type: object
   dto.CreateCourseTypeRequestSwagger:
     properties:
       description:
@@ -320,6 +356,27 @@ definitions:
         type: integer
       updated_at:
         type: string
+    type: object
+  dto.CreateQuestionRequest:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.CreateAnswerRequest'
+        minItems: 2
+        type: array
+      number:
+        minimum: 1
+        type: integer
+      point:
+        minimum: 1
+        type: integer
+      question_title:
+        type: string
+    required:
+    - answers
+    - number
+    - point
+    - question_title
     type: object
   dto.CreateQuizRequest:
     properties:
@@ -528,6 +585,29 @@ definitions:
       total_pages:
         type: integer
     type: object
+  dto.QuestionResponse:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.AnswerResponse'
+        type: array
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      number:
+        type: integer
+      point:
+        type: integer
+      question_title:
+        type: string
+      quiz_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.QuizResponse:
     properties:
       course_id:
@@ -601,6 +681,17 @@ definitions:
       total_students:
         type: integer
     type: object
+  dto.UpdateAnswerRequest:
+    properties:
+      answer_text:
+        type: string
+      id:
+        type: string
+      is_correct:
+        type: boolean
+    required:
+    - answer_text
+    type: object
   dto.UpdateLessonRequest:
     properties:
       course_order:
@@ -626,6 +717,27 @@ definitions:
       number:
         minimum: 1
         type: integer
+    type: object
+  dto.UpdateQuestionRequest:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.UpdateAnswerRequest'
+        minItems: 2
+        type: array
+      number:
+        minimum: 1
+        type: integer
+      point:
+        minimum: 1
+        type: integer
+      question_title:
+        type: string
+    required:
+    - answers
+    - number
+    - point
+    - question_title
     type: object
   dto.UpdateQuizRequest:
     properties:
@@ -1209,6 +1321,8 @@ definitions:
     properties:
       answer_text:
         type: string
+      created_at:
+        type: string
       id:
         type: string
       is_correct:
@@ -1217,6 +1331,8 @@ definitions:
         $ref: '#/definitions/models.QuizQuestion'
       question_id:
         type: string
+      updated_at:
+        type: string
     type: object
   models.QuizQuestion:
     properties:
@@ -1224,6 +1340,8 @@ definitions:
         items:
           $ref: '#/definitions/models.QuizAnswer'
         type: array
+      created_at:
+        type: string
       id:
         type: string
       number:
@@ -1235,6 +1353,8 @@ definitions:
       quiz:
         $ref: '#/definitions/models.Quiz'
       quiz_id:
+        type: string
+      updated_at:
         type: string
     type: object
   models.Role:
@@ -1333,6 +1453,8 @@ definitions:
         $ref: '#/definitions/models.UserQuizAttempt'
       attempt_id:
         type: string
+      created_at:
+        type: string
       id:
         type: string
       is_correct:
@@ -1340,6 +1462,8 @@ definitions:
       question:
         $ref: '#/definitions/models.QuizQuestion'
       question_id:
+        type: string
+      updated_at:
         type: string
     type: object
   models.UserQuizAttempt:
@@ -1352,6 +1476,8 @@ definitions:
         type: string
       correct_answers:
         type: integer
+      created_at:
+        type: string
       id:
         type: string
       is_passed:
@@ -1364,6 +1490,8 @@ definitions:
         type: integer
       total_questions:
         type: integer
+      updated_at:
+        type: string
       user:
         $ref: '#/definitions/models.User'
       user_id:
@@ -3365,6 +3493,320 @@ paths:
       summary: Get My Biodata
       tags:
       - Profile
+  /api/questions/{questionId}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a question by marking is_deleted = true
+      parameters:
+      - description: Question ID (UUID format)
+        format: uuid
+        in: path
+        name: questionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question soft deleted successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid question ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Soft delete a question
+      tags:
+      - Question
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single question using its question ID
+      parameters:
+      - description: Question ID (UUID format)
+        format: uuid
+        in: path
+        name: questionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuestionResponse'
+              type: object
+        "400":
+          description: Invalid question ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get a question by ID
+      tags:
+      - Question
+    put:
+      consumes:
+      - application/json
+      description: Update a question's title or answers using its ID
+      parameters:
+      - description: Question ID (UUID format)
+        format: uuid
+        in: path
+        name: questionId
+        required: true
+        type: string
+      - description: Update Question Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateQuestionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuestionResponse'
+              type: object
+        "400":
+          description: Invalid question ID or invalid request format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Update a question
+      tags:
+      - Question
+  /api/questions/{questionId}/permanent:
+    delete:
+      consumes:
+      - application/json
+      description: Completely remove a question from the database
+      parameters:
+      - description: Question ID (UUID format)
+        format: uuid
+        in: path
+        name: questionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question permanently deleted
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid question ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Permanently delete a question
+      tags:
+      - Question
+  /api/questions/{questionId}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a previously soft-deleted question (is_deleted = false)
+      parameters:
+      - description: Question ID (UUID format)
+        format: uuid
+        in: path
+        name: questionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question restored successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid question ID or question is not deleted
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Restore a soft-deleted question
+      tags:
+      - Question
+  /api/questions/quizzes/{quizId}/questions:
+    post:
+      consumes:
+      - application/json
+      description: Create a single question for a specific quiz using its quiz ID
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      - description: Create Question Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateQuestionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Question created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuestionResponse'
+              type: object
+        "400":
+          description: Invalid quiz ID or invalid request body
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Create a new question in a quiz
+      tags:
+      - Question
+  /api/questions/quizzes/{quizId}/questions/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Create multiple questions for a quiz in one request
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      - description: Bulk Create Questions Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkCreateQuestionsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Questions created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.QuestionResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid quiz ID or invalid request format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Bulk create questions
+      tags:
+      - Question
+  /api/questions/quizzes/{quizId}/questions/deleted:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all questions that were soft-deleted (is_deleted = true)
+        for a specific quiz
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted questions retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.QuestionResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid quiz ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get soft-deleted questions from a quiz
+      tags:
+      - Question
   /api/quizzes/{quizId}:
     get:
       consumes:
