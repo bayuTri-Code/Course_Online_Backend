@@ -3130,6 +3130,543 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/quizzes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new quiz inside a specific course. Only authenticated users can create quizzes.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Create a new quiz",
+                "parameters": [
+                    {
+                        "description": "Quiz creation data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateQuizRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Quiz created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.QuizResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data or user ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found or course not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/course/{courseId}": {
+            "get": {
+                "description": "Retrieve all active (non-deleted) quizzes belonging to a specific course by course ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Get all quizzes in a course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Course ID (UUID format)",
+                        "name": "courseId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of quizzes retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.QuizResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid course ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/deleted/{courseId}": {
+            "get": {
+                "description": "Retrieve all quizzes that have been soft-deleted for a specific course. These quizzes can be restored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Get all soft-deleted quizzes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Course ID (UUID format)",
+                        "name": "courseId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted quizzes retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.QuizResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid course ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/{quizId}": {
+            "get": {
+                "description": "Retrieve detailed information of a specific quiz by its quiz ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Get quiz details by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Quiz ID (UUID format)",
+                        "name": "quizId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz details retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.QuizResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid quiz ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Quiz not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update quiz details such as name, description, time limit, passing score, and other fields by quiz ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Update quiz information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Quiz ID (UUID format)",
+                        "name": "quizId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated quiz data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateQuizRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.QuizResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid quiz ID format or invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Quiz not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/{quizId}/permanent-delete": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently remove a quiz from the database. This action cannot be undone.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Permanently delete a quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Quiz ID (UUID format)",
+                        "name": "quizId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz permanently deleted successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {}
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid quiz ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Quiz not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/{quizId}/restore": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Restore a previously soft-deleted quiz back to active state, making it available again in the course",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Restore a soft-deleted quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Quiz ID (UUID format)",
+                        "name": "quizId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz restored successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {}
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid quiz ID format or quiz is not in deleted state",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Quiz not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/{quizId}/soft-delete": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a quiz as deleted (soft delete) without permanently removing it from the database. The quiz can be restored later.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Soft delete a quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Quiz ID (UUID format)",
+                        "name": "quizId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz soft deleted successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {}
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid quiz ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Quiz not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user": {
             "get": {
                 "description": "Retrieve a list of all users with their basic info, biodata, and roles",
@@ -4896,7 +5433,13 @@ const docTemplate = `{
                 "contact": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "email": {
                     "type": "string"
                 },
                 "firstName": {
@@ -5296,6 +5839,36 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateQuizRequest": {
+            "type": "object",
+            "required": [
+                "course_id",
+                "min_pass_score",
+                "name",
+                "number"
+            ],
+            "properties": {
+                "course_id": {
+                    "type": "string"
+                },
+                "is_pass_required": {
+                    "type": "boolean"
+                },
+                "min_pass_score": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "number": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
         "dto.CreateZoomRequest": {
             "type": "object",
             "required": [
@@ -5575,6 +6148,44 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.QuizResponse": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_pass_required": {
+                    "type": "boolean"
+                },
+                "min_pass_score": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "total_questions": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ReorderLessonsRequest": {
             "type": "object",
             "required": [
@@ -5678,6 +6289,32 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200,
                     "minLength": 3
+                },
+                "number": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "dto.UpdateQuizRequest": {
+            "type": "object",
+            "required": [
+                "min_pass_score",
+                "name",
+                "number"
+            ],
+            "properties": {
+                "is_pass_required": {
+                    "type": "boolean"
+                },
+                "min_pass_score": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 200
                 },
                 "number": {
                     "type": "integer",
@@ -6222,6 +6859,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "email": {
+                    "type": "string"
+                },
                 "firstName": {
                     "type": "string"
                 },
@@ -6382,9 +7022,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "progress": {
-                    "type": "number"
-                },
                 "status": {
                     "type": "string"
                 },
@@ -6495,6 +7132,9 @@ const docTemplate = `{
                 "course_id": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "created_by": {
                     "type": "string"
                 },
@@ -6521,6 +7161,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.QuizQuestion"
                     }
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -6555,6 +7198,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "point": {
+                    "type": "integer"
                 },
                 "question_title": {
                     "type": "string"
@@ -6697,14 +7346,55 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UserQuizAttempt": {
+        "models.UserQuizAnswer": {
             "type": "object",
             "properties": {
-                "attempt_datetime": {
+                "answer": {
+                    "$ref": "#/definitions/models.QuizAnswer"
+                },
+                "answer_id": {
+                    "type": "string"
+                },
+                "attempt": {
+                    "$ref": "#/definitions/models.UserQuizAttempt"
+                },
+                "attempt_id": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "question": {
+                    "$ref": "#/definitions/models.QuizQuestion"
+                },
+                "question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserQuizAttempt": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserQuizAnswer"
+                    }
+                },
+                "attempt_datetime": {
+                    "type": "string"
+                },
+                "correct_answers": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_passed": {
+                    "type": "boolean"
                 },
                 "quiz": {
                     "$ref": "#/definitions/models.Quiz"
@@ -6713,6 +7403,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "score_achieved": {
+                    "type": "integer"
+                },
+                "total_questions": {
                     "type": "integer"
                 },
                 "user": {

@@ -187,7 +187,13 @@ func (s *QuizService) GetDeletedQuizzes(courseID uuid.UUID) ([]dto.QuizResponse,
 			CreatedBy:      quiz.CreatedBy,
 			CreatedAt:      quiz.CreatedAt,
 			UpdatedAt:      quiz.UpdatedAt,
-			DeletedAt:      quiz.DeletedAt,
+			DeletedAt: func() *time.Time {
+				if quiz.DeletedAt.Valid {
+					return &quiz.DeletedAt.Time
+				}
+				return nil
+			}(),
+
 			TotalQuestions: len(quiz.Questions),
 		}
 	}
@@ -196,22 +202,22 @@ func (s *QuizService) GetDeletedQuizzes(courseID uuid.UUID) ([]dto.QuizResponse,
 }
 
 func (s *QuizService) RestoreQuiz(quizID uuid.UUID) error {
-    var quiz models.Quiz
+	var quiz models.Quiz
 
-    if err := s.db.Unscoped().First(&quiz, quizID).Error; err != nil {
-        if errors.Is(err, gorm.ErrRecordNotFound) {
-            return errors.New("quiz not found")
-        }
-        return err
-    }
+	if err := s.db.Unscoped().First(&quiz, quizID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("quiz not found")
+		}
+		return err
+	}
 
-    if !quiz.DeletedAt.Valid {
-        return errors.New("quiz is not deleted")
-    }
+	if !quiz.DeletedAt.Valid {
+		return errors.New("quiz is not deleted")
+	}
 
-    quiz.DeletedAt.Valid = false
-    quiz.DeletedAt.Time = time.Time{}
-    quiz.UpdatedAt = time.Now()
+	quiz.DeletedAt.Valid = false
+	quiz.DeletedAt.Time = time.Time{}
+	quiz.UpdatedAt = time.Now()
 
-    return s.db.Unscoped().Save(&quiz).Error
+	return s.db.Unscoped().Save(&quiz).Error
 }

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type CreateQuizRequest struct {
@@ -23,17 +22,17 @@ type UpdateQuizRequest struct {
 }
 
 type QuizResponse struct {
-	ID             uuid.UUID      `json:"id"`
-	CourseID       uuid.UUID      `json:"course_id"`
-	Name           string         `json:"name"`
-	Number         int            `json:"number"`
-	MinPassScore   int            `json:"min_pass_score"`
-	IsPassRequired bool           `json:"is_pass_required"`
-	CreatedBy      *uuid.UUID     `json:"created_by"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
-	TotalQuestions int            `json:"total_questions"`
+	ID             uuid.UUID  `json:"id"`
+	CourseID       uuid.UUID  `json:"course_id"`
+	Name           string     `json:"name"`
+	Number         int        `json:"number"`
+	MinPassScore   int        `json:"min_pass_score"`
+	IsPassRequired bool       `json:"is_pass_required"`
+	CreatedBy      *uuid.UUID `json:"created_by"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+	DeletedAt      *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+	TotalQuestions int        `json:"total_questions"`
 }
 
 type QuizDetailResponse struct {
