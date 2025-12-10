@@ -22,6 +22,19 @@ func NewQuestionHandler(questionService *quizservicesgo.QuestionService, act *se
 	return &QuestionHandler{questionService: questionService, ActivityService: act}
 }
 
+// CreateQuestion godoc
+// @Summary Create a new question in a quiz
+// @Description Create a single question for a specific quiz using its quiz ID
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Param request body dto.CreateQuestionRequest true "Create Question Request"
+// @Success 201 {object} utils.StandardResponse{data=dto.QuestionResponse} "Question created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID or invalid request body"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/quizzes/{quizId}/questions [post]
 func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -71,6 +84,19 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	}
 }
 
+// BulkCreateQuestions godoc
+// @Summary Bulk create questions
+// @Description Create multiple questions for a quiz in one request
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Param request body dto.BulkCreateQuestionsRequest true "Bulk Create Questions Request"
+// @Success 201 {object} utils.StandardResponse{data=[]dto.QuestionResponse} "Questions created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID or invalid request format"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/quizzes/{quizId}/questions/bulk [post]
 func (h *QuestionHandler) BulkCreateQuestions(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -119,6 +145,19 @@ func (h *QuestionHandler) BulkCreateQuestions(c *gin.Context) {
 	}
 }
 
+// BulkCreateQuestions godoc
+// @Summary Bulk create questions
+// @Description Create multiple questions for a quiz in one request
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Param request body dto.BulkCreateQuestionsRequest true "Bulk Create Questions Request"
+// @Success 201 {object} utils.StandardResponse{data=[]dto.QuestionResponse} "Questions created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID or invalid request format"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/quizzes/{quizId}/questions/bulk [post]
 func (h *QuestionHandler) GetQuestionsByQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -135,6 +174,18 @@ func (h *QuestionHandler) GetQuestionsByQuiz(c *gin.Context) {
 	utils.JSONSuccess(c, questions, "Questions retrieved successfully")
 }
 
+// GetQuestionByID godoc
+// @Summary Get a question by ID
+// @Description Retrieve a single question using its question ID
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param questionId path string true "Question ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=dto.QuestionResponse} "Question retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid question ID"
+// @Failure 404 {object} utils.ErrorResponse "Question not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/{questionId} [get]
 func (h *QuestionHandler) GetQuestionByID(c *gin.Context) {
 	questionID, err := uuid.Parse(c.Param("questionId"))
 	if err != nil {
@@ -155,6 +206,19 @@ func (h *QuestionHandler) GetQuestionByID(c *gin.Context) {
 	utils.JSONSuccess(c, question, "Question retrieved successfully")
 }
 
+// UpdateQuestion godoc
+// @Summary Update a question
+// @Description Update a question's title or answers using its ID
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param questionId path string true "Question ID (UUID format)" format(uuid)
+// @Param request body dto.UpdateQuestionRequest true "Update Question Request"
+// @Success 200 {object} utils.StandardResponse{data=dto.QuestionResponse} "Question updated successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid question ID or invalid request format"
+// @Failure 404 {object} utils.ErrorResponse "Question not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/{questionId} [put]
 func (h *QuestionHandler) UpdateQuestion(c *gin.Context) {
 	questionID, err := uuid.Parse(c.Param("questionId"))
 	if err != nil {
@@ -203,6 +267,18 @@ func (h *QuestionHandler) UpdateQuestion(c *gin.Context) {
 	}
 }
 
+// SoftDeleteQuestion godoc
+// @Summary Soft delete a question
+// @Description Soft delete a question by marking is_deleted = true
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param questionId path string true "Question ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse "Question soft deleted successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid question ID"
+// @Failure 404 {object} utils.ErrorResponse "Question not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/{questionId} [delete]
 func (h *QuestionHandler) SoftDeleteQuestion(c *gin.Context) {
 	questionID, err := uuid.Parse(c.Param("questionId"))
 	if err != nil {
@@ -236,6 +312,18 @@ func (h *QuestionHandler) SoftDeleteQuestion(c *gin.Context) {
 	}
 }
 
+// PermanentDeleteQuestion godoc
+// @Summary Permanently delete a question
+// @Description Completely remove a question from the database
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param questionId path string true "Question ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse "Question permanently deleted"
+// @Failure 400 {object} utils.ErrorResponse "Invalid question ID"
+// @Failure 404 {object} utils.ErrorResponse "Question not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/{questionId}/permanent [delete]
 func (h *QuestionHandler) PermanentDeleteQuestion(c *gin.Context) {
 	questionID, err := uuid.Parse(c.Param("questionId"))
 	if err != nil {
@@ -269,6 +357,17 @@ func (h *QuestionHandler) PermanentDeleteQuestion(c *gin.Context) {
 	}
 }
 
+// GetDeletedQuestions godoc
+// @Summary Get soft-deleted questions from a quiz
+// @Description Retrieve all questions that were soft-deleted (is_deleted = true) for a specific quiz
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.QuestionResponse} "Deleted questions retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/quizzes/{quizId}/questions/deleted [get]
 func (h *QuestionHandler) GetDeletedQuestions(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -285,6 +384,18 @@ func (h *QuestionHandler) GetDeletedQuestions(c *gin.Context) {
 	utils.JSONSuccess(c, questions, "Deleted questions retrieved successfully")
 }
 
+// RestoreQuestion godoc
+// @Summary Restore a soft-deleted question
+// @Description Restore a previously soft-deleted question (is_deleted = false)
+// @Tags Question
+// @Accept json
+// @Produce json
+// @Param questionId path string true "Question ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse "Question restored successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid question ID or question is not deleted"
+// @Failure 404 {object} utils.ErrorResponse "Question not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/questions/{questionId}/restore [post]
 func (h *QuestionHandler) RestoreQuestion(c *gin.Context) {
 	questionID, err := uuid.Parse(c.Param("questionId"))
 	if err != nil {
