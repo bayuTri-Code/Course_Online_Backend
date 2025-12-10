@@ -42,7 +42,7 @@ func NewQuizHandler(quizService *quizservicesgo.QuizService, act *services.Activ
 // @Failure 401 {object} utils.ErrorResponse "User not authenticated"
 // @Failure 404 {object} utils.ErrorResponse "User not found or course not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/quizzes [post]
+// @Router /api/quizzes/courses/{courseId}/quizzes [post]
 func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	var req dto.CreateQuizRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -101,7 +101,7 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse "Invalid course ID format"
 // @Failure 404 {object} utils.ErrorResponse "Course not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/quizzes/course/{courseId} [get]
+// @Router /api/quizzes/course/{courseId}/quizzes [get]
 func (h *QuizHandler) GetQuizzesByCourse(c *gin.Context) {
 	courseID, err := uuid.Parse(c.Param("courseId"))
 	if err != nil {
@@ -252,7 +252,7 @@ func (h *QuizHandler) SoftDeleteQuiz(c *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format"
 // @Failure 404 {object} utils.ErrorResponse "Quiz not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/quizzes/{quizId}/permanent-delete [delete]
+// @Router /api/quizzes/{quizId}/permanent [delete]
 func (h *QuizHandler) PermanentDeleteQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -291,7 +291,7 @@ func (h *QuizHandler) PermanentDeleteQuiz(c *gin.Context) {
 // @Success 200 {object} utils.StandardResponse{data=[]dto.QuizResponse} "Deleted quizzes retrieved successfully"
 // @Failure 400 {object} utils.ErrorResponse "Invalid course ID format"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/quizzes/deleted/{courseId} [get]
+// @Router /api/quizzes/courses/{courseId}/quizzes/deleted [get]
 func (h *QuizHandler) GetDeletedQuizzes(c *gin.Context) {
 	courseID, err := uuid.Parse(c.Param("courseId"))
 	if err != nil {
