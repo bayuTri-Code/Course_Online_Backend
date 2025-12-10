@@ -15,7 +15,7 @@ type Quiz struct {
 	MinPassScore   int            `gorm:"not null" json:"min_pass_score"`
 	IsPassRequired bool           `gorm:"default:false" json:"is_pass_required"`
 	CreatedBy      *uuid.UUID     `gorm:"type:uuid;index" json:"created_by"`
-	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"string" swaggerignore:"true"`
 	CreatedAt      time.Time      `gorm:"type:timestamp;default:current_timestamp" json:"created_at"`
 	UpdatedAt      time.Time      `gorm:"type:timestamp;default:current_timestamp" json:"updated_at"`
 

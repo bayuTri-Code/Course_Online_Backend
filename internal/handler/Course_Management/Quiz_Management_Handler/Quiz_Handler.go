@@ -18,17 +18,31 @@ import (
 type QuizHandler struct {
 	quizService     *quizservicesgo.QuizService
 	ActivityService *services.ActivityService
-	db *gorm.DB
+	db              *gorm.DB
 }
 
-func NewQuizHandler(quizService *quizservicesgo.QuizService,act *services.ActivityService  , db *gorm.DB) *QuizHandler {
+func NewQuizHandler(quizService *quizservicesgo.QuizService, act *services.ActivityService, db *gorm.DB) *QuizHandler {
 	return &QuizHandler{
-		quizService: quizService,
+		quizService:     quizService,
 		ActivityService: act,
-		db:          db,
+		db:              db,
 	}
 }
 
+// CreateQuiz godoc
+// @Summary Create a new quiz
+// @Description Create a new quiz inside a specific course. Only authenticated users can create quizzes.
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateQuizRequest true "Quiz creation data"
+// @Success 201 {object} utils.StandardResponse{data=dto.QuizResponse} "Quiz created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request data or user ID format"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "User not found or course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes [post]
 func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	var req dto.CreateQuizRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -64,20 +78,30 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 		return
 	}
 
-
-
 	utils.JSONCreated(c, quiz, "Quiz created successfully")
 
-	 go func() {
-        firebaseUID, _ := c.Get("user_id")
-        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-        if err == nil {
-            msg := fmt.Sprintf("Created a quiz: %s (ID: %s)", quiz.Name, quiz.ID)
-            _ = h.ActivityService.LogActivity(user.ID, msg)
-        }	
-    }()
+	go func() {
+		firebaseUID, _ := c.Get("user_id")
+		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			msg := fmt.Sprintf("Created a quiz: %s (ID: %s)", quiz.Name, quiz.ID)
+			_ = h.ActivityService.LogActivity(user.ID, msg)
+		}
+	}()
 }
 
+// GetQuizzesByCourse godoc
+// @Summary Get all quizzes in a course
+// @Description Retrieve all active (non-deleted) quizzes belonging to a specific course by course ID
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.QuizResponse} "List of quizzes retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID format"
+// @Failure 404 {object} utils.ErrorResponse "Course not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/course/{courseId} [get]
 func (h *QuizHandler) GetQuizzesByCourse(c *gin.Context) {
 	courseID, err := uuid.Parse(c.Param("courseId"))
 	if err != nil {
@@ -94,6 +118,18 @@ func (h *QuizHandler) GetQuizzesByCourse(c *gin.Context) {
 	utils.JSONSuccess(c, quizzes, "Quizzes retrieved successfully")
 }
 
+// GetQuizByID godoc
+// @Summary Get quiz details by ID
+// @Description Retrieve detailed information of a specific quiz by its quiz ID
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=dto.QuizResponse} "Quiz details retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/{quizId} [get]
 func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -114,6 +150,20 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 	utils.JSONSuccess(c, quiz, "Quiz retrieved successfully")
 }
 
+// UpdateQuiz godoc
+// @Summary Update quiz information
+// @Description Update quiz details such as name, description, time limit, passing score, and other fields by quiz ID
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Param request body dto.UpdateQuizRequest true "Updated quiz data"
+// @Success 200 {object} utils.StandardResponse{data=dto.QuizResponse} "Quiz updated successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format or invalid request data"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/{quizId} [put]
 func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -140,14 +190,28 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	utils.JSONSuccess(c, quiz, "Quiz updated successfully")
 
 	go func() {
-        firebaseUID, _ := c.Get("user_id")
-        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-        if err == nil {
-            msg := fmt.Sprintf("Updated quiz: %s (ID: %s)", quiz.Name, quiz.ID)
-            _ = h.ActivityService.LogActivity(user.ID, msg)
-        }
-    }()
+		firebaseUID, _ := c.Get("user_id")
+		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			msg := fmt.Sprintf("Updated quiz: %s (ID: %s)", quiz.Name, quiz.ID)
+			_ = h.ActivityService.LogActivity(user.ID, msg)
+		}
+	}()
 }
+
+// SoftDeleteQuiz godoc
+// @Summary Soft delete a quiz
+// @Description Mark a quiz as deleted (soft delete) without permanently removing it from the database. The quiz can be restored later.
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=interface{}} "Quiz soft deleted successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/{quizId}/soft-delete [delete]
 func (h *QuizHandler) SoftDeleteQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -166,16 +230,29 @@ func (h *QuizHandler) SoftDeleteQuiz(c *gin.Context) {
 
 	utils.JSONSuccess(c, nil, "Quiz soft deleted successfully")
 
-	 go func() {
-        firebaseUID, _ := c.Get("user_id")
-        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-        if err == nil {	
-            msg := fmt.Sprintf("Soft deleted quiz ID: %s", quizID.String())
-            _ = h.ActivityService.LogActivity(user.ID, msg)
-        }
-    }()
+	go func() {
+		firebaseUID, _ := c.Get("user_id")
+		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			msg := fmt.Sprintf("Soft deleted quiz ID: %s", quizID.String())
+			_ = h.ActivityService.LogActivity(user.ID, msg)
+		}
+	}()
 }
 
+// PermanentDeleteQuiz godoc
+// @Summary Permanently delete a quiz
+// @Description Permanently remove a quiz from the database. This action cannot be undone.
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=interface{}} "Quiz permanently deleted successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/{quizId}/permanent-delete [delete]
 func (h *QuizHandler) PermanentDeleteQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -195,15 +272,26 @@ func (h *QuizHandler) PermanentDeleteQuiz(c *gin.Context) {
 	utils.JSONSuccess(c, nil, "Quiz permanently deleted")
 
 	go func() {
-        firebaseUID, _ := c.Get("user_id")
-        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-        if err == nil {
-            msg := fmt.Sprintf("Permanently deleted quiz ID: %s", quizID.String())
-            _ = h.ActivityService.LogActivity(user.ID, msg)
-        }
-    }()
+		firebaseUID, _ := c.Get("user_id")
+		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			msg := fmt.Sprintf("Permanently deleted quiz ID: %s", quizID.String())
+			_ = h.ActivityService.LogActivity(user.ID, msg)
+		}
+	}()
 }
 
+// GetDeletedQuizzes godoc
+// @Summary Get all soft-deleted quizzes
+// @Description Retrieve all quizzes that have been soft-deleted for a specific course. These quizzes can be restored.
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.QuizResponse} "Deleted quizzes retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID format"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/deleted/{courseId} [get]
 func (h *QuizHandler) GetDeletedQuizzes(c *gin.Context) {
 	courseID, err := uuid.Parse(c.Param("courseId"))
 	if err != nil {
@@ -220,6 +308,19 @@ func (h *QuizHandler) GetDeletedQuizzes(c *gin.Context) {
 	utils.JSONSuccess(c, quizzes, "Deleted quizzes retrieved successfully")
 }
 
+// RestoreQuiz godoc
+// @Summary Restore a soft-deleted quiz
+// @Description Restore a previously soft-deleted quiz back to active state, making it available again in the course
+// @Tags Quiz
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=interface{}} "Quiz restored successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format or quiz is not in deleted state"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/quizzes/{quizId}/restore [put]
 func (h *QuizHandler) RestoreQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -242,12 +343,12 @@ func (h *QuizHandler) RestoreQuiz(c *gin.Context) {
 
 	utils.JSONSuccess(c, nil, "Quiz restored successfully")
 
-	 go func() {
-        firebaseUID, _ := c.Get("user_id")
-        user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-        if err == nil {
-            msg := fmt.Sprintf("Restored quiz ID: %s", quizID.String())
-            _ = h.ActivityService.LogActivity(user.ID, msg)
-        }
-    }()
+	go func() {
+		firebaseUID, _ := c.Get("user_id")
+		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+		if err == nil {
+			msg := fmt.Sprintf("Restored quiz ID: %s", quizID.String())
+			_ = h.ActivityService.LogActivity(user.ID, msg)
+		}
+	}()
 }

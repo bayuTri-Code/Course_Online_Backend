@@ -49,7 +49,11 @@ definitions:
         type: integer
       contact:
         type: string
+      created_at:
+        type: string
       description:
+        type: string
+      email:
         type: string
       firstName:
         type: string
@@ -317,6 +321,28 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.CreateQuizRequest:
+    properties:
+      course_id:
+        type: string
+      is_pass_required:
+        type: boolean
+      min_pass_score:
+        maximum: 100
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 200
+        type: string
+      number:
+        minimum: 1
+        type: integer
+    required:
+    - course_id
+    - min_pass_score
+    - name
+    - number
+    type: object
   dto.CreateZoomRequest:
     properties:
       course_id:
@@ -502,6 +528,31 @@ definitions:
       total_pages:
         type: integer
     type: object
+  dto.QuizResponse:
+    properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      is_pass_required:
+        type: boolean
+      min_pass_score:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+      total_questions:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   dto.ReorderLessonsRequest:
     properties:
       lesson_orders:
@@ -575,6 +626,25 @@ definitions:
       number:
         minimum: 1
         type: integer
+    type: object
+  dto.UpdateQuizRequest:
+    properties:
+      is_pass_required:
+        type: boolean
+      min_pass_score:
+        maximum: 100
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 200
+        type: string
+      number:
+        minimum: 1
+        type: integer
+    required:
+    - min_pass_score
+    - name
+    - number
     type: object
   dto.UpdateUserRequest:
     properties:
@@ -931,6 +1001,8 @@ definitions:
         type: string
       description:
         type: string
+      email:
+        type: string
       firstName:
         type: string
       id:
@@ -1037,8 +1109,6 @@ definitions:
         type: string
       id:
         type: string
-      progress:
-        type: number
       status:
         type: string
       status_payment:
@@ -1112,6 +1182,8 @@ definitions:
         $ref: '#/definitions/models.Course'
       course_id:
         type: string
+      created_at:
+        type: string
       created_by:
         type: string
       creator:
@@ -1130,6 +1202,8 @@ definitions:
         items:
           $ref: '#/definitions/models.QuizQuestion'
         type: array
+      updated_at:
+        type: string
     type: object
   models.QuizAnswer:
     properties:
@@ -1152,6 +1226,10 @@ definitions:
         type: array
       id:
         type: string
+      number:
+        type: integer
+      point:
+        type: integer
       question_title:
         type: string
       quiz:
@@ -1245,17 +1323,46 @@ definitions:
       user_id:
         type: string
     type: object
-  models.UserQuizAttempt:
+  models.UserQuizAnswer:
     properties:
-      attempt_datetime:
+      answer:
+        $ref: '#/definitions/models.QuizAnswer'
+      answer_id:
+        type: string
+      attempt:
+        $ref: '#/definitions/models.UserQuizAttempt'
+      attempt_id:
         type: string
       id:
         type: string
+      is_correct:
+        type: boolean
+      question:
+        $ref: '#/definitions/models.QuizQuestion'
+      question_id:
+        type: string
+    type: object
+  models.UserQuizAttempt:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/models.UserQuizAnswer'
+        type: array
+      attempt_datetime:
+        type: string
+      correct_answers:
+        type: integer
+      id:
+        type: string
+      is_passed:
+        type: boolean
       quiz:
         $ref: '#/definitions/models.Quiz'
       quiz_id:
         type: string
       score_achieved:
+        type: integer
+      total_questions:
         type: integer
       user:
         $ref: '#/definitions/models.User'
@@ -3258,6 +3365,341 @@ paths:
       summary: Get My Biodata
       tags:
       - Profile
+  /api/quizzes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new quiz inside a specific course. Only authenticated
+        users can create quizzes.
+      parameters:
+      - description: Quiz creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Quiz created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizResponse'
+              type: object
+        "400":
+          description: Invalid request data or user ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found or course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new quiz
+      tags:
+      - Quiz
+  /api/quizzes/{quizId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information of a specific quiz by its quiz ID
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz details retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizResponse'
+              type: object
+        "400":
+          description: Invalid quiz ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get quiz details by ID
+      tags:
+      - Quiz
+    put:
+      consumes:
+      - application/json
+      description: Update quiz details such as name, description, time limit, passing
+        score, and other fields by quiz ID
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      - description: Updated quiz data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizResponse'
+              type: object
+        "400":
+          description: Invalid quiz ID format or invalid request data
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update quiz information
+      tags:
+      - Quiz
+  /api/quizzes/{quizId}/permanent-delete:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently remove a quiz from the database. This action cannot
+        be undone.
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz permanently deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data: {}
+              type: object
+        "400":
+          description: Invalid quiz ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Permanently delete a quiz
+      tags:
+      - Quiz
+  /api/quizzes/{quizId}/restore:
+    put:
+      consumes:
+      - application/json
+      description: Restore a previously soft-deleted quiz back to active state, making
+        it available again in the course
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz restored successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data: {}
+              type: object
+        "400":
+          description: Invalid quiz ID format or quiz is not in deleted state
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Restore a soft-deleted quiz
+      tags:
+      - Quiz
+  /api/quizzes/{quizId}/soft-delete:
+    delete:
+      consumes:
+      - application/json
+      description: Mark a quiz as deleted (soft delete) without permanently removing
+        it from the database. The quiz can be restored later.
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz soft deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data: {}
+              type: object
+        "400":
+          description: Invalid quiz ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Soft delete a quiz
+      tags:
+      - Quiz
+  /api/quizzes/course/{courseId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all active (non-deleted) quizzes belonging to a specific
+        course by course ID
+      parameters:
+      - description: Course ID (UUID format)
+        format: uuid
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of quizzes retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.QuizResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid course ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all quizzes in a course
+      tags:
+      - Quiz
+  /api/quizzes/deleted/{courseId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes that have been soft-deleted for a specific
+        course. These quizzes can be restored.
+      parameters:
+      - description: Course ID (UUID format)
+        format: uuid
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted quizzes retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.QuizResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid course ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all soft-deleted quizzes
+      tags:
+      - Quiz
   /api/user:
     get:
       description: Retrieve a list of all users with their basic info, biodata, and
