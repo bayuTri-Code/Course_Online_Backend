@@ -3130,7 +3130,73 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/quizzes": {
+        "/api/quizzes/course/{courseId}/quizzes": {
+            "get": {
+                "description": "Retrieve all active (non-deleted) quizzes belonging to a specific course by course ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Get all quizzes in a course",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Course ID (UUID format)",
+                        "name": "courseId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of quizzes retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.QuizResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid course ID format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Course not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/courses/{courseId}/quizzes": {
             "post": {
                 "security": [
                     {
@@ -3205,73 +3271,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/quizzes/course/{courseId}": {
-            "get": {
-                "description": "Retrieve all active (non-deleted) quizzes belonging to a specific course by course ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Quiz"
-                ],
-                "summary": "Get all quizzes in a course",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Course ID (UUID format)",
-                        "name": "courseId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of quizzes retrieved successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.QuizResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid course ID format",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Course not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/quizzes/deleted/{courseId}": {
+        "/api/quizzes/courses/{courseId}/quizzes/deleted": {
             "get": {
                 "description": "Retrieve all quizzes that have been soft-deleted for a specific course. These quizzes can be restored.",
                 "consumes": [
@@ -3469,7 +3469,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/quizzes/{quizId}/permanent-delete": {
+        "/api/quizzes/{quizId}/permanent": {
             "delete": {
                 "security": [
                     {

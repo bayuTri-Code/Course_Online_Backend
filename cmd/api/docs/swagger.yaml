@@ -3365,52 +3365,6 @@ paths:
       summary: Get My Biodata
       tags:
       - Profile
-  /api/quizzes:
-    post:
-      consumes:
-      - application/json
-      description: Create a new quiz inside a specific course. Only authenticated
-        users can create quizzes.
-      parameters:
-      - description: Quiz creation data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateQuizRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Quiz created successfully
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.QuizResponse'
-              type: object
-        "400":
-          description: Invalid request data or user ID format
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: User not authenticated
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: User not found or course not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create a new quiz
-      tags:
-      - Quiz
   /api/quizzes/{quizId}:
     get:
       consumes:
@@ -3497,7 +3451,7 @@ paths:
       summary: Update quiz information
       tags:
       - Quiz
-  /api/quizzes/{quizId}/permanent-delete:
+  /api/quizzes/{quizId}/permanent:
     delete:
       consumes:
       - application/json
@@ -3620,7 +3574,7 @@ paths:
       summary: Soft delete a quiz
       tags:
       - Quiz
-  /api/quizzes/course/{courseId}:
+  /api/quizzes/course/{courseId}/quizzes:
     get:
       consumes:
       - application/json
@@ -3662,7 +3616,53 @@ paths:
       summary: Get all quizzes in a course
       tags:
       - Quiz
-  /api/quizzes/deleted/{courseId}:
+  /api/quizzes/courses/{courseId}/quizzes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new quiz inside a specific course. Only authenticated
+        users can create quizzes.
+      parameters:
+      - description: Quiz creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Quiz created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizResponse'
+              type: object
+        "400":
+          description: Invalid request data or user ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found or course not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new quiz
+      tags:
+      - Quiz
+  /api/quizzes/courses/{courseId}/quizzes/deleted:
     get:
       consumes:
       - application/json
