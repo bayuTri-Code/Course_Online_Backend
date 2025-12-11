@@ -68,7 +68,7 @@ func (h *InstructorHandler) SearchInstructors(c *gin.Context) {
 // @Router /api/instructors/{id} [get]
 // @Security BearerAuth
 func (h *InstructorHandler) GetInstructorByID(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("instructorId")
 	id, err := utils.ParseUUID(idParam)
 	if err != nil {
 		utils.JSONError(c, "Invalid instructor ID", http.StatusBadRequest, err.Error())

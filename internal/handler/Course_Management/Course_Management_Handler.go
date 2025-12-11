@@ -513,6 +513,57 @@ func (h *CourseHandler) GetMyCoursesByCategoryHandler(c *gin.Context) {
 	utils.JSONSuccess(c, result, "My enrolled courses by category retrieved successfully")
 }
 
+// GetMyAssignedCoursesHandler godoc
+// @Summary Get my assigned courses (for instructor)
+// @Description Get all courses assigned to the logged-in instructor
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.StandardResponse{data=dto.MyCoursesInstructorResponse}
+// @Failure 401 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /api/instructor/my-courses [get]
+func (h *CourseHandler) GetMyAssignedCoursesHandler(c *gin.Context) {
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.JSONUnauthorized(c, "User not authenticated")
+		return
+	}
+
+	firebaseUID, ok := userIDInterface.(string)
+	if !ok {
+		utils.JSONError(c, "Invalid user ID format from Firebase token", http.StatusBadRequest, nil)
+		return
+	}
+
+	instructorID, err := h.service.GetInstructorIDByFirebaseUID(c.Request.Context(), firebaseUID)
+	if err != nil {
+		if err.Error() == "instructor not found" {
+			utils.JSONNotFound(c, "Instructor not found")
+			return
+		}
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.service.GetMyAssignedCourses(c.Request.Context(), instructorID, &params)
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, result, "My assigned courses retrieved successfully")
+}
+
 // GetPopularCoursesHandler godoc
 // @Summary Get popular courses
 // @Description Get most popular courses sorted by enrollment count
@@ -586,46 +637,7 @@ func (h *CourseHandler) GetAllCourseTypesHandler(c *gin.Context) {
 	utils.JSONSuccess(c, courseTypes, "Course types retrieved successfully")
 }
 
-// GetCoursesByInstructorHandler godoc
-// @Summary Get courses by instructor
-// @Description Get all courses created by a specific instructor
-// @Tags courses-browsing
-// @Accept json
-// @Produce json
-// @Param instructorId path string true "Instructor ID (UUID)"
-// @Param page query int false "Page number" default(1)
-// @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} utils.StandardResponse{data=dto.CoursesByInstructorResponse}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /api/courses/instructor/{instructorId} [get]
-func (h *CourseHandler) GetCoursesByInstructorHandler(c *gin.Context) {
-	instructorIDParam := c.Param("instructorId")
-	instructorID, err := uuid.Parse(instructorIDParam)
-	if err != nil {
-		utils.JSONError(c, "Invalid instructor ID", http.StatusBadRequest, err.Error())
-		return
-	}
 
-	var params dto.SimplePaginationParams
-	if err := c.ShouldBindQuery(&params); err != nil {
-		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
-		return
-	}
-
-	result, err := h.service.GetCoursesByInstructor(c.Request.Context(), instructorID, &params)
-	if err != nil {
-		if err.Error() == "instructor not found" {
-			utils.JSONNotFound(c, "Instructor not found")
-			return
-		}
-		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
-		return
-	}
-
-	utils.JSONSuccess(c, result, "Instructor courses retrieved successfully")
-}
 
 // GetRelatedCoursesHandler godoc
 // @Summary Get related courses
