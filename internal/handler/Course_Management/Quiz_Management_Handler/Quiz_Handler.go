@@ -211,7 +211,7 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format"
 // @Failure 404 {object} utils.ErrorResponse "Quiz not found"
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/quizzes/{quizId}/soft-delete [delete]
+// @Router /api/quizzes/{quizId} [delete]
 func (h *QuizHandler) SoftDeleteQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
