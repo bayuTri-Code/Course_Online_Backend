@@ -24,7 +24,7 @@ func StudentQuizAnswerRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App)
 		studentRoutes.GET("/quizzes/:quizId/start", middleware.CheckEnrollmentAccess(db), studentQuizHandler.StartQuiz)
 		studentRoutes.GET("/quizzes/:quizId/attempts", middleware.CheckEnrollmentAccess(db), studentQuizHandler.GetQuizAttemptsHistory)
 
-		studentRoutes.GET("/attempts/:attemptId", studentQuizHandler.GetAttemptDetail)
+		studentRoutes.GET("/quizzes/attempts/:attemptId", studentQuizHandler.GetAttemptDetail)
 		studentRoutes.GET("/my-attempts", studentQuizHandler.GetAllMyAttempts)
 	}
 }

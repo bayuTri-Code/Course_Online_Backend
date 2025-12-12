@@ -44,6 +44,19 @@ func (h *StudentQuizHandler) getUserIDFromContext(c *gin.Context) (uuid.UUID, er
 	return user.ID, nil
 }
 
+// GetQuizzesInCourse godoc
+// @Summary Get quizzes for a course
+// @Description Retrieve all quizzes inside a specific course for the authenticated student.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param courseId path string true "Course ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=[]dto.QuizInCourseResponse} "Quizzes retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid course ID"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "User not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/courses/{courseId}/quizzes [get]
 func (h *StudentQuizHandler) GetQuizzesInCourse(c *gin.Context) {
 	courseID, err := uuid.Parse(c.Param("courseId"))
 	if err != nil {
@@ -70,6 +83,19 @@ func (h *StudentQuizHandler) GetQuizzesInCourse(c *gin.Context) {
 	utils.JSONSuccess(c, quizzes, "Quizzes retrieved successfully")
 }
 
+// StartQuiz godoc
+// @Summary Start a quiz
+// @Description Initialize a quiz attempt and retrieve all questions with answer options.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=dto.StartQuizResponse} "Quiz started successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/{quizId}/start [get]
 func (h *StudentQuizHandler) StartQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -100,6 +126,20 @@ func (h *StudentQuizHandler) StartQuiz(c *gin.Context) {
 	utils.JSONSuccess(c, quiz, "Quiz started successfully")
 }
 
+// SubmitQuiz godoc
+// @Summary Submit quiz answers
+// @Description Submit all answers to a quiz and receive scoring and result summary.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Param request body dto.SubmitQuizRequest true "Submit quiz request payload"
+// @Success 201 {object} utils.StandardResponse{data=dto.SubmitQuizResponse} "Quiz submitted successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request data or validation error"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/{quizId}/submit [post]
 func (h *StudentQuizHandler) SubmitQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -156,6 +196,19 @@ func (h *StudentQuizHandler) SubmitQuiz(c *gin.Context) {
 	utils.JSONCreated(c, result, "Quiz submitted successfully")
 }
 
+// GetQuizAttemptsHistory godoc
+// @Summary Get quiz attempt history
+// @Description Retrieve all attempts the student has made for a specific quiz.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=dto.QuizAttemptsHistoryResponse} "Attempts retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/{quizId}/attempts [get]
 func (h *StudentQuizHandler) GetQuizAttemptsHistory(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
 	if err != nil {
@@ -186,6 +239,20 @@ func (h *StudentQuizHandler) GetQuizAttemptsHistory(c *gin.Context) {
 	utils.JSONSuccess(c, history, "Attempts retrieved successfully")
 }
 
+// GetAttemptDetail godoc
+// @Summary Get quiz attempt detail
+// @Description Retrieve detailed information of a specific quiz attempt, including answers and scoring.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param attemptId path string true "Attempt ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=dto.AttemptDetailResponse} "Attempt detail retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid attempt ID"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 403 {object} utils.ErrorResponse "Access denied"
+// @Failure 404 {object} utils.ErrorResponse "Attempt not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/attempts/{attemptId} [get]
 func (h *StudentQuizHandler) GetAttemptDetail(c *gin.Context) {
 	attemptID, err := uuid.Parse(c.Param("attemptId"))
 	if err != nil {
@@ -220,6 +287,20 @@ func (h *StudentQuizHandler) GetAttemptDetail(c *gin.Context) {
 	utils.JSONSuccess(c, detail, "Attempt detail retrieved successfully")
 }
 
+// GetAllMyAttempts godoc
+// @Summary Get all quiz attempts by the authenticated student
+// @Description Retrieve all quiz attempts made by the current authenticated student with pagination.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Param order query string false "Sort order (asc|desc)"
+// @Success 200 {object} utils.StandardResponse{data=dto.AllMyAttemptsResponse} "My attempts retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid query parameters"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/my-attempts [get]
 func (h *StudentQuizHandler) GetAllMyAttempts(c *gin.Context) {
 	var params dto.AllMyAttemptsQueryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
