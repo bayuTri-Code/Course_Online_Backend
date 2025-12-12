@@ -22,6 +22,14 @@ type InstructorSearchResponse struct {
 	Instructors []InstructorResponse `json:"instructors"`
 }
 
+type MyCoursesInstructorResponse struct {
+	Courses    []CourseResponse `json:"courses"`
+	Total      int64            `json:"total"`
+	Page       int              `json:"page"`
+	Limit      int              `json:"limit"`
+	TotalPages int              `json:"total_pages"`
+}
+
 type CreateCourseRequest struct {
 	Name              string  `form:"name" binding:"required,min=3,max=200"`
 	Description       string  `form:"description" binding:"required"`

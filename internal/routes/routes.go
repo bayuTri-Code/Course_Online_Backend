@@ -75,6 +75,7 @@ func Routes(
 	courseroutes.LessonRoutes(protected, db, app)
 	quizroutes.QuizManagementRoutes(protected, db, app)
 	quizroutes.QuizQuestionAndAnswerRoutes(protected, db, app)
+	quizroutes.StudentQuizAnswerRoutes(protected, db, app)
 
 
 	enrollroutes.EnrollmentRoutes(protected, db, app)

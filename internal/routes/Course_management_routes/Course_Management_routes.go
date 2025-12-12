@@ -29,7 +29,7 @@ func CourseManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) 
 		courses.DELETE("/:course_id/permanent", courseHandler.PermanentDeleteCourseHandler)
 
 		courses.GET("/instructors/search", instructorHandler.SearchInstructors)
-		courses.GET("/instructors/:id", instructorHandler.GetInstructorByID)
+		courses.GET("/instructors/:instructorId", instructorHandler.GetInstructorByID)
 	}
 
 	categories := r.Group("/mycourses")
@@ -42,5 +42,11 @@ func CourseManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) 
 	myCourses.Use(middleware.RoleMiddleware("student", "super_admin", "admin", "instructor"))
 	{
 		myCourses.GET("/courses", courseHandler.GetMyCoursesHandler)
+	}
+
+	instructor := r.Group("instructor")
+	instructor.Use(middleware.RoleMiddleware("instructor"))
+	{
+		instructor.GET("/my-courses", courseHandler.GetMyAssignedCoursesHandler)
 	}
 }

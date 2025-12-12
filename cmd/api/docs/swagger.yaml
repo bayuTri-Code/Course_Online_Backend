@@ -256,16 +256,14 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.CoursesByInstructorResponse:
+  dto.CreateAnswerRequest:
     properties:
-      courses:
-        items:
-          $ref: '#/definitions/dto.CourseResponse'
-        type: array
-      instructor:
-        $ref: '#/definitions/dto.InstructorResponse'
-      total:
-        type: integer
+      answer_text:
+        type: string
+      is_correct:
+        type: boolean
+    required:
+    - answer_text
     type: object
   dto.CreateAnswerRequest:
     properties:
@@ -546,6 +544,21 @@ definitions:
           $ref: '#/definitions/dto.CourseResponse'
         type: array
       total:
+        type: integer
+    type: object
+  dto.MyCoursesInstructorResponse:
+    properties:
+      courses:
+        items:
+          $ref: '#/definitions/dto.CourseResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
         type: integer
     type: object
   dto.OTPUserResponse:
@@ -2392,54 +2405,6 @@ paths:
       summary: Get all course types
       tags:
       - courses-browsing
-  /api/courses/instructor/{instructorId}:
-    get:
-      consumes:
-      - application/json
-      description: Get all courses created by a specific instructor
-      parameters:
-      - description: Instructor ID (UUID)
-        in: path
-        name: instructorId
-        required: true
-        type: string
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CoursesByInstructorResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      summary: Get courses by instructor
-      tags:
-      - courses-browsing
   /api/courses/latest:
     get:
       consumes:
@@ -2953,6 +2918,47 @@ paths:
       summary: Get Activity Summary
       tags:
       - Activity
+  /api/instructor/my-courses:
+    get:
+      consumes:
+      - application/json
+      description: Get all courses assigned to the logged-in instructor
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MyCoursesInstructorResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my assigned courses (for instructor)
+      tags:
+      - courses
   /api/instructors/{id}:
     get:
       consumes:
@@ -3808,6 +3814,46 @@ paths:
       tags:
       - Question
   /api/quizzes/{quizId}:
+    delete:
+      consumes:
+      - application/json
+      description: Mark a quiz as deleted (soft delete) without permanently removing
+        it from the database. The quiz can be restored later.
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz soft deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data: {}
+              type: object
+        "400":
+          description: Invalid quiz ID format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Soft delete a quiz
+      tags:
+      - Quiz
     get:
       consumes:
       - application/json
@@ -3973,47 +4019,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Restore a soft-deleted quiz
-      tags:
-      - Quiz
-  /api/quizzes/{quizId}/soft-delete:
-    delete:
-      consumes:
-      - application/json
-      description: Mark a quiz as deleted (soft delete) without permanently removing
-        it from the database. The quiz can be restored later.
-      parameters:
-      - description: Quiz ID (UUID format)
-        format: uuid
-        in: path
-        name: quizId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Quiz soft deleted successfully
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.StandardResponse'
-            - properties:
-                data: {}
-              type: object
-        "400":
-          description: Invalid quiz ID format
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Quiz not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Soft delete a quiz
       tags:
       - Quiz
   /api/quizzes/course/{courseId}/quizzes:
