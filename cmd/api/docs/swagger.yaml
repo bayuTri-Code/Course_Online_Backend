@@ -18,6 +18,23 @@ definitions:
       total_users:
         type: integer
     type: object
+  dto.AllMyAttemptsResponse:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/dto.MyAttemptItem'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      statistics:
+        $ref: '#/definitions/dto.AttemptsStatistics'
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   dto.AnswerResponse:
     properties:
       answer_text:
@@ -34,6 +51,90 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  dto.AnswerResultDetail:
+    properties:
+      correct_answer_id:
+        type: string
+      correct_answer_text:
+        type: string
+      is_correct:
+        type: boolean
+      point_earned:
+        type: integer
+      question_id:
+        type: string
+      question_number:
+        type: integer
+      question_point:
+        type: integer
+      question_title:
+        type: string
+      your_answer_id:
+        type: string
+      your_answer_text:
+        type: string
+    type: object
+  dto.AttemptDetailResponse:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.AnswerResultDetail'
+        type: array
+      attempt_datetime:
+        type: string
+      attempt_id:
+        type: string
+      correct_answers:
+        type: integer
+      course_id:
+        type: string
+      course_name:
+        type: string
+      is_passed:
+        type: boolean
+      min_pass_score:
+        type: integer
+      quiz_id:
+        type: string
+      quiz_name:
+        type: string
+      result_summary:
+        $ref: '#/definitions/dto.QuizResultSummary'
+      score_achieved:
+        type: integer
+      total_questions:
+        type: integer
+    type: object
+  dto.AttemptSummary:
+    properties:
+      attempt_datetime:
+        type: string
+      attempt_id:
+        type: string
+      attempt_number:
+        type: integer
+      correct_answers:
+        type: integer
+      is_passed:
+        type: boolean
+      score_achieved:
+        type: integer
+      total_questions:
+        type: integer
+    type: object
+  dto.AttemptsStatistics:
+    properties:
+      average_score:
+        type: number
+      failed_attempts:
+        type: integer
+      passed_attempts:
+        type: integer
+      total_attempts:
+        type: integer
+      total_quizzes_attempted:
+        type: integer
     type: object
   dto.BaseResponse:
     properties:
@@ -255,15 +356,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  dto.CreateAnswerRequest:
-    properties:
-      answer_text:
-        type: string
-      is_correct:
-        type: boolean
-    required:
-    - answer_text
     type: object
   dto.CreateAnswerRequest:
     properties:
@@ -535,6 +627,33 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.MyAttemptItem:
+    properties:
+      attempt_datetime:
+        type: string
+      attempt_id:
+        type: string
+      correct_answers:
+        type: integer
+      course_id:
+        type: string
+      course_name:
+        type: string
+      is_passed:
+        type: boolean
+      min_pass_score:
+        type: integer
+      quiz_id:
+        type: string
+      quiz_name:
+        type: string
+      quiz_number:
+        type: integer
+      score_achieved:
+        type: integer
+      total_questions:
+        type: integer
+    type: object
   dto.MyCourseByCategoryResponse:
     properties:
       category:
@@ -621,6 +740,78 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.QuizAnswerForStudentResponse:
+    properties:
+      answer_text:
+        type: string
+      id:
+        type: string
+    type: object
+  dto.QuizAttemptsHistoryResponse:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/dto.AttemptSummary'
+        type: array
+      best_score:
+        type: integer
+      is_completed:
+        type: boolean
+      latest_score:
+        type: integer
+      min_pass_score:
+        type: integer
+      quiz_id:
+        type: string
+      quiz_name:
+        type: string
+      total_attempts:
+        type: integer
+    type: object
+  dto.QuizInCourseResponse:
+    properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_completed:
+        type: boolean
+      is_pass_required:
+        type: boolean
+      min_pass_score:
+        type: integer
+      my_attempts_count:
+        type: integer
+      my_best_score:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+      total_points:
+        type: integer
+      total_questions:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  dto.QuizQuestionForStudentResponse:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.QuizAnswerForStudentResponse'
+        type: array
+      id:
+        type: string
+      number:
+        type: integer
+      point:
+        type: integer
+      question_title:
+        type: string
+    type: object
   dto.QuizResponse:
     properties:
       course_id:
@@ -645,6 +836,15 @@ definitions:
         type: integer
       updated_at:
         type: string
+    type: object
+  dto.QuizResultSummary:
+    properties:
+      percentage:
+        type: number
+      points_earned:
+        type: integer
+      total_points:
+        type: integer
     type: object
   dto.ReorderLessonsRequest:
     properties:
@@ -678,12 +878,80 @@ definitions:
         example: true
         type: boolean
     type: object
+  dto.StartQuizResponse:
+    properties:
+      description:
+        type: string
+      is_pass_required:
+        type: boolean
+      min_pass_score:
+        type: integer
+      questions:
+        items:
+          $ref: '#/definitions/dto.QuizQuestionForStudentResponse'
+        type: array
+      quiz_id:
+        type: string
+      quiz_name:
+        type: string
+      total_points:
+        type: integer
+      total_questions:
+        type: integer
+    type: object
+  dto.StudentAnswerInput:
+    properties:
+      answer_id:
+        type: string
+      question_id:
+        type: string
+    required:
+    - answer_id
+    - question_id
+    type: object
   dto.StudentDashboardResponse:
     properties:
       enrolled_courses:
         type: integer
       message:
         type: string
+    type: object
+  dto.SubmitQuizRequest:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.StudentAnswerInput'
+        minItems: 1
+        type: array
+    required:
+    - answers
+    type: object
+  dto.SubmitQuizResponse:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.AnswerResultDetail'
+        type: array
+      attempt_datetime:
+        type: string
+      attempt_id:
+        type: string
+      correct_answers:
+        type: integer
+      is_passed:
+        type: boolean
+      min_pass_score:
+        type: integer
+      quiz_id:
+        type: string
+      quiz_name:
+        type: string
+      result_summary:
+        $ref: '#/definitions/dto.QuizResultSummary'
+      score_achieved:
+        type: integer
+      total_questions:
+        type: integer
     type: object
   dto.SuperAdminDashboardResponse:
     properties:
@@ -4147,6 +4415,282 @@ paths:
       summary: Get all soft-deleted quizzes
       tags:
       - Quiz
+  /api/student/courses/{courseId}/quizzes:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes inside a specific course for the authenticated
+        student.
+      parameters:
+      - description: Course ID (UUID format)
+        format: uuid
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quizzes retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.QuizInCourseResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get quizzes for a course
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/{quizId}/attempts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all attempts the student has made for a specific quiz.
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attempts retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizAttemptsHistoryResponse'
+              type: object
+        "400":
+          description: Invalid quiz ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get quiz attempt history
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/{quizId}/start:
+    get:
+      consumes:
+      - application/json
+      description: Initialize a quiz attempt and retrieve all questions with answer
+        options.
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz started successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.StartQuizResponse'
+              type: object
+        "400":
+          description: Invalid quiz ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Start a quiz
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/{quizId}/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit all answers to a quiz and receive scoring and result summary.
+      parameters:
+      - description: Quiz ID (UUID format)
+        format: uuid
+        in: path
+        name: quizId
+        required: true
+        type: string
+      - description: Submit quiz request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SubmitQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Quiz submitted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SubmitQuizResponse'
+              type: object
+        "400":
+          description: Invalid request data or validation error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Submit quiz answers
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/attempts/{attemptId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information of a specific quiz attempt, including
+        answers and scoring.
+      parameters:
+      - description: Attempt ID (UUID format)
+        format: uuid
+        in: path
+        name: attemptId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attempt detail retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AttemptDetailResponse'
+              type: object
+        "400":
+          description: Invalid attempt ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Attempt not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get quiz attempt detail
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/my-attempts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quiz attempts made by the current authenticated student
+        with pagination.
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Sort order (asc|desc)
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My attempts retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AllMyAttemptsResponse'
+              type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all quiz attempts by the authenticated student
+      tags:
+      - students' quiz answers
   /api/user:
     get:
       description: Retrieve a list of all users with their basic info, biodata, and
