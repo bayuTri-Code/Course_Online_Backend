@@ -48,9 +48,7 @@ type QuizDetailResponse struct {
 	Questions      int        `json:"questions"`
 }
 
-
-//quiz question and answer DTOs
-
+//-----------------quiz question and answer DTOs-----------------------\\
 type CreateQuestionRequest struct {
 	QuestionTitle string               `json:"question_title" binding:"required"`
 	Number        int                  `json:"number" binding:"required,min=1"`
