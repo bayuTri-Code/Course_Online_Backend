@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"course_online_backend/internal/models"
+	
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	
 	"gorm.io/gorm"
 )
 
@@ -148,83 +148,5 @@ func CheckCourseOwnershipDynamic(db *gorm.DB) gin.HandlerFunc {
 
 		c.JSON(403, gin.H{"message": "Forbidden: insufficient permissions"})
 		c.Abort()
-	}
-}
-
-func CheckEnrollmentAccess(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userID := c.GetString("user_id")
-		if userID == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Unauthorized: user not found",
-			})
-			c.Abort()
-			return
-		}
-
-		var courseID uuid.UUID
-		var err error
-
-		if id := c.Param("id"); id != "" {
-			courseID, err = uuid.Parse(id)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
-				c.Abort()
-				return
-			}
-		}
-
-		if courseID == uuid.Nil {
-			if moduleID := c.Param("module_id"); moduleID != "" {
-				var module models.Module
-				if err := db.First(&module, "id = ?", moduleID).Error; err != nil {
-					c.JSON(http.StatusNotFound, gin.H{"error": "Module not found"})
-					c.Abort()
-					return
-				}
-				courseID = module.CourseID
-			}
-		}
-
-		if courseID == uuid.Nil {
-			if lessonID := c.Param("lesson_id"); lessonID != "" || c.Param("id") != "" {
-				target := c.Param("lesson_id")
-				if target == "" {
-					target = c.Param("id")
-				}
-
-				var lesson models.Lesson
-				if err := db.First(&lesson, "id = ?", target).Error; err != nil {
-					c.JSON(http.StatusNotFound, gin.H{"error": "Lesson not found"})
-					c.Abort()
-					return
-				}
-
-				var module models.Module
-				db.First(&module, "id = ?", lesson.ModuleID)
-				courseID = module.CourseID
-			}
-		}
-
-		if courseID == uuid.Nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot determine course for this content"})
-			c.Abort()
-			return
-		}
-
-		var enrollment models.Enrollment
-		err = db.
-			Where("user_id = ? AND course_id = ?", userID, courseID).
-			First(&enrollment).Error
-
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error": "Access denied: You are not enrolled in this course",
-			})
-			c.Abort()
-			return
-		}
-
-		c.Next()
 	}
 }
