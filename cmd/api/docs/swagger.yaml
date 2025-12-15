@@ -329,6 +329,13 @@ definitions:
       total_enrollments:
         type: integer
     type: object
+  dto.CourseTypeInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   dto.CourseTypeResponse:
     properties:
       created_at:
@@ -341,6 +348,15 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  dto.CourseTypeSummary:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      quiz_count:
+        type: integer
     type: object
   dto.CourseTypeWithCountResponse:
     properties:
@@ -467,28 +483,6 @@ definitions:
     - number
     - point
     - question_title
-    type: object
-  dto.CreateQuizRequest:
-    properties:
-      course_id:
-        type: string
-      is_pass_required:
-        type: boolean
-      min_pass_score:
-        maximum: 100
-        minimum: 0
-        type: integer
-      name:
-        maxLength: 200
-        type: string
-      number:
-        minimum: 1
-        type: integer
-    required:
-    - course_id
-    - min_pass_score
-    - name
-    - number
     type: object
   dto.CreateZoomRequest:
     properties:
@@ -680,6 +674,62 @@ definitions:
       total_pages:
         type: integer
     type: object
+  dto.MyQuizItem:
+    properties:
+      course_id:
+        type: string
+      course_name:
+        type: string
+      course_type:
+        $ref: '#/definitions/dto.CourseTypeInfo'
+      created_at:
+        type: string
+      id:
+        type: string
+      is_pass_required:
+        type: boolean
+      latest_attempt_date:
+        type: string
+      min_pass_score:
+        type: integer
+      my_attempts_count:
+        type: integer
+      my_best_score:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+      status:
+        type: string
+      thumbnail:
+        type: string
+      total_points:
+        type: integer
+      total_questions:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  dto.MyQuizzesResponse:
+    properties:
+      completed_quizzes:
+        type: integer
+      course_types:
+        items:
+          $ref: '#/definitions/dto.CourseTypeSummary'
+        type: array
+      in_progress_quizzes:
+        type: integer
+      not_started_quizzes:
+        type: integer
+      quizzes:
+        items:
+          $ref: '#/definitions/dto.MyQuizItem'
+        type: array
+      total_quizzes:
+        type: integer
+    type: object
   dto.OTPUserResponse:
     properties:
       createdAt:
@@ -790,6 +840,8 @@ definitions:
         type: string
       number:
         type: integer
+      thumbnail:
+        type: string
       total_points:
         type: integer
       total_questions:
@@ -832,6 +884,8 @@ definitions:
         type: string
       number:
         type: integer
+      thumbnail:
+        type: string
       total_questions:
         type: integer
       updated_at:
@@ -1019,25 +1073,6 @@ definitions:
     - number
     - point
     - question_title
-    type: object
-  dto.UpdateQuizRequest:
-    properties:
-      is_pass_required:
-        type: boolean
-      min_pass_score:
-        maximum: 100
-        minimum: 0
-        type: integer
-      name:
-        maxLength: 200
-        type: string
-      number:
-        minimum: 1
-        type: integer
-    required:
-    - min_pass_score
-    - name
-    - number
     type: object
   dto.UpdateUserRequest:
     properties:
@@ -1595,6 +1630,8 @@ definitions:
         items:
           $ref: '#/definitions/models.QuizQuestion'
         type: array
+      thumbnail:
+        type: string
       updated_at:
         type: string
     type: object
@@ -4162,27 +4199,39 @@ paths:
       - Quiz
     put:
       consumes:
-      - application/json
-      description: Update quiz details such as name, description, time limit, passing
-        score, and other fields by quiz ID
+      - multipart/form-data
+      description: Update quiz data and optional thumbnail
       parameters:
-      - description: Quiz ID (UUID format)
-        format: uuid
+      - description: Quiz ID
         in: path
         name: quizId
         required: true
         type: string
-      - description: Updated quiz data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateQuizRequest'
+      - description: Quiz name
+        in: formData
+        name: name
+        type: string
+      - description: Quiz order
+        in: formData
+        name: number
+        type: integer
+      - description: Minimum pass score
+        in: formData
+        name: min_pass_score
+        type: integer
+      - description: Is pass required
+        in: formData
+        name: is_pass_required
+        type: boolean
+      - description: Quiz thumbnail
+        in: formData
+        name: thumbnail
+        type: file
       produces:
       - application/json
       responses:
         "200":
-          description: Quiz updated successfully
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/utils.StandardResponse'
@@ -4190,21 +4239,9 @@ paths:
                 data:
                   $ref: '#/definitions/dto.QuizResponse'
               type: object
-        "400":
-          description: Invalid quiz ID format or invalid request data
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: Quiz not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Update quiz information
+      summary: Update quiz (multipart)
       tags:
       - Quiz
   /api/quizzes/{quizId}/permanent:
@@ -4331,24 +4368,44 @@ paths:
       summary: Get all quizzes in a course
       tags:
       - Quiz
-  /api/quizzes/courses/{courseId}/quizzes:
+  /api/quizzes/courses/{course_id}/quizzes:
     post:
       consumes:
-      - application/json
-      description: Create a new quiz inside a specific course. Only authenticated
-        users can create quizzes.
+      - multipart/form-data
+      description: Create quiz with optional thumbnail upload
       parameters:
-      - description: Quiz creation data
-        in: body
-        name: request
+      - description: Course ID
+        in: path
+        name: course_id
         required: true
-        schema:
-          $ref: '#/definitions/dto.CreateQuizRequest'
+        type: string
+      - description: Quiz name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Quiz order
+        in: formData
+        name: number
+        required: true
+        type: integer
+      - description: Minimum pass score
+        in: formData
+        name: min_pass_score
+        type: integer
+      - description: Is pass required
+        in: formData
+        name: is_pass_required
+        type: boolean
+      - description: Quiz thumbnail
+        in: formData
+        name: thumbnail
+        type: file
       produces:
       - application/json
       responses:
         "201":
-          description: Quiz created successfully
+          description: Created
           schema:
             allOf:
             - $ref: '#/definitions/utils.StandardResponse'
@@ -4356,25 +4413,9 @@ paths:
                 data:
                   $ref: '#/definitions/dto.QuizResponse'
               type: object
-        "400":
-          description: Invalid request data or user ID format
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "401":
-          description: User not authenticated
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "404":
-          description: User not found or course not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Create a new quiz
+      summary: Create quiz (multipart)
       tags:
       - Quiz
   /api/quizzes/courses/{courseId}/quizzes/deleted:
@@ -4645,6 +4686,50 @@ paths:
       summary: Get quiz attempt detail
       tags:
       - students' quiz answers
+  /api/student/quizzes/categories/{categoryId}/my-quizzes:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes from enrolled courses filtered by course type/category
+        for the authenticated student.
+      parameters:
+      - description: Course Type/Category ID (UUID format)
+        format: uuid
+        in: path
+        name: categoryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My quizzes by category retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MyQuizzesResponse'
+              type: object
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get my quizzes filtered by course category
+      tags:
+      - students' quiz answers
   /api/student/quizzes/my-attempts:
     get:
       consumes:
@@ -4689,6 +4774,39 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Get all quiz attempts by the authenticated student
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/my-quizzess:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes from all enrolled courses for the authenticated
+        student with progress tracking.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My quizzes retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MyQuizzesResponse'
+              type: object
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all my quizzes
       tags:
       - students' quiz answers
   /api/user:

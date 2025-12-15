@@ -55,6 +55,7 @@ func (s *StudentQuizService) GetQuizzesInCourse(courseID uuid.UUID, userID uuid.
 			Number:          quiz.Number,
 			MinPassScore:    quiz.MinPassScore,
 			IsPassRequired:  quiz.IsPassRequired,
+			ThumbnailURL:    quiz.ThumbnailURL,
 			TotalQuestions:  len(quiz.Questions),
 			TotalPoints:     totalPoints,
 			MyBestScore:     bestScore,
@@ -66,6 +67,254 @@ func (s *StudentQuizService) GetQuizzesInCourse(courseID uuid.UUID, userID uuid.
 	}
 
 	return responses, nil
+}
+
+func (s *StudentQuizService) GetMyQuizzes(userID uuid.UUID) (*dto.MyQuizzesResponse, error) {
+	var enrollments []models.Enrollment
+
+	if err := s.db.Where("user_id = ?", userID).Find(&enrollments).Error; err != nil {
+		return nil, err
+	}
+
+	if len(enrollments) == 0 {
+		return &dto.MyQuizzesResponse{
+			TotalQuizzes:      0,
+			CompletedQuizzes:  0,
+			InProgressQuizzes: 0,
+			NotStartedQuizzes: 0,
+			CourseTypes:       []dto.CourseTypeSummary{},
+			Quizzes:           []dto.MyQuizItem{},
+		}, nil
+	}
+
+	courseIDs := make([]uuid.UUID, len(enrollments))
+	for i, e := range enrollments {
+		courseIDs[i] = e.CourseID
+	}
+
+	var quizzes []models.Quiz
+	if err := s.db.Preload("Course").
+		Preload("Course.CourseType").
+		Preload("Questions").
+		Where("course_id IN ?", courseIDs).
+		Order("created_at DESC").
+		Find(&quizzes).Error; err != nil {
+		return nil, err
+	}
+
+	var courseTypeSummary []dto.CourseTypeSummary
+	s.db.Table("quizzes").
+		Select("course_types.id, course_types.name, COUNT(DISTINCT quizzes.id) as quiz_count").
+		Joins("JOIN courses ON courses.id = quizzes.course_id").
+		Joins("JOIN course_types ON course_types.id = courses.course_type_id").
+		Where("courses.id IN ?", courseIDs).
+		Group("course_types.id, course_types.name").
+		Scan(&courseTypeSummary)
+
+	quizItems := make([]dto.MyQuizItem, 0, len(quizzes))
+	completedCount := 0
+	inProgressCount := 0
+	notStartedCount := 0
+
+	for _, quiz := range quizzes {
+		totalPoints := 0
+		for _, q := range quiz.Questions {
+			totalPoints += q.Point
+		}
+
+		var bestScore *int
+		var attemptsCount int64
+		var latestAttemptDate *time.Time
+		status := "not_started"
+
+		s.db.Model(&models.UserQuizAttempt{}).
+			Where("user_id = ? AND quiz_id = ?", userID, quiz.ID).
+			Count(&attemptsCount)
+
+		var bestAttempt models.UserQuizAttempt
+		if err := s.db.Where("user_id = ? AND quiz_id = ?", userID, quiz.ID).
+			Order("score_achieved DESC").
+			First(&bestAttempt).Error; err == nil {
+			bestScore = &bestAttempt.ScoreAchieved
+
+			if bestAttempt.IsPassed {
+				status = "completed"
+				completedCount++
+			} else {
+				status = "in_progress"
+				inProgressCount++
+			}
+		} else {
+			notStartedCount++
+		}
+
+		var latestAttempt models.UserQuizAttempt
+		if err := s.db.Where("user_id = ? AND quiz_id = ?", userID, quiz.ID).
+			Order("attempt_datetime DESC").
+			First(&latestAttempt).Error; err == nil {
+			latestAttemptDate = &latestAttempt.AttemptDatetime
+		}
+
+		courseType := dto.CourseTypeInfo{
+			ID:   uuid.Nil,
+			Name: "",
+		}
+		if quiz.Course.CourseType != nil {
+			courseType.ID = quiz.Course.CourseType.ID
+			courseType.Name = quiz.Course.CourseType.Name
+		}
+
+		quizItems = append(quizItems, dto.MyQuizItem{
+			ID:                quiz.ID,
+			CourseID:          quiz.CourseID,
+			CourseName:        quiz.Course.Name,
+			CourseType:        courseType,
+			Name:              quiz.Name,
+			Number:            quiz.Number,
+			ThumbnailURL:      quiz.ThumbnailURL,
+			MinPassScore:      quiz.MinPassScore,
+			IsPassRequired:    quiz.IsPassRequired,
+			TotalQuestions:    len(quiz.Questions),
+			TotalPoints:       totalPoints,
+			MyBestScore:       bestScore,
+			MyAttemptsCount:   int(attemptsCount),
+			Status:            status,
+			LatestAttemptDate: latestAttemptDate,
+			CreatedAt:         quiz.CreatedAt,
+			UpdatedAt:         quiz.UpdatedAt,
+		})
+	}
+
+	return &dto.MyQuizzesResponse{
+		TotalQuizzes:      len(quizzes),
+		CompletedQuizzes:  completedCount,
+		InProgressQuizzes: inProgressCount,
+		NotStartedQuizzes: notStartedCount,
+		CourseTypes:       courseTypeSummary,
+		Quizzes:           quizItems,
+	}, nil
+}
+func (s *StudentQuizService) GetMyQuizzesByCategory(userID uuid.UUID, categoryID string) (*dto.MyQuizzesResponse, error) {
+	var enrollments []models.Enrollment
+
+	if err := s.db.Where("user_id = ?", userID).Find(&enrollments).Error; err != nil {
+		return nil, err
+	}
+
+	if len(enrollments) == 0 {
+		return &dto.MyQuizzesResponse{
+			TotalQuizzes:      0,
+			CompletedQuizzes:  0,
+			InProgressQuizzes: 0,
+			NotStartedQuizzes: 0,
+			CourseTypes:       []dto.CourseTypeSummary{},
+			Quizzes:           []dto.MyQuizItem{},
+		}, nil
+	}
+
+	courseIDs := make([]uuid.UUID, len(enrollments))
+	for i, e := range enrollments {
+		courseIDs[i] = e.CourseID
+	}
+
+	var quizzes []models.Quiz
+	if err := s.db.Preload("Course").
+		Preload("Course.CourseType").
+		Preload("Questions").
+		Joins("JOIN courses ON courses.id = quizzes.course_id").
+		Where("quizzes.course_id IN ? AND courses.course_type_id = ?", courseIDs, categoryID).
+		Order("quizzes.created_at DESC").
+		Find(&quizzes).Error; err != nil {
+		return nil, err
+	}
+
+	var courseTypeSummary []dto.CourseTypeSummary
+	s.db.Table("quizzes").
+		Select("course_types.id, course_types.name, COUNT(DISTINCT quizzes.id) as quiz_count").
+		Joins("JOIN courses ON courses.id = quizzes.course_id").
+		Joins("JOIN course_types ON course_types.id = courses.course_type_id").
+		Where("courses.id IN ? AND course_types.id = ?", courseIDs, categoryID).
+		Group("course_types.id, course_types.name").
+		Scan(&courseTypeSummary)
+
+	quizItems := make([]dto.MyQuizItem, 0, len(quizzes))
+	completedCount := 0
+	inProgressCount := 0
+	notStartedCount := 0
+
+	for _, quiz := range quizzes {
+		totalPoints := 0
+		for _, q := range quiz.Questions {
+			totalPoints += q.Point
+		}
+
+		var bestScore *int
+		var attemptsCount int64
+		var latestAttemptDate *time.Time
+		status := "not_started"
+
+		s.db.Model(&models.UserQuizAttempt{}).
+			Where("user_id = ? AND quiz_id = ?", userID, quiz.ID).
+			Count(&attemptsCount)
+
+		var bestAttempt models.UserQuizAttempt
+		if err := s.db.Where("user_id = ? AND quiz_id = ?", userID, quiz.ID).
+			Order("score_achieved DESC").
+			First(&bestAttempt).Error; err == nil {
+			bestScore = &bestAttempt.ScoreAchieved
+
+			if bestAttempt.IsPassed {
+				status = "completed"
+				completedCount++
+			} else {
+				status = "in_progress"
+				inProgressCount++
+			}
+		} else {
+			notStartedCount++
+		}
+
+		var latestAttempt models.UserQuizAttempt
+		if err := s.db.Where("user_id = ? AND quiz_id = ?", userID, quiz.ID).
+			Order("attempt_datetime DESC").
+			First(&latestAttempt).Error; err == nil {
+			latestAttemptDate = &latestAttempt.AttemptDatetime
+		}
+
+		courseType := dto.CourseTypeInfo{
+			ID:   quiz.Course.CourseTypeID,
+			Name: quiz.Course.CourseType.Name,
+		}
+
+		quizItems = append(quizItems, dto.MyQuizItem{
+			ID:                quiz.ID,
+			CourseID:          quiz.CourseID,
+			CourseName:        quiz.Course.Name,
+			CourseType:        courseType,
+			Name:              quiz.Name,
+			Number:            quiz.Number,
+			MinPassScore:      quiz.MinPassScore,
+			IsPassRequired:    quiz.IsPassRequired,
+			TotalQuestions:    len(quiz.Questions),
+			ThumbnailURL:      quiz.ThumbnailURL,
+			TotalPoints:       totalPoints,
+			MyBestScore:       bestScore,
+			MyAttemptsCount:   int(attemptsCount),
+			Status:            status,
+			LatestAttemptDate: latestAttemptDate,
+			CreatedAt:         quiz.CreatedAt,
+			UpdatedAt:         quiz.UpdatedAt,
+		})
+	}
+
+	return &dto.MyQuizzesResponse{
+		TotalQuizzes:      len(quizzes),
+		CompletedQuizzes:  completedCount,
+		InProgressQuizzes: inProgressCount,
+		NotStartedQuizzes: notStartedCount,
+		CourseTypes:       courseTypeSummary,
+		Quizzes:           quizItems,
+	}, nil
 }
 
 func (s *StudentQuizService) StartQuiz(quizID uuid.UUID, userID uuid.UUID) (*dto.StartQuizResponse, error) {

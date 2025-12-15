@@ -6,20 +6,33 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateQuizRequest struct {
-	CourseID       uuid.UUID `json:"course_id" binding:"required"`
-	Name           string    `json:"name" binding:"required,max=200"`
-	Number         int       `json:"number" binding:"required,min=1"`
-	MinPassScore   int       `json:"min_pass_score" binding:"required,min=0,max=100"`
-	IsPassRequired bool      `json:"is_pass_required"`
+type CreateQuizForm struct {
+	Name           string `form:"name" binding:"required"`
+	Number         int    `form:"number" binding:"required"`
+	MinPassScore   int    `form:"min_pass_score"`
+	IsPassRequired bool   `form:"is_pass_required"`
+	ThumbnailURL   string `swaggerignore:"true"`
 }
 
-type UpdateQuizRequest struct {
-	Name           string `json:"name" binding:"required,max=200"`
-	Number         int    `json:"number" binding:"required,min=1"`
-	MinPassScore   int    `json:"min_pass_score" binding:"required,min=0,max=100"`
-	IsPassRequired bool   `json:"is_pass_required"`
+
+type CreateQuizRequest struct {
+	CourseID       uuid.UUID
+	Name           string
+	Number         int
+	MinPassScore   int
+	IsPassRequired bool
+	ThumbnailURL   string
 }
+
+
+type UpdateQuizForm struct {
+	Name           string `form:"name"`
+	Number         int    `form:"number"`
+	MinPassScore   int    `form:"min_pass_score"`
+	IsPassRequired bool   `form:"is_pass_required"`
+	ThumbnailURL   string `swaggerignore:"true"`
+}
+
 
 type QuizResponse struct {
 	ID             uuid.UUID  `json:"id"`
@@ -28,12 +41,14 @@ type QuizResponse struct {
 	Number         int        `json:"number"`
 	MinPassScore   int        `json:"min_pass_score"`
 	IsPassRequired bool       `json:"is_pass_required"`
+	ThumbnailURL   string     `json:"thumbnail"`
 	CreatedBy      *uuid.UUID `json:"created_by"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
-	DeletedAt      *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt      *time.Time `json:"deleted_at,omitempty"`
 	TotalQuestions int        `json:"total_questions"`
 }
+
 
 type QuizDetailResponse struct {
 	ID             uuid.UUID  `json:"id"`
@@ -42,11 +57,13 @@ type QuizDetailResponse struct {
 	Number         int        `json:"number"`
 	MinPassScore   int        `json:"min_pass_score"`
 	IsPassRequired bool       `json:"is_pass_required"`
+	ThumbnailURL   string     `json:"thumbnail"`
 	CreatedBy      *uuid.UUID `json:"created_by"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 	Questions      int        `json:"questions"`
 }
+
 
 //-----------------quiz question and answer DTOs-----------------------\\
 type CreateQuestionRequest struct {

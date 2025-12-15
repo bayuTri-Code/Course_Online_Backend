@@ -88,6 +88,102 @@ func (h *StudentQuizHandler) GetQuizzesInCourse(c *gin.Context) {
 	utils.JSONSuccess(c, quizzes, "Quizzes retrieved successfully")
 }
 
+// Handler - tambahkan di StudentQuizHandler
+
+// GetMyQuizzes godoc
+// @Summary Get all my quizzes
+// @Description Retrieve all quizzes from all enrolled courses for the authenticated student with progress tracking.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.StandardResponse{data=dto.MyQuizzesResponse} "My quizzes retrieved successfully"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "User not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/my-quizzess [get]
+func (h *StudentQuizHandler) GetMyQuizzes(c *gin.Context) {
+	userID, err := h.getUserIDFromContext(c)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.JSONUnauthorized(c, "User not authenticated")
+		} else {
+			utils.JSONError(c, "User not found", http.StatusNotFound, err.Error())
+		}
+		return
+	}
+
+	quizzes, err := h.service.GetMyQuizzes(userID)
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, quizzes, "My quizzes retrieved successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintln("Viewed my quizzes dashboard")
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
+}
+
+
+// GetMyQuizzesByCategory godoc
+// @Summary Get my quizzes filtered by course category
+// @Description Retrieve all quizzes from enrolled courses filtered by course type/category for the authenticated student.
+// @Tags students' quiz answers
+// @Accept json
+// @Produce json
+// @Param categoryId path string true "Course Type/Category ID (UUID format)" format(uuid)
+// @Success 200 {object} utils.StandardResponse{data=dto.MyQuizzesResponse} "My quizzes by category retrieved successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid category ID"
+// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
+// @Failure 404 {object} utils.ErrorResponse "User not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /api/student/quizzes/categories/{categoryId}/my-quizzes [get]
+func (h *StudentQuizHandler) GetMyQuizzesByCategory(c *gin.Context) {
+	categoryID := c.Param("categoryId")
+
+
+	userID, err := h.getUserIDFromContext(c)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.JSONUnauthorized(c, "User not authenticated")
+		} else {
+			utils.JSONError(c, "User not found", http.StatusNotFound, err.Error())
+		}
+		return
+	}
+
+	quizzes, err := h.service.GetMyQuizzesByCategory(userID, categoryID)
+	if err != nil {
+		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
+		return
+	}
+
+	utils.JSONSuccess(c, quizzes, "My quizzes by category retrieved successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf("Viewed quizzes for category ID: %s", categoryID)
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
+}
+
 // StartQuiz godoc
 // @Summary Start a quiz
 // @Description Initialize a quiz attempt and retrieve all questions with answer options.

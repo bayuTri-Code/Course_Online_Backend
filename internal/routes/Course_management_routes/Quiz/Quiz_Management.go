@@ -20,7 +20,7 @@ func QuizManagementRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	quizRoutes.Use(middleware.FirebaseAuth(app, db))
 	quizRoutes.Use(middleware.RoleMiddleware("super_admin", "admin"))
 	{
-		quizRoutes.POST("/courses/:courseId/quizzes", middleware.CheckCourseOwnershipDynamic(db), quizHandler.CreateQuiz)
+		quizRoutes.POST("/courses/:course_id/quizzes", middleware.CheckCourseOwnershipDynamic(db), quizHandler.CreateQuiz)
 		quizRoutes.GET("/courses/:courseId/quizzes", quizHandler.GetQuizzesByCourse)
 		quizRoutes.GET("/:quizId", quizHandler.GetQuizByID)
 		quizRoutes.PUT("/:quizId", middleware.CheckCourseOwnershipDynamic(db), quizHandler.UpdateQuiz)

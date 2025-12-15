@@ -1,34 +1,75 @@
 package dto
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
+type CourseTypeSummary struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	QuizCount int       `json:"quiz_count"`
+}
+
+type CourseTypeInfo struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type MyQuizzesResponse struct {
+	TotalQuizzes      int                 `json:"total_quizzes"`
+	CompletedQuizzes  int                 `json:"completed_quizzes"`
+	InProgressQuizzes int                 `json:"in_progress_quizzes"`
+	NotStartedQuizzes int                 `json:"not_started_quizzes"`
+	CourseTypes       []CourseTypeSummary `json:"course_types"`
+	Quizzes           []MyQuizItem        `json:"quizzes"`
+}
+
+type MyQuizItem struct {
+	ID                uuid.UUID      `json:"id"`
+	CourseID          uuid.UUID      `json:"course_id"`
+	CourseName        string         `json:"course_name"`
+	CourseType        CourseTypeInfo `json:"course_type"`
+	Name              string         `json:"name"`
+	Number            int            `json:"number"`
+	MinPassScore      int            `json:"min_pass_score"`
+	IsPassRequired    bool           `json:"is_pass_required"`
+	TotalQuestions    int            `json:"total_questions"`
+	ThumbnailURL      string         `json:"thumbnail"`
+	TotalPoints       int            `json:"total_points"`
+	MyBestScore       *int           `json:"my_best_score"`
+	MyAttemptsCount   int            `json:"my_attempts_count"`
+	Status            string         `json:"status"`
+	LatestAttemptDate *time.Time     `json:"latest_attempt_date"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
+}
+
 type QuizInCourseResponse struct {
-	ID              uuid.UUID  `json:"id"`
-	CourseID        uuid.UUID  `json:"course_id"`
-	Name            string     `json:"name"`
-	Number          int        `json:"number"`
-	MinPassScore    int        `json:"min_pass_score"`
-	IsPassRequired  bool       `json:"is_pass_required"`
-	TotalQuestions  int        `json:"total_questions"`
-	TotalPoints     int        `json:"total_points"`
-	MyBestScore     *int       `json:"my_best_score"`
-	MyAttemptsCount int        `json:"my_attempts_count"`
-	IsCompleted     bool       `json:"is_completed"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
+	ID              uuid.UUID `json:"id"`
+	CourseID        uuid.UUID `json:"course_id"`
+	Name            string    `json:"name"`
+	Number          int       `json:"number"`
+	MinPassScore    int       `json:"min_pass_score"`
+	IsPassRequired  bool      `json:"is_pass_required"`
+	TotalQuestions  int       `json:"total_questions"`
+	ThumbnailURL    string    `json:"thumbnail"`
+	TotalPoints     int       `json:"total_points"`
+	MyBestScore     *int      `json:"my_best_score"`
+	MyAttemptsCount int       `json:"my_attempts_count"`
+	IsCompleted     bool      `json:"is_completed"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type StartQuizResponse struct {
-	QuizID         uuid.UUID                    `json:"quiz_id"`
-	QuizName       string                       `json:"quiz_name"`
-	Description    string                       `json:"description,omitempty"`
-	MinPassScore   int                          `json:"min_pass_score"`
-	IsPassRequired bool                         `json:"is_pass_required"`
-	TotalQuestions int                          `json:"total_questions"`
-	TotalPoints    int                          `json:"total_points"`
+	QuizID         uuid.UUID                        `json:"quiz_id"`
+	QuizName       string                           `json:"quiz_name"`
+	Description    string                           `json:"description,omitempty"`
+	MinPassScore   int                              `json:"min_pass_score"`
+	IsPassRequired bool                             `json:"is_pass_required"`
+	TotalQuestions int                              `json:"total_questions"`
+	TotalPoints    int                              `json:"total_points"`
 	Questions      []QuizQuestionForStudentResponse `json:"questions"`
 }
 
@@ -55,47 +96,47 @@ type StudentAnswerInput struct {
 }
 
 type SubmitQuizResponse struct {
-	AttemptID       uuid.UUID              `json:"attempt_id"`
-	QuizID          uuid.UUID              `json:"quiz_id"`
-	QuizName        string                 `json:"quiz_name"`
-	AttemptDatetime time.Time              `json:"attempt_datetime"`
-	ScoreAchieved   int                    `json:"score_achieved"`
-	TotalQuestions  int                    `json:"total_questions"`
-	CorrectAnswers  int                    `json:"correct_answers"`
-	IsPassed        bool                   `json:"is_passed"`
-	MinPassScore    int                    `json:"min_pass_score"`
-	ResultSummary   QuizResultSummary      `json:"result_summary"`
-	Answers         []AnswerResultDetail   `json:"answers"`
+	AttemptID       uuid.UUID            `json:"attempt_id"`
+	QuizID          uuid.UUID            `json:"quiz_id"`
+	QuizName        string               `json:"quiz_name"`
+	AttemptDatetime time.Time            `json:"attempt_datetime"`
+	ScoreAchieved   int                  `json:"score_achieved"`
+	TotalQuestions  int                  `json:"total_questions"`
+	CorrectAnswers  int                  `json:"correct_answers"`
+	IsPassed        bool                 `json:"is_passed"`
+	MinPassScore    int                  `json:"min_pass_score"`
+	ResultSummary   QuizResultSummary    `json:"result_summary"`
+	Answers         []AnswerResultDetail `json:"answers"`
 }
 
 type QuizResultSummary struct {
-	TotalPoints   int     `json:"total_points"`
-	PointsEarned  int     `json:"points_earned"`
-	Percentage    float64 `json:"percentage"`
+	TotalPoints  int     `json:"total_points"`
+	PointsEarned int     `json:"points_earned"`
+	Percentage   float64 `json:"percentage"`
 }
 
 type AnswerResultDetail struct {
-	QuestionID         uuid.UUID `json:"question_id"`
-	QuestionTitle      string    `json:"question_title"`
-	QuestionNumber     int       `json:"question_number"`
-	QuestionPoint      int       `json:"question_point"`
-	YourAnswerID       uuid.UUID `json:"your_answer_id"`
-	YourAnswerText     string    `json:"your_answer_text"`
-	IsCorrect          bool      `json:"is_correct"`
-	CorrectAnswerID    uuid.UUID `json:"correct_answer_id"`
-	CorrectAnswerText  string    `json:"correct_answer_text"`
-	PointEarned        int       `json:"point_earned"`
+	QuestionID        uuid.UUID `json:"question_id"`
+	QuestionTitle     string    `json:"question_title"`
+	QuestionNumber    int       `json:"question_number"`
+	QuestionPoint     int       `json:"question_point"`
+	YourAnswerID      uuid.UUID `json:"your_answer_id"`
+	YourAnswerText    string    `json:"your_answer_text"`
+	IsCorrect         bool      `json:"is_correct"`
+	CorrectAnswerID   uuid.UUID `json:"correct_answer_id"`
+	CorrectAnswerText string    `json:"correct_answer_text"`
+	PointEarned       int       `json:"point_earned"`
 }
 
 type QuizAttemptsHistoryResponse struct {
-	QuizID         uuid.UUID              `json:"quiz_id"`
-	QuizName       string                 `json:"quiz_name"`
-	MinPassScore   int                    `json:"min_pass_score"`
-	TotalAttempts  int                    `json:"total_attempts"`
-	BestScore      *int                   `json:"best_score"`
-	LatestScore    *int                   `json:"latest_score"`
-	IsCompleted    bool                   `json:"is_completed"`
-	Attempts       []AttemptSummary       `json:"attempts"`
+	QuizID        uuid.UUID        `json:"quiz_id"`
+	QuizName      string           `json:"quiz_name"`
+	MinPassScore  int              `json:"min_pass_score"`
+	TotalAttempts int              `json:"total_attempts"`
+	BestScore     *int             `json:"best_score"`
+	LatestScore   *int             `json:"latest_score"`
+	IsCompleted   bool             `json:"is_completed"`
+	Attempts      []AttemptSummary `json:"attempts"`
 }
 
 type AttemptSummary struct {
@@ -125,12 +166,12 @@ type AttemptDetailResponse struct {
 }
 
 type AllMyAttemptsResponse struct {
-	Total      int64                     `json:"total"`
-	Page       int                       `json:"page"`
-	Limit      int                       `json:"limit"`
-	TotalPages int                       `json:"total_pages"`
-	Statistics AttemptsStatistics        `json:"statistics"`
-	Attempts   []MyAttemptItem           `json:"attempts"`
+	Total      int64              `json:"total"`
+	Page       int                `json:"page"`
+	Limit      int                `json:"limit"`
+	TotalPages int                `json:"total_pages"`
+	Statistics AttemptsStatistics `json:"statistics"`
+	Attempts   []MyAttemptItem    `json:"attempts"`
 }
 
 type AttemptsStatistics struct {
