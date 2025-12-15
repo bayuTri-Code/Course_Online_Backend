@@ -5,6 +5,45 @@ import (
 	"github.com/google/uuid"
 )
 
+type CourseTypeSummary struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	QuizCount int       `json:"quiz_count"`
+}
+
+type CourseTypeInfo struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type MyQuizzesResponse struct {
+	TotalQuizzes      int                  `json:"total_quizzes"`
+	CompletedQuizzes  int                  `json:"completed_quizzes"`
+	InProgressQuizzes int                  `json:"in_progress_quizzes"`
+	NotStartedQuizzes int                  `json:"not_started_quizzes"`
+	CourseTypes       []CourseTypeSummary  `json:"course_types"`
+	Quizzes           []MyQuizItem         `json:"quizzes"`
+}
+
+type MyQuizItem struct {
+	ID                uuid.UUID      `json:"id"`
+	CourseID          uuid.UUID      `json:"course_id"`
+	CourseName        string         `json:"course_name"`
+	CourseType        CourseTypeInfo `json:"course_type"`
+	Name              string         `json:"name"`
+	Number            int            `json:"number"`
+	MinPassScore      int            `json:"min_pass_score"`
+	IsPassRequired    bool           `json:"is_pass_required"`
+	TotalQuestions    int            `json:"total_questions"`
+	TotalPoints       int            `json:"total_points"`
+	MyBestScore       *int           `json:"my_best_score"`
+	MyAttemptsCount   int            `json:"my_attempts_count"`
+	Status            string         `json:"status"`
+	LatestAttemptDate *time.Time     `json:"latest_attempt_date"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
+}
+
 type QuizInCourseResponse struct {
 	ID              uuid.UUID  `json:"id"`
 	CourseID        uuid.UUID  `json:"course_id"`

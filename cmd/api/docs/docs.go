@@ -4295,6 +4295,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/student/quizzes/categories/{categoryId}/my-quizzes": {
+            "get": {
+                "description": "Retrieve all quizzes from enrolled courses filtered by course type/category for the authenticated student.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "students' quiz answers"
+                ],
+                "summary": "Get my quizzes filtered by course category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Course Type/Category ID (UUID format)",
+                        "name": "categoryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "My quizzes by category retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MyQuizzesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid category ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/student/quizzes/my-attempts": {
             "get": {
                 "description": "Retrieve all quiz attempts made by the current authenticated student with pagination.",
@@ -4355,6 +4424,59 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/student/quizzes/my-quizzess": {
+            "get": {
+                "description": "Retrieve all quizzes from all enrolled courses for the authenticated student with progress tracking.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "students' quiz answers"
+                ],
+                "summary": "Get all my quizzes",
+                "responses": {
+                    "200": {
+                        "description": "My quizzes retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MyQuizzesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -6777,6 +6899,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CourseTypeInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CourseTypeResponse": {
             "type": "object",
             "properties": {
@@ -6794,6 +6927,20 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CourseTypeSummary": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quiz_count": {
+                    "type": "integer"
                 }
             }
         },
@@ -7290,6 +7437,88 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MyQuizItem": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "string"
+                },
+                "course_name": {
+                    "type": "string"
+                },
+                "course_type": {
+                    "$ref": "#/definitions/dto.CourseTypeInfo"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_pass_required": {
+                    "type": "boolean"
+                },
+                "latest_attempt_date": {
+                    "type": "string"
+                },
+                "min_pass_score": {
+                    "type": "integer"
+                },
+                "my_attempts_count": {
+                    "type": "integer"
+                },
+                "my_best_score": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_points": {
+                    "type": "integer"
+                },
+                "total_questions": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MyQuizzesResponse": {
+            "type": "object",
+            "properties": {
+                "completed_quizzes": {
+                    "type": "integer"
+                },
+                "course_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CourseTypeSummary"
+                    }
+                },
+                "in_progress_quizzes": {
+                    "type": "integer"
+                },
+                "not_started_quizzes": {
+                    "type": "integer"
+                },
+                "quizzes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MyQuizItem"
+                    }
+                },
+                "total_quizzes": {
                     "type": "integer"
                 }
             }

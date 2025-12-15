@@ -329,6 +329,13 @@ definitions:
       total_enrollments:
         type: integer
     type: object
+  dto.CourseTypeInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   dto.CourseTypeResponse:
     properties:
       created_at:
@@ -341,6 +348,15 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  dto.CourseTypeSummary:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      quiz_count:
+        type: integer
     type: object
   dto.CourseTypeWithCountResponse:
     properties:
@@ -678,6 +694,60 @@ definitions:
       total:
         type: integer
       total_pages:
+        type: integer
+    type: object
+  dto.MyQuizItem:
+    properties:
+      course_id:
+        type: string
+      course_name:
+        type: string
+      course_type:
+        $ref: '#/definitions/dto.CourseTypeInfo'
+      created_at:
+        type: string
+      id:
+        type: string
+      is_pass_required:
+        type: boolean
+      latest_attempt_date:
+        type: string
+      min_pass_score:
+        type: integer
+      my_attempts_count:
+        type: integer
+      my_best_score:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+      status:
+        type: string
+      total_points:
+        type: integer
+      total_questions:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  dto.MyQuizzesResponse:
+    properties:
+      completed_quizzes:
+        type: integer
+      course_types:
+        items:
+          $ref: '#/definitions/dto.CourseTypeSummary'
+        type: array
+      in_progress_quizzes:
+        type: integer
+      not_started_quizzes:
+        type: integer
+      quizzes:
+        items:
+          $ref: '#/definitions/dto.MyQuizItem'
+        type: array
+      total_quizzes:
         type: integer
     type: object
   dto.OTPUserResponse:
@@ -4645,6 +4715,50 @@ paths:
       summary: Get quiz attempt detail
       tags:
       - students' quiz answers
+  /api/student/quizzes/categories/{categoryId}/my-quizzes:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes from enrolled courses filtered by course type/category
+        for the authenticated student.
+      parameters:
+      - description: Course Type/Category ID (UUID format)
+        format: uuid
+        in: path
+        name: categoryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My quizzes by category retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MyQuizzesResponse'
+              type: object
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get my quizzes filtered by course category
+      tags:
+      - students' quiz answers
   /api/student/quizzes/my-attempts:
     get:
       consumes:
@@ -4689,6 +4803,39 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
       summary: Get all quiz attempts by the authenticated student
+      tags:
+      - students' quiz answers
+  /api/student/quizzes/my-quizzess:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes from all enrolled courses for the authenticated
+        student with progress tracking.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My quizzes retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MyQuizzesResponse'
+              type: object
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get all my quizzes
       tags:
       - students' quiz answers
   /api/user:
