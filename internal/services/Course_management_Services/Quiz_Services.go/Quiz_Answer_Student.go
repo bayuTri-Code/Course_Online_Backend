@@ -55,6 +55,7 @@ func (s *StudentQuizService) GetQuizzesInCourse(courseID uuid.UUID, userID uuid.
 			Number:          quiz.Number,
 			MinPassScore:    quiz.MinPassScore,
 			IsPassRequired:  quiz.IsPassRequired,
+			ThumbnailURL:    quiz.ThumbnailURL,
 			TotalQuestions:  len(quiz.Questions),
 			TotalPoints:     totalPoints,
 			MyBestScore:     bestScore,
@@ -167,9 +168,10 @@ func (s *StudentQuizService) GetMyQuizzes(userID uuid.UUID) (*dto.MyQuizzesRespo
 			ID:                quiz.ID,
 			CourseID:          quiz.CourseID,
 			CourseName:        quiz.Course.Name,
-			CourseType:        courseType, 
+			CourseType:        courseType,
 			Name:              quiz.Name,
 			Number:            quiz.Number,
+			ThumbnailURL:      quiz.ThumbnailURL,
 			MinPassScore:      quiz.MinPassScore,
 			IsPassRequired:    quiz.IsPassRequired,
 			TotalQuestions:    len(quiz.Questions),
@@ -188,13 +190,13 @@ func (s *StudentQuizService) GetMyQuizzes(userID uuid.UUID) (*dto.MyQuizzesRespo
 		CompletedQuizzes:  completedCount,
 		InProgressQuizzes: inProgressCount,
 		NotStartedQuizzes: notStartedCount,
-		CourseTypes:       courseTypeSummary, 
+		CourseTypes:       courseTypeSummary,
 		Quizzes:           quizItems,
 	}, nil
 }
 func (s *StudentQuizService) GetMyQuizzesByCategory(userID uuid.UUID, categoryID string) (*dto.MyQuizzesResponse, error) {
 	var enrollments []models.Enrollment
-	
+
 	if err := s.db.Where("user_id = ?", userID).Find(&enrollments).Error; err != nil {
 		return nil, err
 	}
@@ -294,6 +296,7 @@ func (s *StudentQuizService) GetMyQuizzesByCategory(userID uuid.UUID, categoryID
 			MinPassScore:      quiz.MinPassScore,
 			IsPassRequired:    quiz.IsPassRequired,
 			TotalQuestions:    len(quiz.Questions),
+			ThumbnailURL:      quiz.ThumbnailURL,
 			TotalPoints:       totalPoints,
 			MyBestScore:       bestScore,
 			MyAttemptsCount:   int(attemptsCount),

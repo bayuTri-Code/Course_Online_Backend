@@ -180,3 +180,80 @@ func (m *MinioHelper) DeleteCourseThumbnail(thumbnailURL string) error {
 
 	return nil
 }
+
+
+func (m *MinioHelper) UploadQuizThumbnail(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	if database.MinioClient == nil {
+		return "", fmt.Errorf("minio client not initialized")
+	}
+
+	ctx := context.Background()
+
+	cfg := config.MinioConfig
+
+	maxMB := cfg.MaxSize / (1024 * 1024)
+	minKB := cfg.MinSize / 1024
+
+	if fileHeader.Size > cfg.MaxSize {
+		return "", fmt.Errorf("file too large, maximum allowed size is %d MB", maxMB)
+	}
+
+	if fileHeader.Size < cfg.MinSize {
+		return "", fmt.Errorf("file too small, minimum allowed size is %d KB", minKB)
+	}
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		return "", fmt.Errorf("file must be an image")
+	}
+
+	ext := filepath.Ext(fileHeader.Filename)
+	filename := fmt.Sprintf("quiz/thumbnails/%s%s", uuid.New().String(), ext)
+
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	_, err := database.MinioClient.PutObject(
+		ctx,
+		cfg.Bucket,
+		filename,
+		file,
+		fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: contentType,
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload thumbnail to minio: %w", err)
+	}
+
+	protocol := "http"
+	if cfg.UseSSL {
+		protocol = "https"
+	}
+	fullURL := fmt.Sprintf("%s://%s/%s/%s", protocol, cfg.ImageENDPOINT, cfg.Bucket, filename)
+
+	return fullURL, nil
+}
+
+func (m *MinioHelper) DeleteQuizThumbnail(thumbnailURL string) error {
+	if thumbnailURL == "" || database.MinioClient == nil {
+		return nil
+	}
+
+	objectName := m.extractObjectName(thumbnailURL)
+	if objectName == "" {
+		return nil
+	}
+
+	ctx := context.Background()
+	cfg := config.MinioConfig
+
+	err := database.MinioClient.RemoveObject(ctx, cfg.Bucket, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to delete thumbnail from minio: %w", err)
+	}
+
+	return nil
+}

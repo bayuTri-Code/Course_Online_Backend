@@ -3679,81 +3679,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/quizzes/courses/{courseId}/quizzes": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new quiz inside a specific course. Only authenticated users can create quizzes.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Quiz"
-                ],
-                "summary": "Create a new quiz",
-                "parameters": [
-                    {
-                        "description": "Quiz creation data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateQuizRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Quiz created successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.QuizResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request data or user ID format",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "User not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found or course not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/quizzes/courses/{courseId}/quizzes/deleted": {
             "get": {
                 "description": "Retrieve all quizzes that have been soft-deleted for a specific course. These quizzes can be restored.",
@@ -3809,6 +3734,87 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/courses/{course_id}/quizzes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create quiz with optional thumbnail upload",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Create quiz (multipart)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Course ID",
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Quiz name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Quiz order",
+                        "name": "number",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Minimum pass score",
+                        "name": "min_pass_score",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is pass required",
+                        "name": "is_pass_required",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Quiz thumbnail",
+                        "name": "thumbnail",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.QuizResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3882,9 +3888,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update quiz details such as name, description, time limit, passing score, and other fields by quiz ID",
+                "description": "Update quiz data and optional thumbnail",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -3892,29 +3898,49 @@ const docTemplate = `{
                 "tags": [
                     "Quiz"
                 ],
-                "summary": "Update quiz information",
+                "summary": "Update quiz (multipart)",
                 "parameters": [
                     {
                         "type": "string",
-                        "format": "uuid",
-                        "description": "Quiz ID (UUID format)",
+                        "description": "Quiz ID",
                         "name": "quizId",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Updated quiz data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateQuizRequest"
-                        }
+                        "type": "string",
+                        "description": "Quiz name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Quiz order",
+                        "name": "number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Minimum pass score",
+                        "name": "min_pass_score",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is pass required",
+                        "name": "is_pass_required",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Quiz thumbnail",
+                        "name": "thumbnail",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Quiz updated successfully",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -3929,24 +3955,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid quiz ID format or invalid request data",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Quiz not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponse"
                         }
                     }
                 }
@@ -7124,36 +7132,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateQuizRequest": {
-            "type": "object",
-            "required": [
-                "course_id",
-                "min_pass_score",
-                "name",
-                "number"
-            ],
-            "properties": {
-                "course_id": {
-                    "type": "string"
-                },
-                "is_pass_required": {
-                    "type": "boolean"
-                },
-                "min_pass_score": {
-                    "type": "integer",
-                    "maximum": 100,
-                    "minimum": 0
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "number": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
         "dto.CreateZoomRequest": {
             "type": "object",
             "required": [
@@ -7483,6 +7461,9 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "thumbnail": {
+                    "type": "string"
+                },
                 "total_points": {
                     "type": "integer"
                 },
@@ -7690,6 +7671,9 @@ const docTemplate = `{
                 "number": {
                     "type": "integer"
                 },
+                "thumbnail": {
+                    "type": "string"
+                },
                 "total_points": {
                     "type": "integer"
                 },
@@ -7753,6 +7737,9 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "integer"
+                },
+                "thumbnail": {
+                    "type": "string"
                 },
                 "total_questions": {
                     "type": "integer"
@@ -8032,32 +8019,6 @@ const docTemplate = `{
                 },
                 "question_title": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.UpdateQuizRequest": {
-            "type": "object",
-            "required": [
-                "min_pass_score",
-                "name",
-                "number"
-            ],
-            "properties": {
-                "is_pass_required": {
-                    "type": "boolean"
-                },
-                "min_pass_score": {
-                    "type": "integer",
-                    "maximum": 100,
-                    "minimum": 0
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "number": {
-                    "type": "integer",
-                    "minimum": 1
                 }
             }
         },
@@ -8900,6 +8861,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.QuizQuestion"
                     }
+                },
+                "thumbnail": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

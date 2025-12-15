@@ -19,8 +19,9 @@ func NewQuizService(db *gorm.DB) *QuizService {
 }
 
 func (s *QuizService) CreateQuiz(req dto.CreateQuizRequest, userID uuid.UUID) (*dto.QuizResponse, error) {
+
 	var course models.Course
-	if err := s.db.First(&course, req.CourseID).Error; err != nil {
+	if err := s.db.First(&course, "id = ?", req.CourseID).Error; err != nil {
 		return nil, errors.New("course not found")
 	}
 
@@ -30,6 +31,7 @@ func (s *QuizService) CreateQuiz(req dto.CreateQuizRequest, userID uuid.UUID) (*
 		Number:         req.Number,
 		MinPassScore:   req.MinPassScore,
 		IsPassRequired: req.IsPassRequired,
+		ThumbnailURL:   req.ThumbnailURL,
 		CreatedBy:      &userID,
 	}
 
@@ -44,6 +46,7 @@ func (s *QuizService) CreateQuiz(req dto.CreateQuizRequest, userID uuid.UUID) (*
 		Number:         quiz.Number,
 		MinPassScore:   quiz.MinPassScore,
 		IsPassRequired: quiz.IsPassRequired,
+		ThumbnailURL:   quiz.ThumbnailURL,
 		CreatedBy:      quiz.CreatedBy,
 		CreatedAt:      quiz.CreatedAt,
 		UpdatedAt:      quiz.UpdatedAt,
@@ -67,6 +70,7 @@ func (s *QuizService) GetQuizzesByCourse(courseID uuid.UUID) ([]dto.QuizResponse
 			Number:         quiz.Number,
 			MinPassScore:   quiz.MinPassScore,
 			IsPassRequired: quiz.IsPassRequired,
+			ThumbnailURL:   quiz.ThumbnailURL,
 			CreatedBy:      quiz.CreatedBy,
 			CreatedAt:      quiz.CreatedAt,
 			UpdatedAt:      quiz.UpdatedAt,
@@ -94,35 +98,39 @@ func (s *QuizService) GetQuizByID(quizID uuid.UUID) (*dto.QuizDetailResponse, er
 		Number:         quiz.Number,
 		MinPassScore:   quiz.MinPassScore,
 		IsPassRequired: quiz.IsPassRequired,
+		ThumbnailURL:   quiz.ThumbnailURL,
 		CreatedBy:      quiz.CreatedBy,
 		CreatedAt:      quiz.CreatedAt,
 		UpdatedAt:      quiz.UpdatedAt,
 		Questions:      len(quiz.Questions),
 	}, nil
 }
-
-func (s *QuizService) UpdateQuiz(quizID uuid.UUID, req dto.UpdateQuizRequest) (*dto.QuizResponse, error) {
+func (s *QuizService) UpdateQuiz(quizID uuid.UUID, req dto.UpdateQuizForm) (*dto.QuizResponse, error) {
 	var quiz models.Quiz
 
 	if err := s.db.First(&quiz, quizID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("quiz not found")
-		}
-		return nil, err
+		return nil, errors.New("quiz not found")
 	}
 
-	quiz.Name = req.Name
-	quiz.Number = req.Number
+	if req.Name != "" {
+		quiz.Name = req.Name
+	}
+	if req.Number != 0 {
+		quiz.Number = req.Number
+	}
+
 	quiz.MinPassScore = req.MinPassScore
 	quiz.IsPassRequired = req.IsPassRequired
+
+	if req.ThumbnailURL != "" {
+		quiz.ThumbnailURL = req.ThumbnailURL
+	}
+
 	quiz.UpdatedAt = time.Now()
 
 	if err := s.db.Save(&quiz).Error; err != nil {
 		return nil, err
 	}
-
-	var questionCount int64
-	s.db.Model(&models.QuizQuestion{}).Where("quiz_id = ?", quiz.ID).Count(&questionCount)
 
 	return &dto.QuizResponse{
 		ID:             quiz.ID,
@@ -131,10 +139,10 @@ func (s *QuizService) UpdateQuiz(quizID uuid.UUID, req dto.UpdateQuizRequest) (*
 		Number:         quiz.Number,
 		MinPassScore:   quiz.MinPassScore,
 		IsPassRequired: quiz.IsPassRequired,
+		ThumbnailURL:   quiz.ThumbnailURL,
 		CreatedBy:      quiz.CreatedBy,
 		CreatedAt:      quiz.CreatedAt,
 		UpdatedAt:      quiz.UpdatedAt,
-		TotalQuestions: int(questionCount),
 	}, nil
 }
 
@@ -184,6 +192,7 @@ func (s *QuizService) GetDeletedQuizzes(courseID uuid.UUID) ([]dto.QuizResponse,
 			Number:         quiz.Number,
 			MinPassScore:   quiz.MinPassScore,
 			IsPassRequired: quiz.IsPassRequired,
+			ThumbnailURL:   quiz.ThumbnailURL,
 			CreatedBy:      quiz.CreatedBy,
 			CreatedAt:      quiz.CreatedAt,
 			UpdatedAt:      quiz.UpdatedAt,

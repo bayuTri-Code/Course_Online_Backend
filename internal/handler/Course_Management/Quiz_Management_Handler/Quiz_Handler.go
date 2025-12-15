@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"course_online_backend/internal/dto"
-	"course_online_backend/internal/models"
 	"course_online_backend/internal/services"
 	quizservicesgo "course_online_backend/internal/services/Course_management_Services/Quiz_Services.go"
 	"course_online_backend/internal/utils"
@@ -30,65 +29,77 @@ func NewQuizHandler(quizService *quizservicesgo.QuizService, act *services.Activ
 }
 
 // CreateQuiz godoc
-// @Summary Create a new quiz
-// @Description Create a new quiz inside a specific course. Only authenticated users can create quizzes.
+// @Summary Create quiz (multipart)
+// @Description Create quiz with optional thumbnail upload
 // @Tags Quiz
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param request body dto.CreateQuizRequest true "Quiz creation data"
-// @Success 201 {object} utils.StandardResponse{data=dto.QuizResponse} "Quiz created successfully"
-// @Failure 400 {object} utils.ErrorResponse "Invalid request data or user ID format"
-// @Failure 401 {object} utils.ErrorResponse "User not authenticated"
-// @Failure 404 {object} utils.ErrorResponse "User not found or course not found"
-// @Failure 500 {object} utils.ErrorResponse "Internal server error"
-// @Router /api/quizzes/courses/{courseId}/quizzes [post]
+// @Param course_id path string true "Course ID"
+// @Param name formData string true "Quiz name"
+// @Param number formData int true "Quiz order"
+// @Param min_pass_score formData int false "Minimum pass score"
+// @Param is_pass_required formData bool false "Is pass required"
+// @Param thumbnail formData file false "Quiz thumbnail"
+// @Success 201 {object} utils.StandardResponse{data=dto.QuizResponse}
+// @Router /api/quizzes/courses/{course_id}/quizzes [post]
 func (h *QuizHandler) CreateQuiz(c *gin.Context) {
-	var req dto.CreateQuizRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.JSONError(c, "Invalid request data", http.StatusBadRequest, err.Error())
+	courseIDParam := c.Param("course_id")
+	courseUUID, err := uuid.Parse(courseIDParam)
+	if err != nil {
+		utils.JSONError(c, "Invalid course_id", http.StatusBadRequest, err.Error())
 		return
 	}
 
-	userIDInterface, exists := c.Get("user_id")
-	if !exists {
+	var form dto.CreateQuizForm
+	if err := c.ShouldBind(&form); err != nil {
+		utils.JSONError(c, "Invalid form data", http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userFirebaseID, _ := c.Get("user_id")
+	user, err := h.ActivityService.GetUserByFirebaseUID(userFirebaseID.(string))
+	if err != nil {
 		utils.JSONUnauthorized(c, "User not authenticated")
 		return
 	}
 
-	firebaseUID, ok := userIDInterface.(string)
-	if !ok {
-		utils.JSONError(c, "Invalid user ID format from Firebase token", http.StatusBadRequest, nil)
-		return
+	if file, fileHeader, err := c.Request.FormFile("thumbnail"); err == nil {
+		defer file.Close()
+
+		minio := services.MinioHelper{}
+		url, err := minio.UploadQuizThumbnail(file, fileHeader)
+		if err != nil {
+			utils.JSONError(c, "Failed upload thumbnail", http.StatusBadRequest, err.Error())
+			return
+		}
+		form.ThumbnailURL = url
 	}
 
-	var user models.User
-	if err := h.db.Where("firebase_uid = ?", firebaseUID).First(&user).Error; err != nil {
-		utils.JSONError(c, "User not found", http.StatusNotFound, err.Error())
-		return
+	req := dto.CreateQuizRequest{
+		CourseID:       courseUUID,
+		Name:           form.Name,
+		Number:         form.Number,
+		MinPassScore:   form.MinPassScore,
+		IsPassRequired: form.IsPassRequired,
+		ThumbnailURL:   form.ThumbnailURL,
 	}
 
 	quiz, err := h.quizService.CreateQuiz(req, user.ID)
 	if err != nil {
-		if err.Error() == "course not found" {
-			utils.JSONNotFound(c, "Course not found")
-			return
-		}
 		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
 		return
 	}
 
-	utils.JSONCreated(c, quiz, "Quiz created successfully")
+	utils.JSONCreated(c, quiz, "Quiz created")
 
-	go func() {
-		firebaseUID, _ := c.Get("user_id")
-		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-		if err == nil {
-			msg := fmt.Sprintf("Created a quiz: %s (ID: %s)", quiz.Name, quiz.ID)
-			_ = h.ActivityService.LogActivity(user.ID, msg)
-		}
-	}()
+	go h.ActivityService.LogActivity(
+		user.ID,
+		fmt.Sprintf("Created quiz: %s", quiz.Name),
+	)
 }
+
+
 
 // GetQuizzesByCourse godoc
 // @Summary Get all quizzes in a course
@@ -151,18 +162,19 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 }
 
 // UpdateQuiz godoc
-// @Summary Update quiz information
-// @Description Update quiz details such as name, description, time limit, passing score, and other fields by quiz ID
+// @Summary Update quiz (multipart)
+// @Description Update quiz data and optional thumbnail
 // @Tags Quiz
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param quizId path string true "Quiz ID (UUID format)" format(uuid)
-// @Param request body dto.UpdateQuizRequest true "Updated quiz data"
-// @Success 200 {object} utils.StandardResponse{data=dto.QuizResponse} "Quiz updated successfully"
-// @Failure 400 {object} utils.ErrorResponse "Invalid quiz ID format or invalid request data"
-// @Failure 404 {object} utils.ErrorResponse "Quiz not found"
-// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Param quizId path string true "Quiz ID"
+// @Param name formData string false "Quiz name"
+// @Param number formData int false "Quiz order"
+// @Param min_pass_score formData int false "Minimum pass score"
+// @Param is_pass_required formData bool false "Is pass required"
+// @Param thumbnail formData file false "Quiz thumbnail"
+// @Success 200 {object} utils.StandardResponse{data=dto.QuizResponse}
 // @Router /api/quizzes/{quizId} [put]
 func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	quizID, err := uuid.Parse(c.Param("quizId"))
@@ -171,13 +183,26 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateQuizRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.JSONError(c, "Invalid request data", http.StatusBadRequest, err.Error())
+	var form dto.UpdateQuizForm
+	if err := c.ShouldBind(&form); err != nil {
+		utils.JSONError(c, "Invalid form data", http.StatusBadRequest, err.Error())
 		return
 	}
 
-	quiz, err := h.quizService.UpdateQuiz(quizID, req)
+	file, fileHeader, err := c.Request.FormFile("thumbnail")
+	if err == nil {
+		defer file.Close()
+
+		minio := services.MinioHelper{}
+		url, err := minio.UploadQuizThumbnail(file, fileHeader)
+		if err != nil {
+			utils.JSONError(c, "Failed upload thumbnail", http.StatusBadRequest, err.Error())
+			return
+		}
+		form.ThumbnailURL = url
+	}
+
+	quiz, err := h.quizService.UpdateQuiz(quizID, form)
 	if err != nil {
 		if err.Error() == "quiz not found" {
 			utils.JSONNotFound(c, "Quiz not found")
@@ -188,16 +213,8 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, quiz, "Quiz updated successfully")
-
-	go func() {
-		firebaseUID, _ := c.Get("user_id")
-		user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
-		if err == nil {
-			msg := fmt.Sprintf("Updated quiz: %s (ID: %s)", quiz.Name, quiz.ID)
-			_ = h.ActivityService.LogActivity(user.ID, msg)
-		}
-	}()
 }
+
 
 // SoftDeleteQuiz godoc
 // @Summary Soft delete a quiz
