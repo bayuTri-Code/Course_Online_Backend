@@ -3760,13 +3760,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Course ID",
-                        "name": "course_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "Quiz name",
                         "name": "name",
                         "in": "formData",
@@ -3795,7 +3788,8 @@ const docTemplate = `{
                         "type": "file",
                         "description": "Quiz thumbnail",
                         "name": "thumbnail",
-                        "in": "formData"
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3902,13 +3896,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Quiz ID",
-                        "name": "quizId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "Quiz name",
                         "name": "name",
                         "in": "formData"
@@ -3935,7 +3922,8 @@ const docTemplate = `{
                         "type": "file",
                         "description": "Quiz thumbnail",
                         "name": "thumbnail",
-                        "in": "formData"
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {

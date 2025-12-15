@@ -4202,11 +4202,6 @@ paths:
       - multipart/form-data
       description: Update quiz data and optional thumbnail
       parameters:
-      - description: Quiz ID
-        in: path
-        name: quizId
-        required: true
-        type: string
       - description: Quiz name
         in: formData
         name: name
@@ -4226,6 +4221,7 @@ paths:
       - description: Quiz thumbnail
         in: formData
         name: thumbnail
+        required: true
         type: file
       produces:
       - application/json
@@ -4374,11 +4370,6 @@ paths:
       - multipart/form-data
       description: Create quiz with optional thumbnail upload
       parameters:
-      - description: Course ID
-        in: path
-        name: course_id
-        required: true
-        type: string
       - description: Quiz name
         in: formData
         name: name
@@ -4400,6 +4391,7 @@ paths:
       - description: Quiz thumbnail
         in: formData
         name: thumbnail
+        required: true
         type: file
       produces:
       - application/json

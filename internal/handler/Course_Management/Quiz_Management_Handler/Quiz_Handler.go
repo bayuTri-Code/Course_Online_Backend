@@ -35,12 +35,11 @@ func NewQuizHandler(quizService *quizservicesgo.QuizService, act *services.Activ
 // @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param course_id path string true "Course ID"
 // @Param name formData string true "Quiz name"
 // @Param number formData int true "Quiz order"
 // @Param min_pass_score formData int false "Minimum pass score"
 // @Param is_pass_required formData bool false "Is pass required"
-// @Param thumbnail formData file false "Quiz thumbnail"
+// @Param thumbnail formData file true "Quiz thumbnail"
 // @Success 201 {object} utils.StandardResponse{data=dto.QuizResponse}
 // @Router /api/quizzes/courses/{course_id}/quizzes [post]
 func (h *QuizHandler) CreateQuiz(c *gin.Context) {
@@ -168,12 +167,11 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 // @Accept multipart/form-data
 // @Produce json
 // @Security BearerAuth
-// @Param quizId path string true "Quiz ID"
 // @Param name formData string false "Quiz name"
 // @Param number formData int false "Quiz order"
 // @Param min_pass_score formData int false "Minimum pass score"
 // @Param is_pass_required formData bool false "Is pass required"
-// @Param thumbnail formData file false "Quiz thumbnail"
+// @Param thumbnail formData file true "Quiz thumbnail"
 // @Success 200 {object} utils.StandardResponse{data=dto.QuizResponse}
 // @Router /api/quizzes/{quizId} [put]
 func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
