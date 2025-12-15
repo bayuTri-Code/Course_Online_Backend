@@ -1,10 +1,12 @@
 package quizmanagementhandler
 
 import (
+	"fmt"
 	"net/http"
 
 	"course_online_backend/internal/dto"
 	"course_online_backend/internal/models"
+	"course_online_backend/internal/services"
 	quizservicesgo "course_online_backend/internal/services/Course_management_Services/Quiz_Services.go"
 	"course_online_backend/internal/utils"
 
@@ -14,14 +16,17 @@ import (
 )
 
 type StudentQuizHandler struct {
-	service *quizservicesgo.StudentQuizService
-	db      *gorm.DB
+	service         *quizservicesgo.StudentQuizService
+	db              *gorm.DB
+	ActivityService *services.ActivityService
 }
 
-func NewStudentQuizHandler(service *quizservicesgo.StudentQuizService, db *gorm.DB) *StudentQuizHandler {
-	return &StudentQuizHandler{
-		service: service,
-		db:      db,
+func NewStudentQuizHandler(
+	service *quizservicesgo.StudentQuizService, db *gorm.DB, act *services.ActivityService) *StudentQuizHandler {
+		return &StudentQuizHandler{
+			service:         service,
+			db:              db,
+			ActivityService: act,
 	}
 }
 
@@ -124,6 +129,24 @@ func (h *StudentQuizHandler) StartQuiz(c *gin.Context) {
 	}
 
 	utils.JSONSuccess(c, quiz, "Quiz started successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf(
+				"Started quiz: %s (QuizID: %s)",
+				quiz.QuizName,
+				quizID.String(),
+			)
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // SubmitQuiz godoc
@@ -194,6 +217,26 @@ func (h *StudentQuizHandler) SubmitQuiz(c *gin.Context) {
 	}
 
 	utils.JSONCreated(c, result, "Quiz submitted successfully")
+
+	if firebaseUID, exists := c.Get("user_id"); exists {
+		go func() {
+			user, err := h.ActivityService.GetUserByFirebaseUID(firebaseUID.(string))
+			if err != nil {
+				fmt.Printf("User not found for activity logging")
+				return
+			}
+
+			activityMsg := fmt.Sprintf(
+				"Submitted quiz: %s (QuizID: %s, Score: %d, Passed: %t)",
+				result.QuizName,
+				quizID.String(),
+				result.ScoreAchieved,
+				result.IsPassed,
+			)
+
+			_ = h.ActivityService.LogActivity(user.ID, activityMsg)
+		}()
+	}
 }
 
 // GetQuizAttemptsHistory godoc

@@ -3,6 +3,7 @@ package quiz
 import (
 	quizmanagementhandler "course_online_backend/internal/handler/Course_Management/Quiz_Management_Handler"
 	"course_online_backend/internal/middleware"
+	"course_online_backend/internal/services"
 	quizservicesgo "course_online_backend/internal/services/Course_management_Services/Quiz_Services.go"
 
 	firebase "firebase.google.com/go/v4"
@@ -12,7 +13,8 @@ import (
 
 func StudentQuizAnswerRoutes(r *gin.RouterGroup, db *gorm.DB, app *firebase.App) {
 	studentQuizService := quizservicesgo.NewStudentQuizService(db)
-	studentQuizHandler := quizmanagementhandler.NewStudentQuizHandler(studentQuizService, db)
+	activityService := services.NewActivityService(db)
+	studentQuizHandler := quizmanagementhandler.NewStudentQuizHandler(studentQuizService, db, activityService)
 
 	studentRoutes := r.Group("/student")
 	studentRoutes.Use(middleware.FirebaseAuth(app, db))
