@@ -7,7 +7,6 @@ import (
 	"course_online_backend/internal/utils"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -422,7 +421,7 @@ func (h *CourseHandler) GetByIDCourseHandler(c *gin.Context) {
 // @Param categoryId path string true "Category ID (UUID)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} utils.StandardResponse{data=dto.CourseByCategoryResponse}
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -454,6 +453,7 @@ func (h *CourseHandler) GetCoursesByCategoryHandler(c *gin.Context) {
 	utils.JSONSuccess(c, result, "Courses retrieved successfully")
 }
 
+
 // GetMyCoursesByCategoryHandler godoc
 // @Summary Get my enrolled courses by category
 // @Description Get courses that the user has enrolled in, filtered by category
@@ -463,7 +463,7 @@ func (h *CourseHandler) GetCoursesByCategoryHandler(c *gin.Context) {
 // @Param categoryId path string true "Category ID (UUID)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} utils.StandardResponse{data=dto.MyCourseByCategoryResponse}
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 401 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
@@ -570,25 +570,26 @@ func (h *CourseHandler) GetMyAssignedCoursesHandler(c *gin.Context) {
 // @Tags courses-browsing
 // @Accept json
 // @Produce json
-// @Param limit query int false "Number of courses to return" default(10)
-// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseResponse}
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /api/courses/popular [get]
 func (h *CourseHandler) GetPopularCoursesHandler(c *gin.Context) {
-	limitStr := c.DefaultQuery("limit", "10")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		limit = 10
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
 	}
 
-	courses, err := h.service.GetPopularCourses(c.Request.Context(), limit)
+	result, err := h.service.GetPopularCourses(c.Request.Context(), &params)
 	if err != nil {
 		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
 		return
 	}
 
-	utils.JSONSuccess(c, courses, "Popular courses retrieved successfully")
+	utils.JSONSuccess(c, result, "Popular courses retrieved successfully")
 }
 
 // GetLatestCoursesHandler godoc
@@ -597,26 +598,28 @@ func (h *CourseHandler) GetPopularCoursesHandler(c *gin.Context) {
 // @Tags courses-browsing
 // @Accept json
 // @Produce json
-// @Param limit query int false "Number of courses to return" default(10)
-// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseResponse}
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /api/courses/latest [get]
 func (h *CourseHandler) GetLatestCoursesHandler(c *gin.Context) {
-	limitStr := c.DefaultQuery("limit", "10")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		limit = 10
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
 	}
 
-	courses, err := h.service.GetLatestCourses(c.Request.Context(), limit)
+	result, err := h.service.GetLatestCourses(c.Request.Context(), &params)
 	if err != nil {
 		utils.JSONError(c, err.Error(), http.StatusInternalServerError, nil)
 		return
 	}
 
-	utils.JSONSuccess(c, courses, "Latest courses retrieved successfully")
+	utils.JSONSuccess(c, result, "Latest courses retrieved successfully")
 }
+
 
 // GetAllCourseTypesHandler godoc
 // @Summary Get all course types
@@ -646,8 +649,9 @@ func (h *CourseHandler) GetAllCourseTypesHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Course ID (UUID)"
-// @Param limit query int false "Number of courses to return" default(5)
-// @Success 200 {object} utils.StandardResponse{data=[]dto.CourseResponse}
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(5)
+// @Success 200 {object} utils.StandardResponse{data=dto.PaginationResponse{data=[]dto.CourseResponse}}
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -660,13 +664,13 @@ func (h *CourseHandler) GetRelatedCoursesHandler(c *gin.Context) {
 		return
 	}
 
-	limitStr := c.DefaultQuery("limit", "5")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		limit = 5
+	var params dto.SimplePaginationParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		utils.JSONError(c, "Invalid query parameters", http.StatusBadRequest, err.Error())
+		return
 	}
 
-	courses, err := h.service.GetRelatedCourses(c.Request.Context(), courseID, limit)
+	result, err := h.service.GetRelatedCourses(c.Request.Context(), courseID, &params)
 	if err != nil {
 		if err.Error() == "course not found" {
 			utils.JSONNotFound(c, "Course not found")
@@ -676,7 +680,7 @@ func (h *CourseHandler) GetRelatedCoursesHandler(c *gin.Context) {
 		return
 	}
 
-	utils.JSONSuccess(c, courses, "Related courses retrieved successfully")
+	utils.JSONSuccess(c, result, "Related courses retrieved successfully")
 }
 
 // GetCourseStatsHandler godoc

@@ -722,7 +722,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.CourseByCategoryResponse"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/dto.PaginationResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/dto.CourseResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -810,8 +825,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "default": 10,
-                        "description": "Number of courses to return",
+                        "description": "Items per page",
                         "name": "limit",
                         "in": "query"
                     }
@@ -828,10 +850,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.CourseResponse"
-                                            }
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/dto.PaginationResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/dto.CourseResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -997,8 +1031,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "default": 10,
-                        "description": "Number of courses to return",
+                        "description": "Items per page",
                         "name": "limit",
                         "in": "query"
                     }
@@ -1015,10 +1056,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.CourseResponse"
-                                            }
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/dto.PaginationResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/dto.CourseResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -1525,8 +1578,15 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "default": 5,
-                        "description": "Number of courses to return",
+                        "description": "Items per page",
                         "name": "limit",
                         "in": "query"
                     }
@@ -1543,10 +1603,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.CourseResponse"
-                                            }
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/dto.PaginationResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/dto.CourseResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -2761,7 +2833,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.MyCourseByCategoryResponse"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/dto.PaginationResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/dto.CourseResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -6726,23 +6813,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CourseByCategoryResponse": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "$ref": "#/definitions/dto.CourseTypeWithCountResponse"
-                },
-                "courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.CourseResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "dto.CourseCountByCategoryResponse": {
             "type": "object",
             "properties": {
@@ -7363,23 +7433,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total_questions": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.MyCourseByCategoryResponse": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "$ref": "#/definitions/dto.CourseTypeWithCountResponse"
-                },
-                "courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.CourseResponse"
-                    }
-                },
-                "total": {
                     "type": "integer"
                 }
             }
