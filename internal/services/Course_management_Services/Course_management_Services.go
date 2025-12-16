@@ -169,7 +169,6 @@ func (s *CourseService) GetInstructorIDByFirebaseUID(ctx context.Context, fireba
 		}
 		return uuid.Nil, err
 	}
-		
 
 	return user.ID, nil
 }
@@ -350,7 +349,6 @@ func (s *CourseService) GetByIDCourse(ctx context.Context, course_id uuid.UUID, 
 	return s.mapToCourseDetailResponse(&course), nil
 }
 
-
 func (s *CourseService) GetMyAssignedCourses(ctx context.Context, instructorID uuid.UUID, params *dto.SimplePaginationParams) (*dto.MyCoursesInstructorResponse, error) {
 	if params.Page < 1 {
 		params.Page = 1
@@ -361,7 +359,7 @@ func (s *CourseService) GetMyAssignedCourses(ctx context.Context, instructorID u
 
 	query := s.db.Model(&models.Course{}).
 		Where("instructor_id = ?", instructorID).
-		Where("deleted_at IS NULL") 
+		Where("deleted_at IS NULL")
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
@@ -373,8 +371,8 @@ func (s *CourseService) GetMyAssignedCourses(ctx context.Context, instructorID u
 
 	query = query.Preload("CourseType").
 		Preload("Creator").
-		Preload("Modules", "deleted_at IS NULL"). 
-		Preload("Modules.Lessons", "deleted_at IS NULL"). 
+		Preload("Modules", "deleted_at IS NULL").
+		Preload("Modules.Lessons", "deleted_at IS NULL").
 		Preload("Enrollments").
 		Preload("Zoom").
 		Order("created_at DESC")
@@ -552,7 +550,7 @@ func (s *CourseService) GetAllCourse(ctx context.Context, params *dto.CourseQuer
 // 	return s.mapToCourseDetailResponse(&course), nil
 // }
 
-func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.CourseByCategoryResponse, error) {
+func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.PaginationResponse, error) {
 	if params.Page < 1 {
 		params.Page = 1
 	}
@@ -568,7 +566,8 @@ func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uui
 		return nil, err
 	}
 
-	query := s.db.Model(&models.Course{}).Where("course_type_id = ?", categoryID)
+	query := s.db.Model(&models.Course{}).
+		Where("course_type_id = ? AND deleted_at IS NULL", categoryID)
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
@@ -582,6 +581,7 @@ func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uui
 		Preload("Creator").
 		Preload("Modules").
 		Preload("Enrollments").
+		Preload("Instructor.Biodata").
 		Order("created_at DESC")
 
 	var courses []models.Course
@@ -594,21 +594,20 @@ func (s *CourseService) GetCoursesByCategory(ctx context.Context, categoryID uui
 		courseResponses[i] = s.mapToCourseResponse(&course)
 	}
 
-	return &dto.CourseByCategoryResponse{
-		Category: dto.CourseTypeWithCountResponse{
-			ID:           category.ID,
-			Name:         category.Name,
-			Description:  category.Description,
-			CoursesCount: total,
-			CreatedAt:    category.CreatedAt,
-			UpdatedAt:    category.UpdatedAt,
-		},
-		Courses: courseResponses,
-		Total:   total,
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
 	}, nil
 }
 
-func (s *CourseService) GetMyCoursesByCategory(ctx context.Context, firebaseUID string, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.MyCourseByCategoryResponse, error) {
+func (s *CourseService) GetMyCoursesByCategory(ctx context.Context, firebaseUID string, categoryID uuid.UUID, params *dto.SimplePaginationParams) (*dto.PaginationResponse, error) {
 	if params.Page < 1 {
 		params.Page = 1
 	}
@@ -656,7 +655,8 @@ func (s *CourseService) GetMyCoursesByCategory(ctx context.Context, firebaseUID 
 		Preload("Modules", func(db *gorm.DB) *gorm.DB {
 			return db.Order("number ASC")
 		}).
-		Preload("Enrollments", "user_id = ?", user.ID)
+		Preload("Enrollments", "user_id = ?", user.ID).
+		Preload("Instructor.Biodata")
 
 	var courses []models.Course
 	if err := query.Find(&courses).Error; err != nil {
@@ -668,26 +668,28 @@ func (s *CourseService) GetMyCoursesByCategory(ctx context.Context, firebaseUID 
 		courseResponses[i] = s.mapToCourseResponse(&course)
 	}
 
-	return &dto.MyCourseByCategoryResponse{
-		Category: dto.CourseTypeWithCountResponse{
-			ID:           category.ID,
-			Name:         category.Name,
-			Description:  category.Description,
-			CoursesCount: total,
-			CreatedAt:    category.CreatedAt,
-			UpdatedAt:    category.UpdatedAt,
-		},
-		Courses: courseResponses,
-		Total:   total,
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
 	}, nil
 }
 
-func (s *CourseService) GetPopularCourses(ctx context.Context, limit int) ([]dto.CourseResponse, error) {
-	if limit < 1 {
-		limit = 10
+func (s *CourseService) GetPopularCourses(ctx context.Context, params *dto.SimplePaginationParams) (*dto.PaginationResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
 	}
-	if limit > 50 {
-		limit = 50
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+	if params.Limit > 50 {
+		params.Limit = 50
 	}
 
 	type CourseWithEnrollmentCount struct {
@@ -695,17 +697,33 @@ func (s *CourseService) GetPopularCourses(ctx context.Context, limit int) ([]dto
 		EnrollmentCount int64
 	}
 
-	var coursesWithCount []CourseWithEnrollmentCount
+	// Count total
+	var total int64
 	err := s.db.Model(&models.Course{}).
+		Joins("LEFT JOIN enrollments ON enrollments.course_id = courses.id").
+		Where("courses.deleted_at IS NULL").
+		Group("courses.id").
+		Count(&total).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Get paginated data
+	offset := (params.Page - 1) * params.Limit
+	var coursesWithCount []CourseWithEnrollmentCount
+	err = s.db.Model(&models.Course{}).
 		Select("courses.*, COUNT(enrollments.id) as enrollment_count").
 		Joins("LEFT JOIN enrollments ON enrollments.course_id = courses.id").
+		Where("courses.deleted_at IS NULL").
 		Group("courses.id").
 		Order("enrollment_count DESC").
-		Limit(limit).
+		Offset(offset).
+		Limit(params.Limit).
 		Preload("CourseType").
 		Preload("Creator").
 		Preload("Modules").
 		Preload("Enrollments").
+		Preload("Instructor.Biodata").
 		Find(&coursesWithCount).Error
 
 	if err != nil {
@@ -717,25 +735,50 @@ func (s *CourseService) GetPopularCourses(ctx context.Context, limit int) ([]dto
 		courseResponses[i] = s.mapToCourseResponse(&item.Course)
 	}
 
-	return courseResponses, nil
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
+	}, nil
 }
 
-func (s *CourseService) GetLatestCourses(ctx context.Context, limit int) ([]dto.CourseResponse, error) {
-	if limit < 1 {
-		limit = 10
+func (s *CourseService) GetLatestCourses(ctx context.Context, params *dto.SimplePaginationParams) (*dto.PaginationResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
 	}
-	if limit > 50 {
-		limit = 50
+	if params.Limit < 1 {
+		params.Limit = 10
+	}
+	if params.Limit > 50 {
+		params.Limit = 50
 	}
 
-	var courses []models.Course
+	var total int64
 	err := s.db.Model(&models.Course{}).
+		Where("deleted_at IS NULL").
+		Count(&total).Error
+	if err != nil {
+		return nil, err
+	}
+
+	offset := (params.Page - 1) * params.Limit
+	var courses []models.Course
+	err = s.db.Model(&models.Course{}).
+		Where("deleted_at IS NULL").
 		Preload("CourseType").
 		Preload("Creator").
 		Preload("Modules").
 		Preload("Enrollments").
+		Preload("Instructor.Biodata").
 		Order("created_at DESC").
-		Limit(limit).
+		Offset(offset).
+		Limit(params.Limit).
 		Find(&courses).Error
 
 	if err != nil {
@@ -747,7 +790,17 @@ func (s *CourseService) GetLatestCourses(ctx context.Context, limit int) ([]dto.
 		courseResponses[i] = s.mapToCourseResponse(&course)
 	}
 
-	return courseResponses, nil
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
+	}, nil
 }
 
 func (s *CourseService) GetAllCourseTypes(ctx context.Context) ([]dto.CourseTypeWithCountResponse, error) {
@@ -783,13 +836,15 @@ func (s *CourseService) GetAllCourseTypes(ctx context.Context) ([]dto.CourseType
 	return responses, nil
 }
 
-
-func (s *CourseService) GetRelatedCourses(ctx context.Context, courseID uuid.UUID, limit int) ([]dto.CourseResponse, error) {
-	if limit < 1 {
-		limit = 5
+func (s *CourseService) GetRelatedCourses(ctx context.Context, courseID uuid.UUID, params *dto.SimplePaginationParams) (*dto.PaginationResponse, error) {
+	if params.Page < 1 {
+		params.Page = 1
 	}
-	if limit > 20 {
-		limit = 20
+	if params.Limit < 1 {
+		params.Limit = 5
+	}
+	if params.Limit > 20 {
+		params.Limit = 20
 	}
 
 	var currentCourse models.Course
@@ -800,15 +855,28 @@ func (s *CourseService) GetRelatedCourses(ctx context.Context, courseID uuid.UUI
 		return nil, err
 	}
 
-	var courses []models.Course
+	// Count total
+	var total int64
 	err := s.db.Model(&models.Course{}).
-		Where("course_type_id = ? AND id != ?", currentCourse.CourseTypeID, courseID).
+		Where("course_type_id = ? AND id != ? AND deleted_at IS NULL", currentCourse.CourseTypeID, courseID).
+		Count(&total).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Get paginated data
+	offset := (params.Page - 1) * params.Limit
+	var courses []models.Course
+	err = s.db.Model(&models.Course{}).
+		Where("course_type_id = ? AND id != ? AND deleted_at IS NULL", currentCourse.CourseTypeID, courseID).
 		Preload("CourseType").
 		Preload("Creator").
 		Preload("Modules").
 		Preload("Enrollments").
+		Preload("Instructor.Biodata").
 		Order("created_at DESC").
-		Limit(limit).
+		Offset(offset).
+		Limit(params.Limit).
 		Find(&courses).Error
 
 	if err != nil {
@@ -820,7 +888,17 @@ func (s *CourseService) GetRelatedCourses(ctx context.Context, courseID uuid.UUI
 		courseResponses[i] = s.mapToCourseResponse(&course)
 	}
 
-	return courseResponses, nil
+	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+
+	return &dto.PaginationResponse{
+		Total:       total,
+		Page:        params.Page,
+		Limit:       params.Limit,
+		TotalPages:  totalPages,
+		HasNext:     params.Page < totalPages,
+		HasPrevious: params.Page > 1,
+		Data:        courseResponses,
+	}, nil
 }
 
 func (s *CourseService) GetCourseStats(ctx context.Context) (*dto.CourseStatsResponse, error) {

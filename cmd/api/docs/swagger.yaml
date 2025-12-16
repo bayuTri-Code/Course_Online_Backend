@@ -218,17 +218,6 @@ definitions:
     required:
     - questions
     type: object
-  dto.CourseByCategoryResponse:
-    properties:
-      category:
-        $ref: '#/definitions/dto.CourseTypeWithCountResponse'
-      courses:
-        items:
-          $ref: '#/definitions/dto.CourseResponse'
-        type: array
-      total:
-        type: integer
-    type: object
   dto.CourseCountByCategoryResponse:
     properties:
       category_id:
@@ -646,17 +635,6 @@ definitions:
       score_achieved:
         type: integer
       total_questions:
-        type: integer
-    type: object
-  dto.MyCourseByCategoryResponse:
-    properties:
-      category:
-        $ref: '#/definitions/dto.CourseTypeWithCountResponse'
-      courses:
-        items:
-          $ref: '#/definitions/dto.CourseResponse'
-        type: array
-      total:
         type: integer
     type: object
   dto.MyCoursesInstructorResponse:
@@ -2562,8 +2540,13 @@ paths:
         name: id
         required: true
         type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
       - default: 5
-        description: Number of courses to return
+        description: Items per page
         in: query
         name: limit
         type: integer
@@ -2577,9 +2560,14 @@ paths:
             - $ref: '#/definitions/utils.StandardResponse'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/dto.CourseResponse'
-                  type: array
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
               type: object
         "400":
           description: Bad Request
@@ -2667,7 +2655,14 @@ paths:
             - $ref: '#/definitions/utils.StandardResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.CourseByCategoryResponse'
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
               type: object
         "400":
           description: Bad Request
@@ -2716,8 +2711,13 @@ paths:
       - application/json
       description: Get newest courses sorted by creation date
       parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
       - default: 10
-        description: Number of courses to return
+        description: Items per page
         in: query
         name: limit
         type: integer
@@ -2731,9 +2731,14 @@ paths:
             - $ref: '#/definitions/utils.StandardResponse'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/dto.CourseResponse'
-                  type: array
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
               type: object
         "400":
           description: Bad Request
@@ -2832,8 +2837,13 @@ paths:
       - application/json
       description: Get most popular courses sorted by enrollment count
       parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
       - default: 10
-        description: Number of courses to return
+        description: Items per page
         in: query
         name: limit
         type: integer
@@ -2847,9 +2857,14 @@ paths:
             - $ref: '#/definitions/utils.StandardResponse'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/dto.CourseResponse'
-                  type: array
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
               type: object
         "400":
           description: Bad Request
@@ -3567,7 +3582,14 @@ paths:
             - $ref: '#/definitions/utils.StandardResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.MyCourseByCategoryResponse'
+                  allOf:
+                  - $ref: '#/definitions/dto.PaginationResponse'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/dto.CourseResponse'
+                        type: array
+                    type: object
               type: object
         "400":
           description: Bad Request
